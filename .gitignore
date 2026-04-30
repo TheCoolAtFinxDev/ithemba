@@ -50,3 +50,4 @@ __screenshots__/
 test-output
 
 /generated/prisma
+.env
