@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-  "seed": "npx tsx prisma/seed.ts"
-},
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "private": true,
   "devDependencies": {
     "@angular-devkit/core": "~21.2.0",
@@ -77,6 +77,8 @@
     "@prisma/client": "^7.7.0",
     "angular-oauth2-oidc": "^20.0.2",
     "axios": "^1.6.0",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "jwks-rsa": "^4.0.1",

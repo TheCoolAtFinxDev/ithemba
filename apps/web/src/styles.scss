@@ -1,1 +1,92 @@
 /* You can add global styles to this file, and also import other style files */
+// Bootstrap 5
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+// IthembaHealth brand variables — override Bootstrap defaults
+:root {
+  --bs-primary: #00B9D6;
+  --bs-primary-rgb: 0, 185, 214;
+  --ith-green: #4A7C59;
+  --ith-teal: #00B9D6;
+  --ith-danger: #E53935;
+  --ith-bg: #f5f7fb;
+  --ith-card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --ith-sidebar-width: 260px;
+}
+
+body {
+  background-color: var(--ith-bg);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #2d2d2d;
+}
+
+// Dasher-style card
+.ith-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--ith-card-shadow);
+  border: none;
+}
+
+// Primary button — IthembaHealth teal
+.btn-ith-primary {
+  background-color: var(--ith-teal);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: background 0.2s;
+  &:hover { background-color: #009ab5; color: #fff; }
+}
+
+// Secondary button — IthembaHealth green
+.btn-ith-green {
+  background-color: var(--ith-green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: background 0.2s;
+  &:hover { background-color: #3a6347; color: #fff; }
+}
+
+// Outline teal
+.btn-ith-outline {
+  background: transparent;
+  color: var(--ith-teal);
+  border: 2px solid var(--ith-teal);
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: all 0.2s;
+  &:hover { background: var(--ith-teal); color: #fff; }
+}
+
+// Sidebar
+.ith-sidebar {
+  width: var(--ith-sidebar-width);
+  background: #fff;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+// Top navbar
+.ith-navbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  height: 64px;
+}
+
+// Status badges matching screenshots
+.badge-requested { background: #FF9800; color: #fff; }
+.badge-scheduled { background: #2196F3; color: #fff; }
+.badge-confirmed { background: #4CAF50; color: #fff; }
+.badge-completed { background: #9E9E9E; color: #fff; }
+.badge-cancelled { background: #E53935; color: #fff; }

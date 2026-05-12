@@ -10,11 +10,18 @@ export interface UserProfile {
   id: string;
   email: string;
   fullName: string;
-  role: 'PATIENT' | 'PROVIDER' | 'ADMIN';
   clinicName?: string;
   medicalLicenseNumber?: string;
   patient?: any;
   provider?: any;
+  roles?: Array<{
+    role: {
+      name: string;
+      permissions: Array<{
+        permission: { resource: string; action: string; }
+      }>;
+    };
+  }>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,11 +52,26 @@ export class AuthService {
     return (this.oauth.getIdentityClaims() as Record<string, any>) ?? {};
   }
 
-  get role(): string {
-    return this.profile?.role ?? 'PATIENT';
-  }
+ get role(): string {
+  return this.profile?.roles?.[0]?.role?.name ?? 'PATIENT';
+  
+}
 
- async init(): Promise<void> {
+get permissions(): string[] {
+  const perms: string[] = [];
+  this.profile?.roles?.forEach(userRole => {
+    userRole.role?.permissions?.forEach(rp => {
+      perms.push(`${rp.permission.resource}:${rp.permission.action}`);
+    });
+  });
+  return perms;
+}
+
+hasPermission(resource: string, action: string): boolean {
+  return this.permissions.includes(`${resource}:${action}`);
+}
+
+async init(): Promise<void> {
   this.oauth.configure(authConfig);
 
   try {
@@ -63,10 +85,27 @@ export class AuthService {
 
   if (this.oauth.hasValidAccessToken()) {
     await this.syncProfile();
+    this.redirectByRole();
   }
 
   this._loading$.next(false);
   this.oauth.setupAutomaticSilentRefresh();
+}
+
+private redirectByRole(): void {
+  const currentPath = window.location.pathname;
+  if (currentPath === '/' || currentPath === '/home') {
+    switch (this.role) {
+      case 'ADMIN':
+        this.router.navigate(['/admin']);
+        break;
+      case 'PROVIDER':
+        this.router.navigate(['/provider']);
+        break;
+      default:
+        this.router.navigate(['/patient']);
+    }
+  }
 }
 
   login(): void {
@@ -81,26 +120,23 @@ export class AuthService {
 
 private async syncProfile(): Promise<void> {
   const claims = this.claims;
-  const sub = this.oauth.getAccessToken() 
-    ? JSON.parse(atob(this.oauth.getAccessToken().split('.')[1]))['sub'] 
+  const sub = this.oauth.getAccessToken()
+    ? JSON.parse(atob(this.oauth.getAccessToken().split('.')[1]))['sub']
     : null;
-
-  console.log('Claims:', JSON.stringify(claims));
-  console.log('Sub from token:', sub);
 
   const dto = {
     email: claims['email'] ?? claims['username'] ?? (sub ? `${sub}@wso2.local` : undefined),
     fullName: claims['name'] ?? claims['given_name'] ?? 'User',
-    role: this.determineRole(claims),
+    role: 'PATIENT',
   };
 
-  console.log('Sync DTO:', JSON.stringify(dto));
-
   try {
-    const profile = await this.http
+    await this.http
       .post<UserProfile>(`${environment.apiUrl}/auth/sync`, dto)
       .toPromise();
-    this._profile$.next(profile!);
+
+    // Load full profile including roles
+    await this.loadProfile();
   } catch (e) {
     console.error('Profile sync failed', e);
   }
@@ -117,10 +153,10 @@ private async syncProfile(): Promise<void> {
     }
   }
 
-  private determineRole(claims: Record<string, any>): 'PATIENT' | 'PROVIDER' | 'ADMIN' {
-    const role = claims['role'] ?? claims['groups']?.[0];
-    if (role === 'PROVIDER') return 'PROVIDER';
-    if (role === 'ADMIN') return 'ADMIN';
-    return 'PATIENT';
-  }
+  // private determineRole(claims: Record<string, any>): 'PATIENT' | 'PROVIDER' | 'ADMIN' {
+  //   const role = claims['role'] ?? claims['groups']?.[0];
+  //   if (role === 'PROVIDER') return 'PROVIDER';
+  //   if (role === 'ADMIN') return 'ADMIN';
+  //   return 'PATIENT';
+  // }
 }

@@ -1,0 +1,200 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg ith-navbar px-4 position-fixed w-100 top-0" style="z-index:1000">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+      <div style="width:36px;height:36px;background:#4A7C59;border-radius:50%;display:flex;align-items:center;justify-content:center">
+        <i class="bi bi-heart-pulse-fill text-white" style="font-size:18px"></i>
+      </div>
+      <span style="font-weight:700;color:#2d2d2d;font-size:20px">i<span style="color:#00B9D6">Themba</span></span>
+    </a>
+    <div class="d-flex align-items-center gap-3">
+      <a href="#how-it-works" class="text-decoration-none text-muted d-none d-md-inline">How it works</a>
+      <a href="#providers" class="text-decoration-none text-muted d-none d-md-inline">For Providers</a>
+      <button class="btn-ith-outline btn" (click)="login()">Sign In</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section style="padding-top:120px;padding-bottom:80px;background:linear-gradient(135deg,#f5f7fb 0%,#e8f8fb 100%)">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <span class="badge mb-3" style="background:#e8f8fb;color:#00B9D6;font-size:13px;padding:8px 16px;border-radius:20px;font-weight:500">
+          🇱🇸 Built for Basotho
+        </span>
+        <h1 style="font-size:48px;font-weight:800;line-height:1.2;color:#1a1a2e">
+          Your Health.<br>
+          <span style="color:#00B9D6">Your Savings.</span><br>
+          Your Control.
+        </h1>
+        <p class="mt-4 text-muted" style="font-size:18px;line-height:1.7">
+          iThemba Health Savings Plan empowers Basotho to save specifically for private healthcare —
+          and pay providers directly via M-Pesa or C-Pay.
+        </p>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <button class="btn-ith-primary btn btn-lg" (click)="registerPatient()">
+            <i class="bi bi-person-plus me-2"></i>Open Your HSA
+          </button>
+          <button class="btn-ith-outline btn btn-lg" (click)="login()">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </button>
+        </div>
+        <div class="d-flex gap-4 mt-4">
+          <div class="text-center">
+            <div style="font-size:24px;font-weight:700;color:#00B9D6">R67</div>
+            <div class="text-muted" style="font-size:13px">once-off registration</div>
+          </div>
+          <div style="width:1px;background:#e0e0e0"></div>
+          <div class="text-center">
+            <div style="font-size:24px;font-weight:700;color:#00B9D6">5%</div>
+            <div class="text-muted" style="font-size:13px">transaction fee</div>
+          </div>
+          <div style="width:1px;background:#e0e0e0"></div>
+          <div class="text-center">
+            <div style="font-size:24px;font-weight:700;color:#00B9D6">R500</div>
+            <div class="text-muted" style="font-size:13px">min monthly</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 mt-5 mt-lg-0">
+        <div class="ith-card p-4 ms-lg-4">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div style="width:48px;height:48px;background:#e8f8fb;border-radius:12px;display:flex;align-items:center;justify-content:center">
+              <i class="bi bi-wallet2" style="color:#00B9D6;font-size:24px"></i>
+            </div>
+            <div>
+              <div class="text-muted" style="font-size:13px">HSA Balance</div>
+              <div style="font-size:28px;font-weight:700;color:#1a1a2e">R 4,250.00</div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted" style="font-size:13px">Contributed</span>
+              <span style="font-weight:600">R 5,000.00</span>
+            </div>
+            <div class="progress" style="height:6px;border-radius:3px">
+              <div class="progress-bar" style="width:85%;background:#00B9D6"></div>
+            </div>
+          </div>
+          <hr>
+          <div style="font-size:13px;font-weight:600;color:#2d2d2d;margin-bottom:12px">Recent activity</div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-hospital" style="color:#4A7C59"></i>
+              <span style="font-size:14px">Boikemisetso CHC</span>
+            </div>
+            <span style="color:#E53935;font-weight:600">-R 350.00</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-phone" style="color:#00B9D6"></i>
+              <span style="font-size:14px">M-Pesa Top Up</span>
+            </div>
+            <span style="color:#4A7C59;font-weight:600">+R 1,000.00</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-capsule" style="color:#FF9800"></i>
+              <span style="font-size:14px">Pharmacy</span>
+            </div>
+            <span style="color:#E53935;font-weight:600">-R 400.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how-it-works" style="padding:80px 0;background:#fff">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 style="font-size:36px;font-weight:700">How iThemba works</h2>
+      <p class="text-muted mt-2">Simple, transparent, and built for Lesotho</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-3 text-center">
+        <div style="width:64px;height:64px;background:#e8f8fb;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <i class="bi bi-person-check" style="color:#00B9D6;font-size:28px"></i>
+        </div>
+        <h5 style="font-weight:700">1. Register</h5>
+        <p class="text-muted">Sign up via the web app or M-Pesa super app. KYC verified by Vodacom M-Pesa.</p>
+      </div>
+      <div class="col-md-3 text-center">
+        <div style="width:64px;height:64px;background:#e8f0eb;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <i class="bi bi-piggy-bank" style="color:#4A7C59;font-size:28px"></i>
+        </div>
+        <h5 style="font-weight:700">2. Save</h5>
+        <p class="text-muted">Contribute monthly via debit order (R500–R10,000) or top up via M-Pesa anytime.</p>
+      </div>
+      <div class="col-md-3 text-center">
+        <div style="width:64px;height:64px;background:#e8f8fb;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <i class="bi bi-calendar-check" style="color:#00B9D6;font-size:28px"></i>
+        </div>
+        <h5 style="font-weight:700">3. Book</h5>
+        <p class="text-muted">Find and book accredited doctors, dentists, pharmacies and hospitals in your network.</p>
+      </div>
+      <div class="col-md-3 text-center">
+        <div style="width:64px;height:64px;background:#fce8e8;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <i class="bi bi-shield-check" style="color:#E53935;font-size:28px"></i>
+        </div>
+        <h5 style="font-weight:700">4. Pay</h5>
+        <p class="text-muted">Get a visit code via SMS. Show it at the clinic. Payment authorised instantly from your HSA.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Provider CTA -->
+<section id="providers" style="padding:80px 0;background:#f5f7fb">
+  <div class="container">
+    <div class="ith-card p-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge mb-3" style="background:#e8f0eb;color:#4A7C59;font-size:13px;padding:8px 16px;border-radius:20px">
+            For Healthcare Providers
+          </span>
+          <h2 style="font-size:36px;font-weight:700">Are you a health services provider?</h2>
+          <p class="text-muted mt-3" style="font-size:16px;line-height:1.7">
+            Join the iThemba network of accredited private practitioners. Get guaranteed fast payment,
+            reduce admin burden, and reach more patients across Lesotho.
+          </p>
+          <ul class="list-unstyled mt-3">
+            <li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:#4A7C59"></i>Instant payment via M-Pesa on claim approval</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:#4A7C59"></i>Online appointment management dashboard</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:#4A7C59"></i>Digital claim submission — no paperwork</li>
+          </ul>
+        </div>
+        <div class="col-lg-4 text-center mt-4 mt-lg-0">
+          <button class="btn-ith-green btn btn-lg w-100 mb-3" (click)="registerProvider()">
+            <i class="bi bi-hospital me-2"></i>Join Our Network
+          </button>
+          <p class="text-muted" style="font-size:13px">Our team will review your application and get back to you within 2 business days.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="background:#1a1a2e;color:#fff;padding:40px 0">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div style="width:32px;height:32px;background:#4A7C59;border-radius:50%;display:flex;align-items:center;justify-content:center">
+            <i class="bi bi-heart-pulse-fill text-white" style="font-size:16px"></i>
+          </div>
+          <span style="font-weight:700;font-size:18px">iThemba Health</span>
+        </div>
+        <p style="color:#9e9e9e;font-size:13px">"iThemba" means hope. Health savings for Basotho.</p>
+      </div>
+      <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a href="#" class="text-decoration-none me-3" style="color:#9e9e9e;font-size:13px">WhatsApp: +266 590 33663</a>
+        <a href="#" class="text-decoration-none me-3" style="color:#9e9e9e;font-size:13px">&#64;ithembahealth</a>
+        <p style="color:#9e9e9e;font-size:12px;margin-top:8px">© 2026 iThemba Health Savings Plan. Powered by FinX Pty Ltd.</p>
+      </div>
+    </div>
+  </div>
+</footer>
