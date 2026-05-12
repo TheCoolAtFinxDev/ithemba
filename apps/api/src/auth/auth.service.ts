@@ -6,8 +6,7 @@ import { SyncProfileDto } from './auth.dto';
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async sync(sub: string, dto: SyncProfileDto) {
-  // Upsert the user profile
+async sync(sub: string, dto: SyncProfileDto) {
   const profile = await this.prisma.userProfile.upsert({
     where: { id: sub },
     create: {
@@ -18,10 +17,10 @@ export class AuthService {
       medicalLicenseNumber: dto.medicalLicenseNumber,
     },
     update: {
-      email: dto.email ?? `${sub}@wso2.local`,
       fullName: dto.fullName,
       clinicName: dto.clinicName,
       medicalLicenseNumber: dto.medicalLicenseNumber,
+      // Don't update email — it's unique and set on creation only
     },
   });
 
