@@ -11,12 +11,20 @@ export const routes: Routes = [
 
   // Patient portal
   {
+  path: 'patient/onboard',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./features/patient/onboarding/patient-onboarding').then(
+      (m) => m.PatientOnboarding,
+    ),
+},
+  {
     path: 'patient',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/patient/patient-dashboard').then((m) => m.PatientDashboard),
   },
-
+  
   // Provider portal
   {
     path: 'provider',
