@@ -24,11 +24,23 @@ export class Wso2JwtStrategy extends PassportStrategy(Strategy, 'wso2-jwt') {
 });
   }
 
- async validate(payload: any) {
+async validate(payload: any) {
+  const profile = await this.prisma.userProfile.findUnique({
+    where: { id: payload.sub },
+    include: {
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
+
   return {
     sub: payload.sub,
     email: payload.email,
-    role: payload.role ?? 'PATIENT',
+    roles: profile?.roles?.map(r => r.role.name) ?? [],
+    primaryRole: profile?.roles?.[0]?.role.name ?? 'PATIENT',
   };
 }
 }

@@ -1,20 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
-import { Role } from '@prisma/client';
+import { IsString, IsOptional, IsIn } from 'class-validator';
 
 export class SyncProfileDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsEmail()
+  @IsString()
   email?: string;
 
   @ApiProperty()
   @IsString()
   fullName: string;
 
-  @ApiProperty({ enum: Role })
-  @IsEnum(Role)
-  role: Role;
+  @ApiProperty({ enum: ['PATIENT', 'PROVIDER', 'ADMIN'] })
+  @IsIn(['PATIENT', 'PROVIDER', 'ADMIN'])
+  role: string;
 
   @ApiPropertyOptional()
   @IsOptional()

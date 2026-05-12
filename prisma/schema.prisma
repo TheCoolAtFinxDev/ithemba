@@ -14,20 +14,65 @@ model UserProfile {
   id        String   @id
   email     String   @unique
   fullName  String   @default("")
-  role      Role     @default(PATIENT)
   clinicName           String?
   medicalLicenseNumber String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   patient  Patient?
   provider Provider?
+
+  roles UserRole[]
+
   @@map("user_profiles")
 }
 
-enum Role {
-  PATIENT
-  PROVIDER
-  ADMIN
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  resource    String
+  action      String
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userProfileId String
+  roleId        String
+  assignedAt    DateTime    @default(now())
+  assignedBy    String?
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userProfileId, roleId])
+  @@map("user_roles")
 }
 
 model Patient {

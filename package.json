@@ -2,7 +2,9 @@
   "name": "@ithemba/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+  "seed": "npx tsx prisma/seed.ts"
+},
   "private": true,
   "devDependencies": {
     "@angular-devkit/core": "~21.2.0",
@@ -44,6 +46,7 @@
     "nx": "22.6.5",
     "prettier": "~3.6.2",
     "prisma": "^7.7.0",
+    "ts-node": "^10.9.2",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0",
