@@ -17,14 +17,17 @@
       <p class="text-muted" style="font-size:13px">Here's your health savings overview</p>
 
       <!-- HSA Balance Card -->
-      <div class="ith-card p-4 mb-4" style="background:linear-gradient(135deg,#00B9D6,#4A7C59);color:#fff">
+      <div class="ith-card p-4 mb-4" style="background:linear-gradient(135deg,#00B9D6,#4A7C59);color:#fff;cursor:pointer" (click)="activeView='wallet'">
         <div style="font-size:12px;opacity:0.8;margin-bottom:4px">HSA Balance</div>
-        <div style="font-size:36px;font-weight:700">R 0.00</div>
+        <div style="font-size:36px;font-weight:700">
+          <span *ngIf="walletBalance !== null">R {{ walletBalance | number:'1.2-2' }}</span>
+          <span *ngIf="walletBalance === null" class="placeholder-glow"><span class="placeholder col-4"></span></span>
+        </div>
         <div class="d-flex gap-3 mt-3">
-          <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border-radius:8px;font-size:13px">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border-radius:8px;font-size:13px" (click)="$event.stopPropagation(); activeView='wallet'">
             <i class="bi bi-plus-circle me-1"></i>Top Up
           </button>
-          <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border-radius:8px;font-size:13px">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border-radius:8px;font-size:13px" (click)="$event.stopPropagation(); activeView='wallet'">
             <i class="bi bi-clock-history me-1"></i>History
           </button>
         </div>
@@ -51,7 +54,7 @@
           </div>
         </div>
         <div class="col-6">
-          <div class="ith-card p-3 text-center quick-action" (click)="setTab('claims')">
+          <div class="ith-card p-3 text-center quick-action" (click)="activeView='claims'">
             <i class="bi bi-file-medical" style="font-size:28px;color:#9C27B0"></i>
             <div style="font-size:13px;font-weight:600;margin-top:8px">My Claims</div>
           </div>
@@ -101,16 +104,16 @@
     </app-patient-book>
   </ng-container>
 
-  <!-- ── CLAIMS PLACEHOLDER ─────────────────────────────────────────── -->
+  <!-- ── WALLET ────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="activeView === 'wallet'">
+    <app-patient-wallet (back)="activeView = 'home'; loadWalletBalance()">
+    </app-patient-wallet>
+  </ng-container>
+
+  <!-- ── CLAIMS ─────────────────────────────────────────────────────── -->
   <ng-container *ngIf="activeView === 'claims'">
-    <div class="ith-navbar px-4 d-flex align-items-center gap-3" style="position:sticky;top:0;z-index:100">
-      <i class="bi bi-arrow-left" style="font-size:20px;cursor:pointer" (click)="setTab('home')"></i>
-      <h6 class="mb-0 fw-bold">My Claims</h6>
-    </div>
-    <div class="text-center py-5 text-muted px-4 mt-4">
-      <i class="bi bi-file-medical" style="font-size:56px;opacity:0.2"></i>
-      <p class="mt-3" style="font-size:14px">Claims coming soon</p>
-    </div>
+    <app-patient-claims (back)="setTab('home')">
+    </app-patient-claims>
   </ng-container>
 
 </div>
@@ -125,8 +128,8 @@
     <i class="bi" [class.bi-calendar-fill]="activeTab === 'appointments'" [class.bi-calendar3]="activeTab !== 'appointments'"></i>
     Appointments
   </a>
-  <a class="nav-item" [class.active]="activeTab === 'claims'" (click)="setTab('claims')">
-    <i class="bi" [class.bi-file-medical-fill]="activeTab === 'claims'" [class.bi-file-medical]="activeTab !== 'claims'"></i>
+  <a class="nav-item" [class.active]="activeView === 'claims'" (click)="activeView='claims'; activeTab='claims'">
+    <i class="bi" [class.bi-file-medical-fill]="activeView === 'claims'" [class.bi-file-medical]="activeView !== 'claims'"></i>
     Claims
   </a>
 </nav>

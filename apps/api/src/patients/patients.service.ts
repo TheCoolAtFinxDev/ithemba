@@ -1,8 +1,8 @@
 import {
-  Injectable, NotFoundException, ConflictException, ForbiddenException,
+  Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { OnboardPatientDto, UpdatePatientAddressDto } from './patients.dto';
+import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto } from './patients.dto';
 
 const REGISTRATION_FEE = 67;
 
@@ -102,6 +102,76 @@ export class PatientsService {
           .join(', '),
         lastModifiedBy: userProfileId,
       },
+    });
+  }
+
+  // ── Wallet ───────────────────────────────────────────────────
+
+  private async resolvePatient(patientId: string, requestingUserId: string) {
+    const patient = await this.prisma.patient.findUnique({ where: { id: patientId } });
+    if (!patient) throw new NotFoundException('Patient not found');
+    if (patient.userProfileId !== requestingUserId) throw new ForbiddenException();
+    return patient;
+  }
+
+  async getWallet(userProfileId: string, patientId: string) {
+    const patient = await this.resolvePatient(patientId, userProfileId);
+    const account = await this.prisma.healthSavingsAccount.findUnique({
+      where: { patientId: patient.id },
+    });
+    if (!account) throw new NotFoundException('Wallet not found');
+    return account;
+  }
+
+  async topup(userProfileId: string, patientId: string, dto: TopUpDto) {
+    const patient = await this.resolvePatient(patientId, userProfileId);
+    const account = await this.prisma.healthSavingsAccount.findUnique({
+      where: { patientId: patient.id },
+    });
+    if (!account) throw new NotFoundException('Wallet not found');
+
+    if (dto.amount < 500 || dto.amount > 10000) {
+      throw new BadRequestException('Top-up must be between R500 and R10,000');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const record = await tx.savingsTransaction.create({
+        data: {
+          accountId: account.id,
+          patientId: patient.id,
+          transactionType: 'Deposit',
+          amount: dto.amount,
+          mpesaTransactionCode: dto.mpesaRef,
+          notes: dto.mpesaPhone
+            ? `M-Pesa top-up from ${dto.mpesaPhone}`
+            : 'M-Pesa top-up (stub)',
+          isSuccessful: true,
+        },
+      });
+
+      await tx.healthSavingsAccount.update({
+        where: { id: account.id },
+        data: {
+          balance: { increment: dto.amount },
+          totalContributed: { increment: dto.amount },
+        },
+      });
+
+      return record;
+    });
+  }
+
+  async getTransactions(userProfileId: string, patientId: string) {
+    const patient = await this.resolvePatient(patientId, userProfileId);
+    const account = await this.prisma.healthSavingsAccount.findUnique({
+      where: { patientId: patient.id },
+    });
+    if (!account) return [];
+
+    return this.prisma.savingsTransaction.findMany({
+      where: { accountId: account.id },
+      orderBy: { transactionDate: 'desc' },
+      take: 50,
     });
   }
 

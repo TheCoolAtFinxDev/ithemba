@@ -1,0 +1,53 @@
+.provider-claims { padding: 0; }
+
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #777;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: #00B9D6; }
+.tab-btn--active { color: #00B9D6; border-bottom-color: #00B9D6; }
+
+.claim-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.badge-green  { background: #E8F5E9; color: #2E7D32; }
+.badge-red    { background: #FFEBEE; color: #B71C1C; }
+.badge-blue   { background: #E3F2FD; color: #1565C0; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-grey   { background: #F5F5F5; color: #616161; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-sheet {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 28px 24px 40px;
+  width: 100%;
+  max-width: 540px;
+  animation: slide-up 0.22s ease;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

@@ -1,9 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString, IsOptional, IsDateString,
-  IsBoolean, IsEnum, ValidateNested,
+  IsBoolean, IsNumber, Min, Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class CreatePatientDto {
   @ApiProperty()
@@ -46,6 +45,24 @@ export class UpdatePatientAddressDto {
   @IsOptional()
   @IsString()
   country?: string;
+}
+
+export class TopUpDto {
+  @ApiProperty({ description: 'Amount in ZAR (R500 - R10,000)' })
+  @IsNumber()
+  @Min(500)
+  @Max(10000)
+  amount: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  mpesaRef?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  mpesaPhone?: string;
 }
 
 export class OnboardPatientDto {

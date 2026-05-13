@@ -84,13 +84,15 @@ export class PatientAppointmentDetail implements OnInit, OnChanges {
 
   ngOnInit() {
     this.auth.profile$.subscribe(p => {
-      if (p?.patient?.id) this.patientId = p.patient.id;
+      if (p?.patient?.id) {
+        this.patientId = p.patient.id;
+        if (this.appointmentId && !this.appointment) this.load();
+      }
     });
-    this.load();
   }
 
   ngOnChanges() {
-    if (this.appointmentId) {
+    if (this.appointmentId && this.patientId) {
       this.appointment = null;
       this.otpSent = false;
       this.load();

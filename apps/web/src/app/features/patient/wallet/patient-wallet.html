@@ -1,0 +1,112 @@
+<!-- Header -->
+<div class="ith-navbar px-4 d-flex align-items-center gap-3" style="position:sticky;top:0;z-index:100">
+  <button class="btn-icon" (click)="back.emit()">
+    <i class="bi bi-arrow-left" style="font-size:20px"></i>
+  </button>
+  <h6 class="mb-0 fw-bold">My Wallet</h6>
+</div>
+
+<div class="px-3 pb-5 pt-3">
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ error }}</div>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary"></div>
+  </div>
+
+  <!-- Balance card -->
+  <div *ngIf="!loading && wallet" class="wallet-card mb-4">
+    <div style="font-size:12px;opacity:0.75;margin-bottom:6px;letter-spacing:0.5px;text-transform:uppercase">HSA Balance</div>
+    <div style="font-size:42px;font-weight:800;letter-spacing:-1px">
+      R {{ (+wallet.balance) | number:'1.2-2' }}
+    </div>
+    <div class="d-flex gap-4 mt-3">
+      <div>
+        <div style="font-size:11px;opacity:0.65;text-transform:uppercase;letter-spacing:0.5px">Contributed</div>
+        <div style="font-size:15px;font-weight:700">R {{ (+wallet.totalContributed) | number:'1.2-2' }}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;opacity:0.65;text-transform:uppercase;letter-spacing:0.5px">Claimed</div>
+        <div style="font-size:15px;font-weight:700">R {{ (+wallet.totalClaimed) | number:'1.2-2' }}</div>
+      </div>
+    </div>
+    <button class="btn btn-topup mt-4 w-100" (click)="openTopup()">
+      <i class="bi bi-plus-circle me-2"></i>Top Up via M-Pesa
+    </button>
+  </div>
+
+  <!-- Transactions -->
+  <div *ngIf="!loading">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 style="font-weight:700;margin:0">Transaction History</h6>
+      <button class="btn btn-sm" style="font-size:12px;color:#00B9D6;padding:4px 8px" (click)="loadTransactions()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+
+    <div *ngIf="txLoading" class="text-center py-3">
+      <div class="spinner-border spinner-border-sm text-primary"></div>
+    </div>
+
+    <div *ngIf="!txLoading && transactions.length === 0" class="text-center py-5 text-muted">
+      <i class="bi bi-clock-history" style="font-size:40px;opacity:0.25"></i>
+      <p class="mt-2" style="font-size:14px">No transactions yet</p>
+    </div>
+
+    <div *ngFor="let tx of transactions" class="ith-card p-3 mb-2 d-flex align-items-center gap-3">
+      <div class="tx-icon-wrap" [style.background]="txColor(tx.transactionType) + '22'">
+        <i class="bi" [ngClass]="txIcon(tx.transactionType)" [style.color]="txColor(tx.transactionType)"></i>
+      </div>
+      <div class="flex-grow-1">
+        <div style="font-weight:600;font-size:14px">{{ txLabel(tx.transactionType) }}</div>
+        <div style="font-size:12px;color:#9e9e9e">{{ tx.notes || '' }}</div>
+        <div style="font-size:11px;color:#b0b0b0">{{ tx.transactionDate | date:'d MMM y, HH:mm' }}</div>
+      </div>
+      <div style="font-size:16px;font-weight:700" [style.color]="txColor(tx.transactionType)">
+        {{ txSign(tx.transactionType) }}R{{ (+tx.amount) | number:'1.2-2' }}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Top-up modal -->
+<div *ngIf="showTopup" class="modal-overlay" (click)="closeTopup()">
+  <div class="modal-sheet" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h6 class="fw-bold mb-0">Top Up Wallet</h6>
+      <button class="btn-icon" (click)="closeTopup()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div *ngIf="topupError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ topupError }}</div>
+
+    <label class="form-label fw-semibold" style="font-size:13px">Amount (ZAR)</label>
+    <input type="number" class="form-control mb-3" style="border-radius:10px"
+           [(ngModel)]="topupAmount" min="500" max="10000"
+           placeholder="e.g. 1000" />
+    <div style="font-size:11px;color:#9e9e9e;margin-top:-10px;margin-bottom:14px">Min R500 · Max R10,000 per transaction</div>
+
+    <!-- Quick amount chips -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+      <button *ngFor="let amt of [500, 1000, 2000, 5000]"
+              class="chip-btn" [class.chip-btn--active]="topupAmount === amt"
+              (click)="topupAmount = amt">R{{ amt }}</button>
+    </div>
+
+    <label class="form-label fw-semibold" style="font-size:13px">M-Pesa Number (optional)</label>
+    <input type="tel" class="form-control mb-4" style="border-radius:10px"
+           [(ngModel)]="topupPhone" placeholder="+266 5x xxx xxxx" />
+
+    <div class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;background:#e3f2fd;border:none;color:#1565C0">
+      <i class="bi bi-info-circle me-1"></i>
+      This is a stub — no real M-Pesa charge will occur. Real integration coming soon.
+    </div>
+
+    <button class="btn btn-ith-primary w-100" [disabled]="topupLoading" (click)="submitTopup()">
+      <span *ngIf="topupLoading" class="spinner-border spinner-border-sm me-2"></span>
+      {{ topupLoading ? 'Processing…' : 'Confirm Top-Up of R' + topupAmount }}
+    </button>
+  </div>
+</div>

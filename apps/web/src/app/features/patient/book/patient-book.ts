@@ -75,8 +75,8 @@ export class PatientBook implements OnInit, OnDestroy {
   loadProviders() {
     this.loading = true;
     this.error = '';
-    const q = this.searchTerm ? `&query=${encodeURIComponent(this.searchTerm)}` : '';
-    this.http.get<Provider[]>(`${environment.apiUrl}/v1/providers/profile/search?${q}`)
+    const q = this.searchTerm ? `?query=${encodeURIComponent(this.searchTerm)}` : '';
+    this.http.get<Provider[]>(`${environment.apiUrl}/v1/providers/profile/search${q}`)
       .subscribe({
         next: data => { this.providers = data || []; this.loading = false; },
         error: () => { this.error = 'Could not load providers. Please try again.'; this.loading = false; },
@@ -114,7 +114,8 @@ export class PatientBook implements OnInit, OnDestroy {
   }
 
   confirm() {
-    if (!this.pickedSlotIso || !this.patientId) return;
+    if (!this.pickedSlotIso) return;
+    if (!this.patientId) { this.error = 'Patient profile not loaded. Please refresh.'; return; }
     this.loading = true;
     this.error = '';
     const endIso = new Date(new Date(this.pickedSlotIso).getTime() + 30 * 60000).toISOString();

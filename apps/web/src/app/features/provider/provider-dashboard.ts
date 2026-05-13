@@ -2,10 +2,11 @@ import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { ProviderAppointments } from './appointments/provider-appointments';
+import { ProviderClaims } from './claims/provider-claims';
 
 @Component({
   selector: 'app-provider-dashboard',
-  imports: [ProviderAppointments],
+  imports: [ProviderAppointments, ProviderClaims],
   templateUrl: './provider-dashboard.html',
   styleUrl: './provider-dashboard.css',
 })

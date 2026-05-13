@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
-import { OnboardPatientDto, UpdatePatientAddressDto } from './patients.dto';
+import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto } from './patients.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
@@ -47,5 +47,29 @@ export class PatientsController {
     @CurrentUser() user: any,
   ) {
     return this.patientsService.findById(patientId, user.sub);
+  }
+
+  // ── Wallet ────────────────────────────────────────────────────
+
+  @Get('patients/:patientId/wallet')
+  @ApiOperation({ summary: 'Get HSA wallet balance' })
+  getWallet(@CurrentUser() user: any, @Param('patientId') patientId: string) {
+    return this.patientsService.getWallet(user.sub, patientId);
+  }
+
+  @Post('patients/:patientId/wallet/topup')
+  @ApiOperation({ summary: 'Top up HSA via M-Pesa (stub)' })
+  topup(
+    @CurrentUser() user: any,
+    @Param('patientId') patientId: string,
+    @Body() dto: TopUpDto,
+  ) {
+    return this.patientsService.topup(user.sub, patientId, dto);
+  }
+
+  @Get('patients/:patientId/wallet/transactions')
+  @ApiOperation({ summary: 'Get HSA transaction history' })
+  getTransactions(@CurrentUser() user: any, @Param('patientId') patientId: string) {
+    return this.patientsService.getTransactions(user.sub, patientId);
   }
 }

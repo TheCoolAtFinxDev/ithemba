@@ -1,21 +1,26 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { NgIf } from '@angular/common';
+import { NgIf, DecimalPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
 import { Router } from '@angular/router';
 import { PatientAppointments } from './appointments/patient-appointments';
 import { PatientAppointmentDetail } from './appointments/patient-appointment-detail';
 import { PatientBook } from './book/patient-book';
+import { PatientWallet } from './wallet/patient-wallet';
+import { PatientClaims } from './claims/patient-claims';
+import { environment } from '../../../environments/environment';
 
-type View = 'home' | 'appointments' | 'appointment-detail' | 'book' | 'claims';
+type View = 'home' | 'appointments' | 'appointment-detail' | 'book' | 'wallet' | 'claims';
 
 @Component({
   selector: 'app-patient-dashboard',
-  imports: [NgIf, PatientAppointments, PatientAppointmentDetail, PatientBook],
+  imports: [NgIf, DecimalPipe, PatientAppointments, PatientAppointmentDetail, PatientBook, PatientWallet, PatientClaims],
   templateUrl: './patient-dashboard.html',
   styleUrl: './patient-dashboard.css',
 })
 export class PatientDashboard implements OnInit {
   private auth = inject(AuthService);
+  private http = inject(HttpClient);
   private router = inject(Router);
 
   userName = '';
@@ -29,6 +34,10 @@ export class PatientDashboard implements OnInit {
   rescheduleApptId = '';
   preselectedProviderId = '';
 
+  // wallet summary (home screen)
+  walletBalance: number | null = null;
+  private patientId = '';
+
   ngOnInit() {
     this.auth.profile$.subscribe(profile => {
       if (profile) {
@@ -37,8 +46,17 @@ export class PatientDashboard implements OnInit {
           return;
         }
         this.userName = profile.fullName?.split(' ')[0] ?? 'Patient';
+        if (profile.patient?.id && !this.patientId) {
+          this.patientId = profile.patient.id;
+          this.loadWalletBalance();
+        }
       }
     });
+  }
+
+  loadWalletBalance() {
+    this.http.get<{ balance: string }>(`${environment.apiUrl}/patients/${this.patientId}/wallet`)
+      .subscribe({ next: w => this.walletBalance = +(w?.balance ?? 0) });
   }
 
   setTab(tab: 'home' | 'appointments' | 'claims') {
