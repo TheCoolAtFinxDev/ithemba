@@ -1,26 +1,16 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { NgIf, AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-landing',
-  imports: [],
+  imports: [NgIf, AsyncPipe],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
 export class Landing {
   private auth = inject(AuthService);
-  private router = inject(Router);
+  loading$ = this.auth.loading$;
 
-  login() {
-    this.auth.login();
-  }
-
-  registerPatient() {
-    this.router.navigate(['/register/patient']);
-  }
-
-  registerProvider() {
-    this.router.navigate(['/register/provider']);
-  }
+  login() { this.auth.login(); }
 }
