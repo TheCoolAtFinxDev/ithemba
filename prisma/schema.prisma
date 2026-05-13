@@ -219,6 +219,7 @@ model Appointment {
   beneficiary         Beneficiary?      @relation(fields: [beneficiaryId], references: [id])
   startUtc            DateTime
   endUtc              DateTime
+  visitCode           String?
   reason              String?
   status              AppointmentStatus @default(Requested)
   isConfirmedByClinic Boolean           @default(false)
