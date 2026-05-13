@@ -27,6 +27,14 @@ export const routes: Routes = [
   
   // Provider portal
   {
+  path: 'provider/onboard',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./features/provider/onboarding/provider-onboarding').then(
+      (m) => m.ProviderOnboarding,
+    ),
+},
+  {
     path: 'provider',
     canActivate: [authGuard],
     loadComponent: () =>

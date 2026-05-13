@@ -1,0 +1,81 @@
+<div style="padding:20px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h5 style="font-weight:700;margin:0">Appointments</h5>
+      <p class="text-muted mb-0" style="font-size:13px">Manage your appointment queue</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm" [class.btn-dark]="filter==='all'" [class.btn-outline-secondary]="filter!=='all'"
+        (click)="setFilter('all')" style="border-radius:20px;font-size:12px">All</button>
+      <button class="btn btn-sm" [style.background]="filter==='Requested'?'#FF9800':''" [style.color]="filter==='Requested'?'#fff':''"
+        [class.btn-outline-secondary]="filter!=='Requested'" (click)="setFilter('Requested')" style="border-radius:20px;font-size:12px">Requested</button>
+      <button class="btn btn-sm" [style.background]="filter==='Scheduled'?'#2196F3':''" [style.color]="filter==='Scheduled'?'#fff':''"
+        [class.btn-outline-secondary]="filter!=='Scheduled'" (click)="setFilter('Scheduled')" style="border-radius:20px;font-size:12px">Scheduled</button>
+      <button class="btn btn-sm" [style.background]="filter==='CheckedIn'?'#4A7C59':''" [style.color]="filter==='CheckedIn'?'#fff':''"
+        [class.btn-outline-secondary]="filter!=='CheckedIn'" (click)="setFilter('CheckedIn')" style="border-radius:20px;font-size:12px">Checked In</button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border" style="color:#4A7C59"></div>
+    </div>
+  }
+
+  @if (!loading && filteredAppointments.length === 0) {
+    <div class="ith-card p-5 text-center text-muted">
+      <i class="bi bi-calendar-x" style="font-size:48px;opacity:0.3"></i>
+      <p class="mt-3 mb-0">No appointments found</p>
+    </div>
+  }
+
+  @for (apt of filteredAppointments; track apt.id) {
+    <div class="ith-card p-4 mb-3">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:44px;height:44px;background:#e8f0eb;border-radius:12px;display:flex;align-items:center;justify-content:center">
+            <i class="bi bi-person-fill" style="color:#4A7C59;font-size:18px"></i>
+          </div>
+          <div>
+            <div style="font-weight:600">{{apt.patient?.userProfile?.fullName ?? 'Patient'}}</div>
+            <div class="text-muted" style="font-size:13px">{{apt.reason ?? 'No reason provided'}}</div>
+            <div class="text-muted" style="font-size:12px">
+              <i class="bi bi-calendar3 me-1"></i>{{formatDate(apt.startUtc)}}
+              <i class="bi bi-clock ms-2 me-1"></i>{{formatTime(apt.startUtc)}} — {{formatTime(apt.endUtc)}}
+            </div>
+          </div>
+        </div>
+        <span class="badge" [class]="getStatusClass(apt.status)" style="border-radius:20px;padding:6px 12px;font-size:11px">
+          {{apt.status}}
+        </span>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        @if (apt.status === 'Requested') {
+          <button class="btn btn-sm btn-success" (click)="providerAction(apt, 'accept')" [disabled]="apt.loading">
+            <i class="bi bi-check-circle me-1"></i>Accept
+          </button>
+          <button class="btn btn-sm btn-outline-danger" (click)="providerAction(apt, 'reject')" [disabled]="apt.loading">
+            <i class="bi bi-x-circle me-1"></i>Reject
+          </button>
+        }
+        @if (apt.status === 'Scheduled' || apt.status === 'Confirmed') {
+          <button class="btn btn-sm btn-primary" (click)="providerAction(apt, 'check-in')" [disabled]="apt.loading">
+            <i class="bi bi-door-open me-1"></i>Check In
+          </button>
+          <button class="btn btn-sm btn-outline-danger" (click)="providerAction(apt, 'no-show')" [disabled]="apt.loading">
+            No Show
+          </button>
+        }
+        @if (apt.status === 'CheckedIn' || apt.status === 'InProgress') {
+          <button class="btn btn-sm" style="background:#4A7C59;color:#fff" (click)="providerAction(apt, 'complete')" [disabled]="apt.loading">
+            <i class="bi bi-check2-all me-1"></i>Complete Visit
+          </button>
+        }
+        @if (apt.loading) {
+          <span class="spinner-border spinner-border-sm" style="color:#4A7C59;margin-top:6px"></span>
+        }
+      </div>
+    </div>
+  }
+</div>

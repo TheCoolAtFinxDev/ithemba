@@ -1,0 +1,125 @@
+<div style="min-height:100vh;background:#f5f7fb;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:520px">
+    <div class="text-center mb-4">
+      <div style="width:56px;height:56px;background:#4A7C59;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <i class="bi bi-hospital-fill text-white" style="font-size:24px"></i>
+      </div>
+      <h4 style="font-weight:700">Provider Registration</h4>
+      <p class="text-muted" style="font-size:14px">Step {{currentStep}} of 3</p>
+      <div class="progress mt-2" style="height:4px;border-radius:2px">
+        <div class="progress-bar" style="background:#4A7C59;transition:width 0.3s" [style.width]="(currentStep/3*100)+'%'"></div>
+      </div>
+    </div>
+
+    <div class="ith-card p-4">
+      @if (currentStep === 1) {
+        <h6 style="font-weight:700;margin-bottom:20px">
+          <i class="bi bi-person-badge me-2" style="color:#4A7C59"></i>Personal & Practice Details
+        </h6>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label" style="font-size:13px;font-weight:500">First Name *</label>
+            <input type="text" class="form-control" placeholder="First name" [(ngModel)]="form.firstName">
+          </div>
+          <div class="col-6">
+            <label class="form-label" style="font-size:13px;font-weight:500">Last Name *</label>
+            <input type="text" class="form-control" placeholder="Last name" [(ngModel)]="form.lastName">
+          </div>
+          <div class="col-12">
+            <label class="form-label" style="font-size:13px;font-weight:500">Clinic / Practice Name *</label>
+            <input type="text" class="form-control" placeholder="e.g. Boikemisetso CHC" [(ngModel)]="form.clinicName">
+          </div>
+          <div class="col-12">
+            <label class="form-label" style="font-size:13px;font-weight:500">Specialization *</label>
+            <select class="form-select" [(ngModel)]="form.specialization">
+              <option value="">Select specialization</option>
+              <option>General Medicine</option>
+              <option>Dentist</option>
+              <option>Paediatrics</option>
+              <option>Gynaecology</option>
+              <option>Pharmacy</option>
+              <option>Medical Laboratory</option>
+              <option>Physiotherapy</option>
+              <option>Ophthalmology</option>
+              <option>Orthopaedics</option>
+              <option>Dermatology</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" style="font-size:13px;font-weight:500">Medical License Number</label>
+            <input type="text" class="form-control" placeholder="LS-MED-XXXXX" [(ngModel)]="form.medicalLicenseNumber">
+          </div>
+        </div>
+      }
+
+      @if (currentStep === 2) {
+        <h6 style="font-weight:700;margin-bottom:20px">
+          <i class="bi bi-telephone me-2" style="color:#4A7C59"></i>Contact & Location
+        </h6>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;font-weight:500">Phone Number *</label>
+          <input type="tel" class="form-control" placeholder="+266 xx xxx xxx" [(ngModel)]="form.phoneNumber">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;font-weight:500">Email</label>
+          <input type="email" class="form-control" placeholder="doctor@clinic.co.ls" [(ngModel)]="form.email">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;font-weight:500">Practice Location</label>
+          <input type="text" class="form-control" placeholder="e.g. House 45, Maseru" [(ngModel)]="form.location">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;font-weight:500">M-Pesa Merchant Code</label>
+          <input type="text" class="form-control" placeholder="Your M-Pesa merchant code" [(ngModel)]="form.mpesaMerchantCode">
+          <div class="form-text">Used to receive payments from patients</div>
+        </div>
+      }
+
+      @if (currentStep === 3) {
+        <h6 style="font-weight:700;margin-bottom:20px">
+          <i class="bi bi-info-circle me-2" style="color:#4A7C59"></i>About Your Practice
+        </h6>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;font-weight:500">About</label>
+          <textarea class="form-control" rows="4" placeholder="Brief description of your practice and services..." [(ngModel)]="form.about"></textarea>
+        </div>
+        <div class="ith-card p-3 mb-3" style="background:#e8f0eb;border:1px solid #4A7C59">
+          <div style="font-size:13px;color:#2d5a3d;font-weight:600">
+            <i class="bi bi-info-circle me-1"></i>What happens next?
+          </div>
+          <div class="text-muted mt-1" style="font-size:12px">
+            Your application will be reviewed by the iThemba Health team.
+            Once approved, you'll receive full access to the provider portal.
+            This typically takes 2 business days.
+          </div>
+        </div>
+      }
+
+      <div class="d-flex gap-3 mt-4">
+        @if (currentStep > 1) {
+          <button class="btn btn-outline-secondary" style="flex:1" (click)="prevStep()">
+            <i class="bi bi-arrow-left me-1"></i>Back
+          </button>
+        }
+        @if (currentStep < 3) {
+          <button class="btn-ith-green btn" style="flex:1" (click)="nextStep()">
+            Next<i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        }
+        @if (currentStep === 3) {
+          <button class="btn-ith-green btn" style="flex:1" (click)="submit()" [disabled]="loading">
+            @if (loading) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Submit Application
+          </button>
+        }
+      </div>
+
+      @if (error) {
+        <div class="alert alert-danger mt-3 mb-0" style="font-size:13px">
+          <i class="bi bi-exclamation-circle me-1"></i>{{error}}
+        </div>
+      }
+    </div>
+  </div>
+</div>
