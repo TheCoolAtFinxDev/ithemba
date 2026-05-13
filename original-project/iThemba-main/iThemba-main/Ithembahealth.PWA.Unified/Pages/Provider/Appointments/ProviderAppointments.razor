@@ -1,0 +1,84 @@
+﻿@page "/provider/appointments"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-2">Appointments</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mb-4">View your upcoming and past appointments.</MudText>
+
+    <!-- Filter Options -->
+    <MudPaper Class="pa-3 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="string" Label="Filter by Status" @bind-Value="_selectedStatus" Dense="true">
+                    <MudSelectItem Value="@string.Empty">All</MudSelectItem>
+                    <MudSelectItem Value='@("Upcoming")' >Upcoming</MudSelectItem>
+                    <MudSelectItem Value='@("Completed")'>Completed</MudSelectItem>
+                    <MudSelectItem Value='@("Cancelled")'>Cancelled</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_searchQuery" Label="Search (Patient Name)" Dense="true" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Appointments List -->
+<MudPaper Elevation="0">
+    @foreach (var appointment in FilteredAppointments)
+    {
+        <MudLink Href='@($"/provider/appointments/{appointment.Id}")' Class="no-underline text-primary">
+            <div class="d-flex justify-between align-center pa-3 border-bottom hoverable">
+                <div>
+                    <MudText Typo="Typo.subtitle2">@appointment.PatientName</MudText>
+                    <MudText Typo="Typo.caption">@appointment.Date.ToString("dd MMM yyyy hh:mm tt") - @appointment.Reason</MudText>
+                </div>
+                <MudChip T="Color" Color="@GetChipColor(appointment.Status)" Size="Size.Small">
+                    @appointment.Status
+                </MudChip>
+            </div>
+        </MudLink>
+    }
+</MudPaper>
+
+</MudContainer>
+
+@code {
+    private string _selectedStatus = "";
+    private string _searchQuery = "";
+
+    private List<AppointmentRecord> Appointments = new()
+    {
+        new() { Id=0, PatientName = "Lereko Mokoena", Date = DateTime.Today.AddHours(2), Reason = "Follow-up", Status = "Upcoming" },
+        new() { Id=1,PatientName = "Thato Mokoena", Date = DateTime.Today.AddDays(-1), Reason = "Checkup", Status = "Completed" },
+        new() { Id=2, PatientName = "Lerato Mokoena", Date = DateTime.Today.AddDays(-2), Reason = "Consultation", Status = "Cancelled" },
+    };
+
+    private IEnumerable<AppointmentRecord> FilteredAppointments =>
+        Appointments.Where(a =>
+            (string.IsNullOrWhiteSpace(_selectedStatus) || a.Status == _selectedStatus)
+            && (string.IsNullOrWhiteSpace(_searchQuery) || a.PatientName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)));
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Upcoming" => Color.Info,
+        "Completed" => Color.Success,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    private class AppointmentRecord
+    {
+        public string PatientName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string Reason { get; set; } = "";
+        public string Status { get; set; } = "";
+        public int Id { get; set; }
+    }
+}
+
+<style>
+    .border-bottom {
+        border-bottom: 1px solid #e0e0e0;
+    }
+</style>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ithembahealth.PWA.Unified</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/app.css" />
+    <!-- If you add any scoped CSS files, uncomment the following to load them
+    <link href="Ithembahealth.PWA.Unified.styles.css" rel="stylesheet" /> -->
+    <link href="manifest.webmanifest" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css?v=@(MudBlazor.Metadata.Version)" rel="stylesheet" />
+    <style>
+
+        #app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            z-index: 9999;
+        }
+
+        .loading-container {
+            text-align: center;
+        }
+
+        .loading-logo {
+            width: 100px;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-in-out forwards;
+        }
+
+        .loading-progress {
+            width: 80px;
+            height: 80px;
+            animation: rotate 2s linear infinite;
+            margin: auto;
+        }
+
+            .loading-progress circle {
+                fill: none;
+                stroke-width: 6;
+                stroke-linecap: round;
+                stroke-dasharray: 150, 200;
+                stroke-dashoffset: 0;
+                animation: dash 1.5s ease-in-out infinite, color-cycle 4s ease-in-out infinite;
+            }
+
+                .loading-progress circle:first-child {
+                    stroke: #66905e; /* Green */
+                    opacity: 0.3;
+                }
+
+                .loading-progress circle:last-child {
+                    stroke: #23b0d3; /* Light Blue */
+                }
+
+        .loading-progress-text {
+            margin-top: 14px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #66905e;
+        }
+
+        @keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 100, 200;
+                stroke-dashoffset: -15;
+            }
+
+            100% {
+                stroke-dasharray: 100, 200;
+                stroke-dashoffset: -125;
+            }
+        }
+
+        @keyframes color-cycle {
+            0%, 100% {
+                stroke: #23b0d3;
+            }
+
+            50% {
+                stroke: #66905e;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app">
+        <div class="loading-container">
+            <img src="logo.png" alt="iThembaHealth Logo" class="loading-logo" />
+
+            <!--<svg class="loading-progress">
+                <circle r="40%" cx="50%" cy="50%" />
+                <circle r="40%" cx="50%" cy="50%" />
+            </svg>-->
+            <!--<div class="loading-progress-text"></div>-->
+        </div>
+    </div>
+
+
+    <!--<div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>-->
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script src="/sw-register.js"></script>
+    <script src="/net-events.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js?v=@(MudBlazor.Metadata.Version)"></script>
+
+
+</body>
+
+</html>

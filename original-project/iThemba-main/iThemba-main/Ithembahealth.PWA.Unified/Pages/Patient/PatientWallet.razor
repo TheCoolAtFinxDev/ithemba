@@ -1,0 +1,179 @@
+﻿@page "/patient/wallet"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer Class="px-0" Style="height: calc(100vh - 56px); padding-bottom: 100px; overflow-y: auto;">
+    <MudCard Elevation="4" Class="pa-6 rounded-lg">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h5">Top Up Wallet</MudText>
+            <MudText Typo="Typo.body2">
+                Add funds to your iThembaHealth wallet for booking doctor visits. M-Pesa integration is coming soon.
+            </MudText>
+
+            <MudDivider Class="my-2" />
+
+            <MudText Typo="Typo.subtitle2">Current Balance: LSL @WalletBalance</MudText>
+
+            <MudSelect T="int" Label="Select Amount" Variant="Variant.Outlined"
+                       @bind-Value="SelectedAmount" Class="mb-3">
+                <MudSelectItem Value="50">LSL 50</MudSelectItem>
+                <MudSelectItem Value="100">LSL 100</MudSelectItem>
+                <MudSelectItem Value="200">LSL 200</MudSelectItem>
+                <MudSelectItem Value="500">LSL 500</MudSelectItem>
+            </MudSelect>
+
+            <MudTextField @bind-Value="CustomAmountText" Label="Or Enter Custom Amount (LSL)" Variant="Variant.Outlined" Class="mb-3" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SimulateTopUp" Disabled="@IsProcessing">
+                @((IsProcessing ? "Processing..." : "Top up"))
+            </MudButton>
+
+            @if (TopUpSuccess)
+            {
+                <MudAlert Severity="Severity.Success" Elevation="0" Dense="true" Class="mt-3">
+                    LSL @AmountToTopUp successfully added! New Balance: LSL @WalletBalance
+                </MudAlert>
+            }
+            else if (TopUpFailure)
+            {
+                <MudAlert Severity="Severity.Error" Elevation="0" Dense="true" Class="mt-3">
+                    Invalid amount. Please enter a valid top-up amount above LSL 0.
+                </MudAlert>
+            }
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.subtitle2" Class="mb-1">Top-Up History</MudText>
+            @if (TopUpHistory.Any())
+            {
+                <MudList T="object" Dense="true">
+                    @foreach (var entry in TopUpHistory.OrderByDescending(e => e.Timestamp).Take(3))
+                    {
+                        <MudListItem T="object" Style="display: flex; align-items: center; padding: 8px 0; border-left: 4px solid #23b0d3;">
+                            <MudListItemText>
+                                <MudText Typo="Typo.body2">LSL @entry.Amount</MudText>
+                                <MudText Typo="Typo.caption">@RelativeTime(entry.Timestamp)</MudText>
+                            </MudListItemText>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            else
+            {
+                <MudPaper Class="pa-3 mt-2 text-center" Style="background-color: #f8f9fa; border-radius: 8px;">
+    <MudText Typo="Typo.body2" Color="Color.Secondary">No top-up transactions yet. Your transactions will appear here.</MudText>
+</MudPaper>
+            }
+
+<MudText Class="mt-2" Color="Color.Primary" Style="cursor:pointer;" @onclick="ViewAllTransactions">
+    View all transactions
+</MudText>
+<MudDivider Class="my-4" />
+
+</MudStack>
+</MudCard>
+<style>
+    .sticky-action-bar {
+        position: fixed;
+        bottom: 70px;
+        background-color: white;
+        border-top: 1px solid #ccc;
+        z-index: 100;
+    }
+
+
+    
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</MudContainer>
+
+@code {
+    private int WalletBalance = 220;
+    private int SelectedAmount;
+    private string CustomAmountText;
+    private int AmountToTopUp;
+    private bool TopUpSuccess = false;
+    private bool TopUpFailure = false;
+    private bool IsProcessing = false;
+
+    private List<TopUpEntry> TopUpHistory = new();
+
+    private async void SimulateTopUp()
+    {
+        TopUpSuccess = false;
+        TopUpFailure = false;
+        IsProcessing = true;
+        StateHasChanged();
+
+        if (!string.IsNullOrWhiteSpace(CustomAmountText) && int.TryParse(CustomAmountText, out int custom))
+        {
+            AmountToTopUp = custom;
+        }
+        else if (SelectedAmount > 0)
+        {
+            AmountToTopUp = SelectedAmount;
+        }
+        else
+        {
+            AmountToTopUp = 0;
+        }
+
+        await Task.Delay(2000); // Simulate payment processing
+
+        if (AmountToTopUp > 0)
+        {
+            WalletBalance += AmountToTopUp;
+            TopUpSuccess = true;
+            Snackbar.Add($"LSL {AmountToTopUp} added to wallet!", Severity.Success);
+            TopUpHistory.Add(new TopUpEntry { Amount = AmountToTopUp, Timestamp = DateTime.Now });
+            CustomAmountText = string.Empty;
+            SelectedAmount = 0;
+        }
+        else
+        {
+            TopUpFailure = true;
+            Snackbar.Add("Invalid amount. Please select or enter a valid value.", Severity.Error);
+        }
+
+        IsProcessing = false;
+        StateHasChanged();
+    }
+
+    private void ViewAllTransactions()
+{
+    NavigationManager.NavigateTo("/wallet/history");
+}
+
+private string RelativeTime(DateTime timestamp)
+{
+    var span = DateTime.Now - timestamp;
+    if (span.TotalSeconds < 60) return "just now";
+    if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} minute(s) ago";
+    if (span.TotalHours < 24) return $"{(int)span.TotalHours} hour(s) ago";
+    return timestamp.ToString("dd MMM yyyy");
+}
+
+public class TopUpEntry
+    {
+        public int Amount { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+}
+<style>
+    /* Thin vertical scrollbar for WebKit-based browsers (works in MAUI WebView) */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+
+</style>

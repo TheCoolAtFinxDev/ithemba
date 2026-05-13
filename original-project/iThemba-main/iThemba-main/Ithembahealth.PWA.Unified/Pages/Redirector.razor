@@ -1,0 +1,13 @@
+﻿@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        if (user.IsInRole("Admin")) Navigation.NavigateTo("/admin");
+        else if (user.IsInRole("Provider")) Navigation.NavigateTo("/provider");
+        else Navigation.NavigateTo("/patient");
+    }
+}

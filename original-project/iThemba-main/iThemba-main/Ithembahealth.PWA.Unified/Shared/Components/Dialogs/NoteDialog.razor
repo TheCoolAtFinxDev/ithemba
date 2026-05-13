@@ -1,0 +1,29 @@
+﻿@inject IDialogService DialogService
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Add Admin Note</MudText>
+        <MudTextField @bind-Value="NoteContent" Label="Note" Lines="4" Variant="Variant.Outlined" FullWidth="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Save</MudButton>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string NoteContent { get; set; } = string.Empty;
+
+    private void Submit()
+    {
+        if (!string.IsNullOrWhiteSpace(NoteContent))
+        {
+            MudDialog.Close(DialogResult.Ok(NoteContent));
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

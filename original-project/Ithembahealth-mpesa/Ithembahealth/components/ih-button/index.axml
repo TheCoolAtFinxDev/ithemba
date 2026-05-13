@@ -1,0 +1,3 @@
+<button class="btn {{t}}" loading="{{loading}}" disabled="{{disabled}}" onTap="tap">
+  <slot>{{text}}</slot>
+</button>

@@ -1,0 +1,29 @@
+<view class="screen">
+  <ih-appbar title="Browse Doctors"></ih-appbar>
+
+  <!-- Filters/search (non-functional defaults now) -->
+  <view class="mt-16">
+    <ih-input label="Search" placeholder="Name or specialty" value="{{q}}" onChange="setQ" />
+  </view>
+
+  <!-- Doctors list -->
+  <view class="mt-16" a:if="{{hasDocs}}">
+    <block a:for="{{doctors}}" a:for-item="d" a:key="id">
+      <ih-card>
+        <view class="row space-between">
+          <text class="h2">{{d.name}}</text>
+          <text class="p">{{d.specialty}}</text>
+        </view>
+        <view class="mt-8 row space-between">
+          <text class="p">Clinic: {{d.clinic}}</text>
+          <text class="p">Rating: {{d.rating}}</text>
+        </view>
+        <view class="mt-12">
+          <ih-button type="primary" text="Book" onTap="book" data-id="{{d.id}}" />
+        </view>
+      </ih-card>
+    </block>
+  </view>
+
+  <ih-empty a:else text="No doctors available yet"></ih-empty>
+</view>

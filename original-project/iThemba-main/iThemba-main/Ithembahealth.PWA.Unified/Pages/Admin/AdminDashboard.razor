@@ -1,0 +1,113 @@
+﻿@page "/admin/home"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject NavigationManager NavigationManager
+<AdminLayout Title="Admin">
+    <PageTitle>Admin Dashboard</PageTitle>
+
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudText Typo="Typo.h5" GutterBottom="true">Admin Dashboard</MudText>
+
+        <MudGrid GutterSize="3">
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-4 text-center hoverable" Elevation="2" @onclick="@(() => NavigationManager.NavigateTo("/admin/claims"))">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Claims</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">135</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-4 text-center hoverable" Elevation="2" @onclick="@(() => NavigationManager.NavigateTo("/admin/claims?filter=pending"))">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Pending</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Warning">22</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-4 text-center hoverable" Elevation="2" @onclick="@(() => NavigationManager.NavigateTo("/admin/claims?filter=approved"))">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Approved</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Success">98</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-4 text-center hoverable" Elevation="2" @onclick="@(() => NavigationManager.NavigateTo("/admin/settings"))">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Savings Balance</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Info">LSL 45,000</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Recent Activity</MudText>
+        <MudPaper Class="pa-3" Elevation="1">
+            @foreach (var log in RecentActions)
+            {
+                <div class="d-flex justify-between mb-2">
+                    <MudText Typo="Typo.body2">@log.Description</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@log.Timestamp.ToString("dd MMM yyyy HH:mm")</MudText>
+                </div>
+            }
+        </MudPaper>
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Quick Actions</MudText>
+
+        <MudGrid GutterSize="3">
+            <MudItem xs="6" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Assignment" FullWidth="true"
+                           OnClick="@(() => NavigationManager.NavigateTo("/admin/claims"))">
+                    View All Claims
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.LocalHospital" FullWidth="true"
+                           OnClick="@(() => NavigationManager.NavigateTo("/admin/providers"))">
+                    Manage Providers
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.People" FullWidth="true"
+                           OnClick="@(() => NavigationManager.NavigateTo("/admin/patients"))">
+                    Manage Patients
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.BarChart" FullWidth="true"
+                           OnClick="@(() => NavigationManager.NavigateTo("/admin/reports"))">
+                    Reports
+                </MudButton>
+            </MudItem>
+@*             <MudItem xs="6" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Support" FullWidth="true"
+                           OnClick="@(() => NavigationManager.NavigateTo("/admin/support"))">
+                    View Support Tickets
+                </MudButton>
+            </MudItem> *@
+        </MudGrid>
+
+    </MudContainer>
+
+    @code {
+        public class AdminActionLog
+        {
+            public string Description { get; set; } = "";
+            public DateTime Timestamp { get; set; }
+        }
+
+        private List<AdminActionLog> RecentActions = new()
+        {
+        new() { Description = "Approved claim for Lereko", Timestamp = DateTime.Now.AddMinutes(-25) },
+        new() { Description = "Rejected claim for Teboho", Timestamp = DateTime.Now.AddHours(-1) },
+        new() { Description = "Added note to claim #12345", Timestamp = DateTime.Now.AddHours(-3) },
+        new() { Description = "Viewed beneficiary audit log", Timestamp = DateTime.Now.AddDays(-1) }
+        };
+    }
+    <style>
+        .hoverable {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+            .hoverable:hover {
+                background-color: #f5f5f5;
+            }
+    </style>
+</AdminLayout>

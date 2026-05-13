@@ -1,0 +1,61 @@
+﻿@page "/admin/patients/edit/{Id:guid}"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Edit Patient Profile</MudText>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="Patient.FullName" Label="Full Name" Required="true" Class="mb-3" />
+            <MudTextField @bind-Value="Patient.Phone" Label="Phone Number" Required="true" Class="mb-3" />
+            <MudTextField @bind-Value="Patient.Email" Label="Email Address" Required="true" Class="mb-3" />
+            <MudSwitch T="bool" @bind-Checked="Patient.IsActive" Color="Color.Primary" Label="Active" Class="mb-3" />
+
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel">Cancel</MudButton>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private MudForm? _form;
+
+    public PatientRecord Patient = new()
+    {
+        Id = Guid.NewGuid(),
+        FullName = "Lereko Mokoena",
+        Phone = "+26650123456",
+        Email = "lereko@example.com",
+        LastLogin = DateTime.Now.AddDays(-1),
+        IsActive = true
+    };
+
+    private async Task SaveChanges()
+    {
+        await _form?.Validate();
+        if (_form?.IsValid == true)
+        {
+            // Save logic here
+            NavigationManager.NavigateTo($"/admin/patients/{Patient.Id}");
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo($"/admin/patients/{Patient.Id}");
+    }
+
+    public class PatientRecord
+    {
+        public Guid Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime? LastLogin { get; set; }
+        public bool IsActive { get; set; }
+    }
+}

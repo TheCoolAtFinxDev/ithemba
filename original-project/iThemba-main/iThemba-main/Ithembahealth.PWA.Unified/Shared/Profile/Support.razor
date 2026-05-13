@@ -1,0 +1,48 @@
+﻿@page "/profile/support"
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Support & Contact</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.body1" Class="mb-2">
+            Need help with your health savings account, claims, or the app? We're here for you.
+        </MudText>
+
+        <MudList T="string" Dense="true">
+            <MudListItem>
+                <MudListItemText>
+                    📞 Phone: <MudLink Href="tel:+26660000000">+266 60 000 000</MudLink>
+                </MudListItemText>
+            </MudListItem>
+            <MudListItem>
+                <MudListItemText>
+                    📧 Email: <MudLink Href="mailto:support@ithembahealth.ls">support@ithembahealth.com</MudLink>
+                </MudListItemText>
+            </MudListItem>
+            <MudListItem>
+                <MudListItemText>
+                    🌐 Website: <MudLink Href="https://www.ithembahealth.ls" Target="_blank">www.ithembahealth.com</MudLink>
+                </MudListItemText>
+            </MudListItem>
+        </MudList>
+    </MudPaper>
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6" Class="mb-2">Frequently Asked Questions</MudText>
+
+    <MudExpansionPanels Elevation="1">
+        <MudExpansionPanel Text="How do I submit a health claim?">
+            Go to "Claim History" > tap "Submit New Claim" and fill out the form. You’ll receive updates by SMS or in-app.
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="How do I add a beneficiary?">
+            Navigate to "Savings Plan" > "Beneficiaries", then tap "Add Beneficiary". Phone number validation is required.
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="How do I check claim status?">
+            Go to "Claim History" and use filters to view pending, approved, or rejected claims.
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="How do I contact support?">
+            Use the contact information above or tap "Help" in your profile menu.
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</MudContainer>

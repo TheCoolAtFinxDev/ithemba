@@ -1,0 +1,11 @@
+<view class="wrap">
+  <text a:if="{{label}}" class="label">{{label}}</text>
+  <input
+    class="input"
+    type="{{password ? 'text' : 'text'}}"  
+    password="{{password}}"
+    placeholder="{{placeholder}}"
+    value="{{value}}"
+    onInput="chg"
+  />
+</view>

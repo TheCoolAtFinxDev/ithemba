@@ -1,0 +1,89 @@
+<view class="screen">
+  <ih-appbar title="Create account"></ih-appbar>
+
+  <view class="container">
+
+    <!-- PHONE -->
+    <view class="field">
+      <text class="label">Phone Number</text>
+
+      <view class="phone-row">
+        <text class="prefix">+266</text>
+
+        <input
+          class="input digits"
+          type="number"
+          placeholder="Enter 8 digits"
+          maxlength="8"
+          onInput="onDigitsTyping"
+        />
+      </view>
+    </view>
+<!-- PASSWORD -->
+<view class="field">
+  <text class="label">Password</text>
+
+  <view class="rel-box">
+    <input
+      class="input"
+      password="{{passwordHidden}}"
+      placeholder="Enter password"
+      onInput="onPassTyping"
+    />
+    <text class="eye" onTap="togglePassword">
+      {{passwordHidden ? "Show" : "Hide"}}
+    </text>
+  </view>
+</view>
+
+<!-- CONFIRM PASSWORD -->
+<view class="field">
+  <text class="label">Confirm Password</text>
+
+  <view class="rel-box">
+    <input
+      class="input"
+      password="{{confirmHidden}}"
+      placeholder="Confirm password"
+      onInput="onConfirmTyping"
+    />
+    <text class="eye" onTap="toggleConfirm">
+      {{confirmHidden ? "Show" : "Hide"}}
+    </text>
+  </view>
+</view>
+
+    <!-- SUBMIT BUTTON -->
+    <view class="btn-wrap">
+      <button class="btn-primary"
+              loading="{{loading}}"
+              disabled="{{loading}}"
+              onTap="submit">
+        Create account
+      </button>
+    </view>
+
+    <!-- ALREADY HAVE ACCOUNT -->
+    <view class="link-wrap">
+      <text class="link" onTap="toLogin">I already have an account</text>
+    </view>
+
+    <!-- SIMPLE ERROR -->
+    <text a:if="{{errorMsg}}" class="error">{{errorMsg}}</text>
+
+    <!-- ERROR BANNER -->
+    <view a:if="{{errTitle}}" class="banner error">
+      <text class="b-title">{{errTitle}}</text>
+      <text a:if="{{errMessage}}" class="b-msg">{{errMessage}}</text>
+      <text a:if="{{traceId}}" class="b-trace">Ref: {{traceId}}</text>
+    </view>
+
+    <!-- FIELD ERRORS -->
+    <view a:if="{{fieldErrors && fieldErrors.length}}" class="val-errors">
+      <view a:for="{{fieldErrors}}" a:for-item="e" class="val-error">
+        <text>• {{e}}</text>
+      </view>
+    </view>
+
+  </view>
+</view>

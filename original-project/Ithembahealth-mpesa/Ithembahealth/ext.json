@@ -1,0 +1,13 @@
+{
+  "name": "IthembaHealth",
+  "appxRouteFramework": "YES",
+  "apiBase": "https://ithembahealthapi20251029115517-bkgfhjhuhggqg6h3.canadacentral-01.azurewebsites.net/",
+  "domain": {
+    "request": [
+      "https://ithembahealthapi20251029115517-bkgfhjhuhggqg6h3.canadacentral-01.azurewebsites.net"
+    ],
+    "uploadFile": [],
+    "downloadFile": [],
+    "socket": []
+  }
+}

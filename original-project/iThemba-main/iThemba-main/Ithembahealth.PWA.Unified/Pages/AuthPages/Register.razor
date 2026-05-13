@@ -1,0 +1,119 @@
+﻿@page "/register"
+
+<EditForm Model="RegisterViewModel" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    @* <ValidationSummary /> *@
+
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center justify-center" Style="height: 100vh;">
+        <MudPaper Elevation="4" Class="pa-6" Style="width:100%; max-width:400px; text-align:center;">
+            <MudImage Src="logo.png" Alt="iThembaHealth" Width="100" Class="mb-4" />
+
+            <MudText Typo="Typo.h5" Class="mb-2">Create Your Account</MudText>
+
+            <MudText Typo="Typo.subtitle2" Class="mb-1 mt-3">Register as:</MudText>
+            <MudRadioGroup T="string" @bind-Value="RegisterViewModel.Role" Class="mb-3">
+                <MudRadio T="string" Value='@("patient")' Label="Patient" />
+                <MudRadio T="string" Value='@("provider")' Label="Doctor/Provider" />
+            </MudRadioGroup>
+
+
+            @if (!string.IsNullOrWhiteSpace(Message))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Elevation="0" Dense="true" Class="mb-3">
+                    @Message
+                </MudAlert>
+            }
+            <MudTextField @bind-Value="RegisterViewModel.FullName"
+                          Label="Full Name"
+                          Variant="Variant.Outlined"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          Class="mb-3" />
+            @if (RegisterViewModel.Role == "provider")
+            {
+                <MudTextField @bind-Value="RegisterViewModel.ClinicName"
+                              Label="Clinic Name"
+                              Variant="Variant.Outlined"
+                              AdornmentIcon="@Icons.Material.Filled.LocalHospital"
+                              Class="mb-3" />
+
+                <MudTextField @bind-Value="RegisterViewModel.MedicalLicenseNumber"
+                              Label="Medical License Number"
+                              Variant="Variant.Outlined"
+                              AdornmentIcon="@Icons.Material.Filled.Badge"
+                              Class="mb-3" />
+            }
+
+            <MudTextField @bind-Value="RegisterViewModel.Email"
+                          Label="Email Address"
+                          Variant="Variant.Outlined"
+                          AdornmentIcon="@Icons.Material.Filled.Email"
+                          For="@(() => RegisterViewModel.Email)" />
+
+            <MudTextField @bind-Value="RegisterViewModel.Password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          Class="mt-3"
+                          AdornmentIcon="@Icons.Material.Filled.Lock"
+                          For="@(() => RegisterViewModel.Password)" />
+
+            <MudTextField @bind-Value="RegisterViewModel.ConfirmPassword"
+                          Label="Confirm Password"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          Class="mt-3"
+                          For="@(() => RegisterViewModel.ConfirmPassword)" />
+
+            <MudCheckBox @onclick="() => AcceptedUsage = !AcceptedUsage" T="bool"
+                         @bind-Checked="AcceptedUsage"
+                         Class="mt-3">
+                <ChildContent>
+                    I agree to the
+                    <MudLink Href="/usage-policy?returnUrl=/register" Class="ml-1">Usage Policy</MudLink>
+                </ChildContent>
+            </MudCheckBox>
+
+            <MudCheckBox @onclick="()=> AcceptedTerms =!AcceptedTerms" T="bool"
+                         @bind-Checked="AcceptedTerms"
+                         Class="mt-1">
+                <ChildContent>
+                    I agree to the
+                    <MudLink Href="/terms-and-conditions?returnUrl=/register" Class="ml-1">Terms & Conditions</MudLink>
+                </ChildContent>
+            </MudCheckBox>
+
+            <MudButton Disabled="@_isLoading"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="mt-4"
+                       FullWidth="true"
+                       ButtonType="ButtonType.Submit">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" Class="mr-2" />
+                    <MudText Typo="Typo.button" Class="d-inline">Creating Account...</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.button" Class="d-inline">Register</MudText>
+                }
+            </MudButton>
+
+            <MudText Typo="Typo.caption" Class="mt-3">
+                Already have an account?
+                <MudLink Href="/login">Log In</MudLink>
+            </MudText>
+        </MudPaper>
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex justify-center mt-2">
+            <MudButton StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Variant="Variant.Text"
+                       Color="Color.Primary"
+                       OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                Back
+            </MudButton>
+        </div>
+    </MudContainer>
+</EditForm>

@@ -1,0 +1,11 @@
+<view class="screen">
+  <ih-appbar title="Terms & Conditions"></ih-appbar>
+  <view class="doc mt-16">
+    <text class="h2">Agreement</text>
+    <text class="p mt-12">By continuing, you consent to processing for appointment booking, claims and secure account access.</text>
+  </view>
+  <view class="mt-16">
+    <ih-button type="primary" text="I Agree" onTap="agree"/>
+    <ih-button type="link" text="Back" onTap="back" class="mt-12"/>
+  </view>
+</view>

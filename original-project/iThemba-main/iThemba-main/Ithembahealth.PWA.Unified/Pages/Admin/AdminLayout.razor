@@ -1,0 +1,21 @@
+﻿@using Ithembahealth.PWA.Unified.Auth
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize(Roles = "Admin")]
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">@Title Portal</MudText>
+    <div style="flex: 1; overflow-y: auto; padding-bottom: 80px;">
+        @ChildContent
+    </div>
+</MudPaper>
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ((CookieAuthenticationStateProvider)AuthenticationStateProvider).GetAuthenticationStateAsync();
+    }  
+}

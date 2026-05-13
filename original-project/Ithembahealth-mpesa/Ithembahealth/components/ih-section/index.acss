@@ -1,0 +1,2 @@
+@import "../../styles/theme.acss";
+.head{margin:12rpx 0}.action{color:#23b0d3;font-size:26rpx}

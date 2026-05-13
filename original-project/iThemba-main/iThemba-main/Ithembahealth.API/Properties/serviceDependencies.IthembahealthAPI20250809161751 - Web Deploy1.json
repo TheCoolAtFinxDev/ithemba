@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('serviceConnectorResourceGroupName')]/providers/Microsoft.Web/sites/IthembahealthAPI20250809161751/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsIthembahealthIdentityCo_6BD5EAA0A9",
+      "secretStore": "AzureAppSettings",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/ithembahealthapi-identitydbserver/databases/Ithembahealth.API_identity_db",
+      "type": "mssql.azure",
+      "connectionId": "ConnectionStrings:IthembahealthIdentityConnectionString",
+      "dynamicId": null
+    },
+    "mssql2": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('serviceConnectorResourceGroupName')]/providers/Microsoft.Web/sites/IthembahealthAPI20250809161751/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsIthembahealthConnection_93645DE64B",
+      "secretStore": "AzureAppSettings",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/ithembahealthapi-identitydbserver/databases/Ithembahealth.API_db",
+      "type": "mssql.azure",
+      "connectionId": "ConnectionStrings:IthembahealthConnectionString",
+      "dynamicId": null
+    }
+  }
+}

@@ -1,0 +1,84 @@
+﻿@page "/admin/patients"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Patients</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="SearchTerm" Label="Search by Name, Phone, or Email" Variant="Variant.Outlined" Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="ApplyFilters">Search</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudTable Items="FilteredPatients" Hover="true">
+        <HeaderContent>
+            <MudTh>Full Name</MudTh>
+            <MudTh>Phone</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Last Login</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Full Name">@context.FullName</MudTd>
+            <MudTd DataLabel="Phone">@context.Phone</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
+            <MudTd DataLabel="Last Login">@context.LastLogin?.ToString("dd MMM yyyy")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T ="Color" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewProfile(context.Id)">View</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="() => EditPatient(context.Id)">Edit</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private string SearchTerm = string.Empty;
+
+    private List<PatientRecord> AllPatients = new()
+    {
+        new() { Id = Guid.NewGuid(), FullName = "Lereko Mokoena", Phone = "+26650123456", Email = "lereko@example.com", LastLogin = DateTime.Now.AddDays(-1), IsActive = true },
+        new() { Id = Guid.NewGuid(), FullName = "Teboho Nthunya", Phone = "+26659876543", Email = "teboho@example.com", LastLogin = DateTime.Now.AddDays(-3), IsActive = true },
+        new() { Id = Guid.NewGuid(), FullName = "Thato Lebakeng", Phone = "", Email = "thato@example.com", LastLogin = DateTime.Now.AddDays(-7), IsActive = false },
+    };
+
+    private List<PatientRecord> FilteredPatients => AllPatients
+        .Where(p => string.IsNullOrWhiteSpace(SearchTerm)
+            || p.FullName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || p.Phone.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || p.Email.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private void ApplyFilters() { /* Triggered by filter button */ }
+
+    private void ViewProfile(Guid id)
+    {
+        NavigationManager.NavigateTo($"/admin/patients/{id}");
+    }
+
+    private void EditPatient(Guid id)
+    {
+        NavigationManager.NavigateTo($"/admin/patients/edit/{id}");
+    }
+
+    public class PatientRecord
+    {
+        public Guid Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime? LastLogin { get; set; }
+        public bool IsActive { get; set; }
+    }
+}

@@ -1,0 +1,104 @@
+﻿@page "/provider/payments"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Payment Summary</MudText>
+
+    <!-- Metrics -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-3 text-center" Elevation="1">
+                <MudText Typo="Typo.caption">Total Earned</MudText>
+                <MudText Typo="Typo.h6">LSL 23,400</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-3 text-center" Elevation="1">
+                <MudText Typo="Typo.caption">Last Payment</MudText>
+                <MudText Typo="Typo.h6">LSL 6,500</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">01 Jul 2025</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-3 text-center" Elevation="1">
+                <MudText Typo="Typo.caption">Pending Amount</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Warning">LSL 2,300</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Date Filter and Export -->
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudDatePicker @bind-Date="_startDate" Label="From" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudDatePicker @bind-Date="_endDate" Label="To" />
+            </MudItem>
+            <MudItem xs="12" sm="4" Class="d-flex align-center justify-end">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportPayments">
+                    Export PDF
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Payment History -->
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Filtered Payment History</MudText>
+    <MudPaper Elevation="0">
+        @foreach (var payment in FilteredPayments)
+        {
+            <div class="d-flex justify-between align-center pa-3 border-bottom">
+                <div>
+                    <MudText Typo="Typo.subtitle2">LSL @payment.Amount.ToString("F2")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@payment.Date.ToString("dd MMM yyyy")</MudText>
+                </div>
+                <MudLink Href="@payment.ReceiptUrl" Target="_blank">
+                    <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Receipt">
+                        Download
+                    </MudButton>
+                </MudLink>
+            </div>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    private List<PaymentRecord> AllPayments = new()
+    {
+        new() { Amount = 6500, Date = new DateTime(2025, 7, 1), ReceiptUrl = "/files/payment_july.pdf" },
+        new() { Amount = 4800, Date = new DateTime(2025, 6, 1), ReceiptUrl = "/files/payment_june.pdf" },
+        new() { Amount = 3200, Date = new DateTime(2025, 5, 1), ReceiptUrl = "/files/payment_may.pdf" },
+        new() { Amount = 2100, Date = new DateTime(2025, 4, 1), ReceiptUrl = "/files/payment_april.pdf" },
+    };
+
+    private IEnumerable<PaymentRecord> FilteredPayments =>
+        AllPayments.Where(p =>
+            (!_startDate.HasValue || p.Date >= _startDate.Value.Date) &&
+            (!_endDate.HasValue || p.Date <= _endDate.Value.Date));
+
+    private void ExportPayments()
+    {
+        // Simulate export – implement PDF generation later
+        Console.WriteLine("Exporting payments to PDF...");
+        // You could trigger file generation or call a backend API here
+    }
+
+    private class PaymentRecord
+    {
+        public decimal Amount { get; set; }
+        public DateTime Date { get; set; }
+        public string ReceiptUrl { get; set; } = "";
+    }
+}
+
+<style>
+    .border-bottom {
+        border-bottom: 1px solid #e0e0e0;
+    }
+</style>

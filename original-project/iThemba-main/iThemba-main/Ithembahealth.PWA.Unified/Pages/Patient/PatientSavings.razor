@@ -1,0 +1,72 @@
+﻿@page "/patient/savings"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5">Health Savings</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mb-4">Secure your health with flexible savings.</MudText>
+
+    <!-- Balance and Goal -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudText Typo="Typo.subtitle1">Current Savings</MudText>
+        <MudText Typo="Typo.h6" Color="Color.Primary">LSL 950.00</MudText>
+
+        <MudText Typo="Typo.caption" Class="mt-2">Savings Goal: LSL 1500.00</MudText>
+        <MudProgressLinear Value="63" Color="Color.Success" Class="mt-1 mb-1" />
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => NavigationManager.NavigateTo("/patient/wallet"))">
+            Top Up
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Group"
+                   OnClick="@(() => NavigationManager.NavigateTo("/patient/savings/beneficiaries"))" Class="mt-2">
+            Manage Beneficiaries
+        </MudButton>
+    </MudPaper>
+    <!-- Auto-Debit Setup -->
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.subtitle1">Auto-Debit Setup</MudText>
+        <MudText Typo="Typo.body2" Class="mb-2">
+            Automatically fund your savings from your M-PESA account or a registered merchant.
+        </MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Autorenew"
+                   OnClick="@(() => NavigationManager.NavigateTo("/patient/savings/auto-debit"))">
+            Configure Auto-Debit
+        </MudButton>
+    </MudPaper>
+    <!-- Recent Activity -->
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Recent Transactions</MudText>
+
+    @if (RecentTransactions.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">No transactions yet. Start saving today.</MudAlert>
+    }
+    else
+    {
+        @foreach (var tx in RecentTransactions)
+        {
+            <MudPaper Class="pa-2 mb-2 d-flex justify-between align-center">
+                <div>
+                    <MudText Typo="Typo.body1">@tx.Description</MudText>
+                    <MudText Typo="Typo.caption">@tx.Date.ToString("dd MMM yyyy")</MudText>
+                </div>
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary">+LSL @tx.Amount.ToString("F2")</MudText>
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+    private List<SavingsTransaction> RecentTransactions = new()
+    {
+        new SavingsTransaction { Description = "Top-up via M-Pesa", Amount = 300, Date = DateTime.Today.AddDays(-2) },
+        new SavingsTransaction { Description = "Top-up via Wallet", Amount = 200, Date = DateTime.Today.AddDays(-7) },
+        new SavingsTransaction { Description = "Promo Bonus", Amount = 50, Date = DateTime.Today.AddDays(-10) }
+    };
+
+    public class SavingsTransaction
+    {
+        public string Description { get; set; } = "";
+        public decimal Amount { get; set; }
+        public DateTime Date { get; set; }
+    }
+}

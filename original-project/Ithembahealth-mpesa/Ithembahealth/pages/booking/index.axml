@@ -1,0 +1,98 @@
+<!-- pages/booking/index.axml -->
+<view class="page">
+
+  <!-- Error banner -->
+  <view a:if="{{err}}" class="banner error">
+    <text class="b-title">Error</text>
+    <text class="b-msg">{{err}}</text>
+  </view>
+
+  <!-- Search bar -->
+  <view class="search-row">
+    <input class="q-input" placeholder="Search doctors or clinics"
+           value="{{q}}" onInput="onQueryInput" />
+    <button class="q-btn" onTap="onSearch">Search</button>
+  </view>
+
+  <!-- Date -->
+  <view class="field">
+    <text class="label">Date</text>
+    <picker mode="date" value="{{ymd}}" onChange="onDateInput">
+      <view class="date-box">
+        <text class="{{ ymd ? '' : 'placeholder' }}">{{ dateText }}</text>
+        <text class="calendar-ico">📅</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- Providers list -->
+  <view a:if="{{providers && providers.length}}">
+    <view a:for="{{providers}}" a:for-item="p" a:key="providerId" class="card">
+
+      <!-- Header line: clinic (left) and Book (right) -->
+      <view class="card-head">
+        <text class="clinic">{{p.clinicName || 'Clinic'}}</text>
+        <button class="book-btn" data-pid="{{p.providerId}}" onTap="loadSlots">Book</button>
+      </view>
+
+      <!-- Doctor name -->
+      <text class="doc">Dr {{p.firstName}} {{p.lastName}}</text>
+
+      <!-- Specialization -->
+      <text a:if="{{p.specialization}}" class="spec">{{p.specialization}}</text>
+
+      <!-- Location -->
+      <text class="loc">
+        <!-- <text a:if="{{p.city}}">{{p.city}}</text>
+        <text a:if="{{p.city && (p.district || p.province)}}"> • </text>
+        <text a:if="{{p.district}}">{{p.district}}</text>
+        <text a:if="{{p.district && p.province}}"> • </text>
+        <text a:if="{{p.province}}">{{p.province}}</text>
+        <text a:if="{{p.location}}"> • </text> -->
+        <text a:if="{{p.location}}">{{p.location}}</text>
+      </text>
+
+      <!-- Grouped slots area (only for picked provider) -->
+      <view a:if="{{pickedProviderId === p.providerId}}">
+        <!-- Day groups (max 7) -->
+        <view a:for="{{slotGroups}}" a:for-item="g" a:key="day" class="day-section">
+          <view class="day-head">
+            <text class="day-label">{{g.dayLabel}}</text>
+          </view>
+
+          <scroll-view scroll-x="true" class="slot-strip">
+            <view a:for="{{g.items}}" a:for-item="s" a:key="start" class="slot-pill-wrap">
+              <button class="slot-pill {{pickedSlotIso === s.start ? 'slot-pill--selected' : ''}}"
+                      data-iso="{{s.start}}"
+                      onTap="pickSlot">{{s.label || 'Slot'}}</button>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- Note / Reason for the doctor -->
+        <view class="field">
+          <text class="label">Note for the doctor</text>
+          <textarea
+            class="textarea"
+            placeholder="e.g. Persistent headache for 3 days"
+            value="{{reason}}"
+            maxlength="240"
+            autoHeight="true"
+            onInput="onReasonInput" />
+          <view class="count">{{reason ? reason.length : 0}}/240</view>
+        </view>
+
+        <view class="slot-actions">
+          <button class="confirm-btn" a:if="{{pickedSlotIso}}" onTap="bookNow">Confirm booking</button>
+        </view>
+      </view>
+
+    </view>
+  </view>
+
+  <!-- Empty state -->
+  <view a:if="{{initialLoaded && (!providers || !providers.length)}}" class="empty">
+    <text>No providers found.</text>
+  </view>
+
+</view>

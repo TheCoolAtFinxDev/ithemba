@@ -1,0 +1,57 @@
+﻿@page "/admin/reports/create"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Create Report</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Generate New Report</MudText>
+
+    <MudPaper Class="pa-4" Elevation="2">
+        <MudGrid GutterSize="3">
+            <MudItem xs="12">
+                <MudSelect @bind-Value="SelectedReportType" Label="Report Type" Required="true">
+                    <MudSelectItem Value='@("TaxStatement")'>Tax Statement</MudSelectItem>
+                    <MudSelectItem Value='@("ClaimSummary")'>Claim Summary</MudSelectItem>
+                    <MudSelectItem Value='@("ProviderPayout")'>Provider Payout</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudDatePicker @bind-Date="StartDate" Label="Start Date" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudDatePicker @bind-Date="EndDate" Label="End Date" Required="true" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudTextField @bind-Value="GeneratedFor" Label="Generated For (email or provider name)" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Notes" Label="Notes (Optional)" Lines="3" />
+            </MudItem>
+
+            <MudItem xs="12" Class="text-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateReport">
+                    Generate Report
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string SelectedReportType = "TaxStatement";
+    private DateTime? StartDate = DateTime.Today.AddMonths(-1);
+    private DateTime? EndDate = DateTime.Today;
+    private string GeneratedFor = string.Empty;
+    private string Notes = string.Empty;
+
+    private void GenerateReport()
+    {
+        // You can plug in your actual logic here later
+        Console.WriteLine($"Generating {SelectedReportType} from {StartDate} to {EndDate} for {GeneratedFor}");
+        NavigationManager.NavigateTo("/admin/reports");
+    }
+}

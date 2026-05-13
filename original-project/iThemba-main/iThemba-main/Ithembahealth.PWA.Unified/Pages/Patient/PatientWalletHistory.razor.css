@@ -1,0 +1,8 @@
+﻿.fixed-back-button {
+    position: fixed;
+    bottom: 64px; /* 58px BottomBar + a bit of gap */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    padding: 0.6rem 1.5rem;
+}

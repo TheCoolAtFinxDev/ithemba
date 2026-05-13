@@ -1,0 +1,81 @@
+﻿@page "/privacy-policy"
+
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h4" GutterBottom="true">Privacy Policy</MudText>
+    
+    <MudText Typo="Typo.subtitle1" Class="mb-4">
+        Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")
+    </MudText>
+
+    <MudText Typo="Typo.body1" Class="mb-3">
+        At iThembaHealth, we are committed to protecting your privacy. This Privacy Policy outlines how we collect, use, store, and disclose your personal information when you use our platform and services.
+    </MudText>
+
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">1. Information We Collect</MudText>
+    <MudList T="string" Dense="true">
+        <MudListItem>Personal identification details (e.g., name, email, phone number)</MudListItem>
+        <MudListItem>Health and medical history shared with providers through the platform</MudListItem>
+        <MudListItem>Appointment data, transaction records, and communication logs</MudListItem>
+        <MudListItem>Device and usage data collected via analytics tools</MudListItem>
+    </MudList>
+
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">2. How We Use Your Information</MudText>
+    <MudList T="string" Dense="true">
+        <MudListItem>To facilitate appointments and healthcare-related services</MudListItem>
+        <MudListItem>To process payments and savings plan contributions</MudListItem>
+        <MudListItem>To improve service delivery and personalize user experiences</MudListItem>
+        <MudListItem>To comply with legal and regulatory requirements</MudListItem>
+    </MudList>
+
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">3. Information Sharing</MudText>
+    <MudText Typo="Typo.body1">
+        We do not sell or rent your personal data. Information may be shared with:
+    </MudText>
+    <MudList T="string" Dense="true">
+        <MudListItem>Authorized healthcare providers using the platform</MudListItem>
+        <MudListItem>Financial and payment partners like M-PESA (with your consent)</MudListItem>
+        <MudListItem>Regulatory bodies when legally required</MudListItem>
+    </MudList>
+
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">4. Data Security</MudText>
+    <MudText Typo="Typo.body1" Class="mb-3">
+        We implement industry-standard security measures to protect your personal information. This includes data encryption, secure servers, and strict access controls.
+    </MudText>
+
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">5. Your Rights</MudText>
+    <MudList T="string" Dense="true">
+        <MudListItem>You may request access to or correction of your data at any time</MudListItem>
+        <MudListItem>You may withdraw consent to data processing (where applicable)</MudListItem>
+        <MudListItem>You have the right to request data deletion subject to legal obligations</MudListItem>
+    </MudList>
+
+    <MudText Typo="Typo.h6" Class="mt-4 mb-2">6. Contact Us</MudText>
+    <MudText Typo="Typo.body1">
+        If you have any questions or concerns regarding this policy or your data privacy, please contact our support team at:
+    </MudText>
+    <MudText Typo="Typo.body2" Class="mt-2 mb-5">
+        📧 Email: support@ithembahealth.com<br />
+        📞 Phone: +266 1234 5678
+    </MudText>
+</MudContainer>
+<MudDivider Class="my-4" />
+
+<MudButton Variant="Variant.Text"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.ArrowBack"
+           OnClick="GoBack">
+    Back
+</MudButton>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl);
+    }
+}

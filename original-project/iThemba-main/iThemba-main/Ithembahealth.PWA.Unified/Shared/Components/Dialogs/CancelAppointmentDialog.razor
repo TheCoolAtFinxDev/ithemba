@@ -1,0 +1,24 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle1">Are you sure you want to cancel your appointment with Dr. @DoctorName?</MudText>
+        <MudText Typo="Typo.caption" Class="mb-2 mt-1">A cancellation fee may apply.</MudText>
+        <MudTextField @bind-Value="Notes" Label="Reason for cancellation" Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Default">No</MudButton>
+        <MudButton OnClick="Confirm" Color="Color.Error">Yes, Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string DoctorName { get; set; }
+    [Parameter] public DateTime AppointmentDate { get; set; }
+    [Parameter] public string AppointmentTime { get; set; }
+
+    private string Notes = string.Empty;
+
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(Notes));
+    private void Cancel() => MudDialog.Cancel();
+}

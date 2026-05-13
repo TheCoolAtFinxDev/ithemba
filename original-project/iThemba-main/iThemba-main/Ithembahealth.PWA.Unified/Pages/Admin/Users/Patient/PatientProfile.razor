@@ -1,0 +1,113 @@
+﻿@page "/admin/patients/{Id:guid}"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Patient Profile</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Full Name</MudText>
+                <MudText Typo="Typo.subtitle1">@Patient.FullName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Phone</MudText>
+                <MudText Typo="Typo.subtitle1">@Patient.Phone</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Email</MudText>
+                <MudText Typo="Typo.subtitle1">@Patient.Email</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Status</MudText>
+                <MudChip T="Color" Color="@(Patient.IsActive ? Color.Success : Color.Error)" Size="Size.Small">
+                    @(Patient.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Last Login</MudText>
+                <MudText Typo="Typo.subtitle1">@Patient.LastLogin?.ToString("dd MMM yyyy")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled=true>Edit Profile</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled=true>@(Patient.IsActive ? "Deactivate" : "Activate")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudTabs>
+        <MudTabPanel Text="Appointments">
+            <MudList T="string" Dense="true">
+                <MudListItem><MudListItemText>21 June 2024 - Routine Checkup at Dr. Makhotso Clinic</MudListItemText></MudListItem>
+                <MudListItem><MudListItemText>12 May 2024 - Follow-up for medication</MudListItemText></MudListItem>
+            </MudList>
+        </MudTabPanel>
+        <MudTabPanel Text="Claims">
+            <MudList T="string" Dense="true">
+                <MudListItem><MudListItemText>Claim #12345 - Approved - LSL 300.00</MudListItemText></MudListItem>
+                <MudListItem><MudListItemText>Claim #12312 - Rejected - Missing receipt</MudListItemText></MudListItem>
+            </MudList>
+        </MudTabPanel>
+        <MudTabPanel Text="Health Savings">
+            <MudList T="string" Dense="true">
+                <MudListItem><MudListItemText>Total Balance: LSL 1,800.00</MudListItemText></MudListItem>
+                <MudListItem><MudListItemText><MudLink Href='@($"/admin/patients/{Patient.Id}/savings")'>View Health Savings Account</MudLink></MudListItemText></MudListItem>
+                <MudListItem><MudListItemText><MudLink Href='@($"/admin/patients/{Patient.Id}/beneficiaries")'>View Beneficiaries</MudLink></MudListItemText></MudListItem>
+            </MudList>
+        </MudTabPanel>
+
+    </MudTabs>
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Recent Activity</MudText>
+    <MudPaper Elevation="1" Class="pa-3 mb-4">
+        <MudList T="string">
+            @foreach (var log in AuditLog)
+            {
+                <MudListItem>
+                    <MudListItemText>
+                        <MudText Typo="Typo.body2">@log.Timestamp.ToString("dd MMM yyyy HH:mm") - @log.Action by @log.Actor</MudText>
+                    </MudListItemText>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    public PatientRecord Patient = new()
+    {
+        Id = Guid.NewGuid(),
+        FullName = "Lereko Mokoena",
+        Phone = "+26650123456",
+        Email = "lereko@example.com",
+        LastLogin = DateTime.Now.AddDays(-1),
+        IsActive = true
+    };
+
+    void EditPatient() => NavigationManager.NavigateTo($"/admin/patients/edit/{Patient.Id}");
+    void DeactivatePatient() => Patient.IsActive = !Patient.IsActive;
+    public List<AuditEntry> AuditLog = new()
+    {
+        new() { Timestamp = DateTime.Now.AddDays(-1), Action = "Updated Email", Actor = "Admin Khauhelo" },
+        new() { Timestamp = DateTime.Now.AddDays(-2), Action = "Deactivated Patient", Actor = "Admin Dineo" }
+    };
+
+    public class AuditEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public string Action { get; set; } = string.Empty;
+        public string Actor { get; set; } = string.Empty;
+    }
+
+    public class PatientRecord
+    {
+        public Guid Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime? LastLogin { get; set; }
+        public bool IsActive { get; set; }
+    }
+}

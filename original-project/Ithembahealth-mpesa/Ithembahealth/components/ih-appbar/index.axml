@@ -1,0 +1,4 @@
+<view class="bar">
+  <text class="title">{{title}}</text>
+  <view class="slot" onTap="onRight"><slot></slot></view>
+</view>

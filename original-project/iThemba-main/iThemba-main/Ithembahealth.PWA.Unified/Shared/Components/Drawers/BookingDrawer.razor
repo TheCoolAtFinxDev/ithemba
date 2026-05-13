@@ -1,0 +1,156 @@
+﻿@using System.Net.Http.Json;
+@using Ithembahealth.PWA.Unified.Services
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject LoaderService LoaderService
+
+<MudDrawer Anchor="Anchor.Bottom" Open="@IsOpen" Elevation="8" Variant="DrawerVariant.Temporary" Class="pa-4" Style="height: calc(100vh - 64px); margin-bottom: 72px; border-radius: 12px 12px 0 0;">
+    <MudStack Row="true" Class="d-flex justify-space-between mb-2">
+        <MudText Typo="Typo.h6">Book Appointment</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" Color="Color.Default" />
+    </MudStack>
+
+    <MudStepper Elevation="0" Rounded="true" Linear="true" @bind-ActiveIndex="Step">
+        <MudStep Label="Doctor">
+            <MudTextField @bind-Value="SearchSpecialty" Label="Filter by Specialty" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+            <MudTextField @bind-Value="SearchLocation" Label="Filter by Location" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+
+            <MudGrid>
+                @foreach (var doctor in FilteredDoctors)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudPaper Class="pa-3 mb-2" Style=@($"cursor: pointer; border: {(SelectedDoctor == doctor.Name ? "2px solid #66905e" : "1px solid #ccc")}") @onclick="() => SelectDoctor(doctor)">
+                            <MudText Typo="Typo.subtitle1">@doctor.Name</MudText>
+                            <MudText Typo="Typo.body2">@doctor.Specialty • @doctor.Location</MudText>
+                            <MudText Typo="Typo.caption" Class="mt-1">Fee: LSL @doctor.Fee.ToString("F2")</MudText>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudStep>
+
+        <MudStep Label="Schedule">
+            <MudText Typo="Typo.h6" Class="mb-2">Choose a Date and Time</MudText>
+
+            <MudPaper Class="pa-4 mb-4" Style="border: 1px solid #ccc; border-radius: 8px;">
+                <MudDatePicker @bind-Date="SelectedDate" Label="Pick a Date" Required="true" Class="mb-2" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Event" />
+                @if (!SelectedDate.HasValue)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error">Please select a date</MudText>
+                }
+
+                <MudSelect T="string" Label="Pick Time Slot" @bind-Value="SelectedTime" Class="mb-2" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Schedule">
+                    <MudSelectItem Value='@("09:00")'>09:00 AM</MudSelectItem>
+                    <MudSelectItem Value='@("11:00")'>11:00 AM</MudSelectItem>
+                    <MudSelectItem Value='@("14:00")'>02:00 PM</MudSelectItem>
+                </MudSelect>
+                @if (string.IsNullOrEmpty(SelectedTime))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error">Please select a time slot</MudText>
+                }
+            </MudPaper>
+        </MudStep>
+
+        <MudStep Label="Confirm">
+            <MudText Typo="Typo.body1">Doctor: <b>@SelectedDoctor</b></MudText>
+            <MudText Typo="Typo.body1">Date: <b>@SelectedDate?.ToShortDateString()</b></MudText>
+            <MudText Typo="Typo.body1">Time: <b>@SelectedTime</b></MudText>
+            <MudText Typo="Typo.body1">Booking Fee: <b>LSL @BookingFee.ToString("F2")</b></MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">Wallet Balance: <b>LSL @WalletBalance.ToString("F2")</b></MudText>
+
+            @if (!SelectedDate.HasValue || string.IsNullOrEmpty(SelectedTime))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">Please complete all fields before confirming.</MudText>
+            }
+            else if (WalletBalance < BookingFee)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">Insufficient wallet balance to proceed.</MudText>
+            }
+
+            <MudButton Disabled="@(!CanConfirm)" OnClick="ConfirmBooking" Color="Color.Primary" Variant="Variant.Filled" Class="mt-3">
+                Confirm Booking
+            </MudButton>
+        </MudStep>
+    </MudStepper>
+</MudDrawer>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+
+    public int Step { get; set; } = 0;
+    public string SelectedDoctor { get; set; }
+    public DateTime? SelectedDate { get; set; } = DateTime.Today;
+    public string SelectedTime { get; set; }
+    public decimal WalletBalance { get; set; } = 220.00M;
+    public decimal BookingFee { get; set; } = 150.00M;
+
+    public string SearchSpecialty { get; set; } = string.Empty;
+    public string SearchLocation { get; set; } = string.Empty;
+
+    public List<Doctor> Doctors { get; set; } = new()
+    {
+        new Doctor { Id = Guid.NewGuid(), Name = "Dr. Makhotso", Specialty = "Pediatrics", Location = "Maseru", Fee = 150.00M },
+        new Doctor { Id = Guid.NewGuid(), Name = "Dr. Teboho", Specialty = "Cardiology", Location = "Mafeteng", Fee = 180.00M },
+        new Doctor { Id = Guid.NewGuid(), Name = "Dr. Lerato", Specialty = "General", Location = "Maseru", Fee = 120.00M },
+        new Doctor { Id = Guid.NewGuid(), Name = "Dr. Ntswaki", Specialty = "Dermatology", Location = "Leribe", Fee = 200.00M },
+        new Doctor { Id = Guid.NewGuid(), Name = "Dr. Mokete", Specialty = "ENT", Location = "Mafeteng", Fee = 160.00M },
+        new Doctor { Id = Guid.NewGuid(), Name = "Dr. Thabo", Specialty = "Orthopedics", Location = "Butha-Buthe", Fee = 190.00M },
+    };
+
+    public IEnumerable<Doctor> FilteredDoctors => Doctors.Where(d =>
+        d.Specialty.Contains(SearchSpecialty, StringComparison.OrdinalIgnoreCase) &&
+        d.Location.Contains(SearchLocation, StringComparison.OrdinalIgnoreCase));
+
+    public bool CanConfirm =>
+        !string.IsNullOrEmpty(SelectedDoctor) &&
+        SelectedDate.HasValue &&
+        !string.IsNullOrEmpty(SelectedTime) &&
+        WalletBalance >= BookingFee;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(300); // simulate API call
+    }
+
+    private async Task CloseDrawer() => await IsOpenChanged.InvokeAsync(false);
+
+    public void SelectDoctor(Doctor doctor)
+    {
+        SelectedDoctor = doctor.Name;
+        BookingFee = doctor.Fee;
+        Step = 1;
+    }
+
+    public async Task ConfirmBooking()
+    {
+        if (!CanConfirm)
+        {
+            Snackbar.Add("Cannot complete booking. Check your inputs and wallet balance.", Severity.Error);
+            return;
+        }
+
+        await LoaderService.Show("Booking your appointment...");
+
+        try
+        {
+            await Task.Delay(1500); // Simulated API
+            WalletBalance -= BookingFee;
+            Snackbar.Add("Appointment booked successfully!", Severity.Success);
+            await CloseDrawer();
+        }
+        finally
+        {
+            await LoaderService.Hide();
+        }
+    }
+
+    public class Doctor
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Specialty { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public decimal Fee { get; set; }
+    }
+}

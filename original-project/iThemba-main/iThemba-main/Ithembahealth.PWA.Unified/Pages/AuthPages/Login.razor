@@ -1,0 +1,77 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@using Ithembahealth.PWA.Unified.Services
+@inject UserSessionService Session
+
+<EditForm Model="LoginViewModel" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    @* <ValidationSummary /> *@
+
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center justify-center px-3" Style="min-height: 100vh;">
+        <MudPaper Elevation="4" Class="pa-6" Style="width:100%; max-width:400px; text-align:center;">
+            <MudImage Src="logo.png" Alt="iThembaHealth" Width="100" Class="mb-4" Style="border-radius: 50%;" />
+
+            <MudText Typo="Typo.h5" Class="mb-2">Welcome to iThembaHealth</MudText>
+            <MudText Typo="Typo.caption" Class="mb-4">Log in to continue</MudText>
+
+            @if (!string.IsNullOrWhiteSpace(Message))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Elevation="0" Dense="true" Class="mb-3">
+                    @Message
+                </MudAlert>
+            }
+
+            <MudTextField @bind-Value="LoginViewModel.Email"
+                          Label="Email Address"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Email"
+                          For="@(() => LoginViewModel.Email)" />
+
+            <MudTextField @bind-Value="LoginViewModel.Password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          Class="mt-3"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Lock"
+                          For="@(() => LoginViewModel.Password)" />
+                          <MudCheckBox T="bool" @bind-Checked="LoginViewModel.RememberMe"
+             Label="Remember Me"
+             Class="mt-3" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="_isLoading"
+                       ButtonType="ButtonType.Submit"
+                       Class="mt-4"
+                       FullWidth="true">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" Class="mr-2" />
+                    <MudText Typo="Typo.button" Class="d-inline">Logging in...</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.button" Class="d-inline">Log In</MudText>
+                }
+            </MudButton>
+
+            <MudText Typo="Typo.caption" Class="mt-3">
+                Don’t have an account?
+                <MudLink Href="/register">Register</MudLink>
+            </MudText>
+        </MudPaper>
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex justify-center mt-2">
+            <MudButton StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Variant="Variant.Text"
+                       Color="Color.Primary"
+                       OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                Back to Home
+            </MudButton>
+        </div>
+    </MudContainer>
+</EditForm>
+

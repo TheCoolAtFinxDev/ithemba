@@ -1,0 +1,130 @@
+﻿@page "/provider/claims"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <MudText Typo="Typo.h5" Class="mb-3">All Submitted Claims</MudText>
+
+    <!-- Filters -->
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="string" Label="Filter by Status" @bind-Value="_selectedStatus" Dense="true">
+                    <MudSelectItem Value="string.Empty">All</MudSelectItem>
+                    <MudSelectItem Value='@("Pending")'>Pending</MudSelectItem>
+                    <MudSelectItem Value='@("Approved")' >Approved</MudSelectItem>
+                    <MudSelectItem Value='@("Rejected")' >Rejected</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_searchQuery" Label="Search Patient" Dense="true" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Claims List -->
+    <MudPaper Elevation="0">
+        @foreach (var claim in PaginatedClaims)
+        {
+            <div class="d-flex justify-between align-center pa-3 border-bottom hoverable" @onclick="@(() => NavigateToDetails(claim.Id))">
+                <div>
+                    <MudText Typo="Typo.subtitle2">@claim.PatientName</MudText>
+                    <MudText Typo="Typo.caption">@claim.Date.ToString("dd MMM yyyy") - @claim.Description</MudText>
+                </div>
+                <div class="text-end">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">LSL @claim.Amount.ToString("F2")</MudText>
+                    <MudChip T="Color" Color="@GetChipColor(claim.Status)" Size="Size.Small">@claim.Status</MudChip>
+                </div>
+            </div>
+        }
+    </MudPaper>
+
+    <!-- Pagination -->
+    <MudGrid Class="mt-4 align-center">
+        <MudItem xs="6">
+            <MudSelect T="int" Label="Items per page" @bind-Value="_pageSize" Dense="true" OnValueChanged="SetPageSize">
+                <MudSelectItem Value="5">5</MudSelectItem>
+                <MudSelectItem Value="10">10</MudSelectItem>
+                <MudSelectItem Value="15">15</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6" Class="d-flex justify-end">
+            <MudPagination Page="@(_page + 1)"
+                           PageSize="_pageSize"
+                           TotalItems="@FilteredClaims.Count()"
+                           OnPageChanged="SetPage" />
+        </MudItem>
+    </MudGrid>
+
+</MudContainer>
+
+@code {
+    private string _selectedStatus = "";
+    private string _searchQuery = "";
+    private int _page = 0;
+    private int _pageSize = 5;
+
+    private List<ClaimActivity> AllClaims = new()
+    {
+        new() { Id = 1, PatientName = "Lereko Mokoena", Date = DateTime.Today.AddDays(-1), Amount = 450, Status = "Pending", Description = "Consultation" },
+        new() { Id = 2, PatientName = "Thato Mokoena", Date = DateTime.Today.AddDays(-2), Amount = 1200, Status = "Approved", Description = "Lab Work" },
+        new() { Id = 3, PatientName = "Lerato Mokoena", Date = DateTime.Today.AddDays(-3), Amount = 700, Status = "Rejected", Description = "Scan" },
+        new() { Id = 4, PatientName = "Teboho Khoeli", Date = DateTime.Today.AddDays(-4), Amount = 950, Status = "Approved", Description = "Ultrasound" },
+        new() { Id = 5, PatientName = "Mpho Letele", Date = DateTime.Today.AddDays(-5), Amount = 300, Status = "Pending", Description = "Checkup" },
+        new() { Id = 6, PatientName = "Nthabiseng Molefe", Date = DateTime.Today.AddDays(-6), Amount = 600, Status = "Pending", Description = "Follow-up" }
+    };
+
+    private IEnumerable<ClaimActivity> FilteredClaims => AllClaims
+        .Where(c =>
+            (string.IsNullOrWhiteSpace(_selectedStatus) || c.Status == _selectedStatus) &&
+            (string.IsNullOrWhiteSpace(_searchQuery) || c.PatientName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)));
+
+    private IEnumerable<ClaimActivity> PaginatedClaims => FilteredClaims
+        .Skip(_page * _pageSize)
+        .Take(_pageSize);
+
+    private void SetPage(int page) => _page = page - 1;
+
+    private void SetPageSize(int size)
+    {
+        _pageSize = size;
+        _page = 0;
+    }
+
+    private void NavigateToDetails(int claimId)
+    {
+        NavigationManager.NavigateTo($"/provider/claims/{claimId}");
+    }
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private class ClaimActivity
+    {
+        public int Id { get; set; }
+        public string PatientName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+}
+
+<style>
+    .hoverable {
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+    .hoverable:hover {
+        background-color: #f5f5f5;
+    }
+    .border-bottom {
+        border-bottom: 1px solid #e0e0e0;
+    }
+</style>

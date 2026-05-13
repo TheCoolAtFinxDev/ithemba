@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "pages/get-started/index",
+    "pages/terms/index",
+    "pages/auth/login/index",
+    "pages/auth/register/index",
+    "pages/home/index",
+    "pages/wallet/index",
+    "pages/doctors/index",
+    "pages/booking/index",
+    "pages/appointments/index",
+    "pages/appointments/detail/index",
+    "pages/claims/index",
+    "pages/claims/detail/index",
+    "pages/admin/claims/index",
+    "pages/profile/index",
+    "pages/patient/onboard/index",
+    "pages/admin/claims/detail/index",
+    "pages/support/index"
+  ],
+  "window": {
+    "defaultTitle": "IthembaHealth",
+    "titleBarColor": "#23b0d3",
+    "backgroundColor": "#ffffff",
+    "pullRefresh": false
+  }
+}

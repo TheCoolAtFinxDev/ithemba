@@ -1,0 +1,67 @@
+﻿@page "/patient/savings/beneficiaries/edit"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Patient")]
+
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Edit Beneficiary</MudText>
+
+    <MudForm @ref="_form">
+        <MudTextField Label="Full Name" @bind-Value="_beneficiary.FullName" Required="true" />
+        <MudSelect Label="Relationship"
+                   @bind-Value="_beneficiary.Relationship"
+                   Required="true">
+            <MudSelectItem Value='@("Child")'>Child</MudSelectItem>
+            <MudSelectItem Value='@("Spouse")'>Spouse</MudSelectItem>
+            <MudSelectItem Value='@("Parent")'>Parent</MudSelectItem>
+            <MudSelectItem Value='@("Sibling")'>Sibling</MudSelectItem>
+            <MudSelectItem Value='@("Other")'>Other</MudSelectItem>
+        </MudSelect>
+        <MudTextField Label="Phone Number" @bind-Value="_beneficiary.Phone" Required="true" />
+
+        <div class="mt-4 d-flex justify-end gap-2">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Update</MudButton>
+        </div>
+    </MudForm>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private BeneficiaryModel _beneficiary = new();
+
+    protected override void OnInitialized()
+    {
+        // You could pre-load with a query param or ID from backend
+        _beneficiary = new BeneficiaryModel
+        {
+            FullName = "Lerato Mokoena",
+            Relationship = "Daughter",
+            Phone = "+266 6211 1234"
+        };
+    }
+
+    private async Task SaveChanges()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            Snackbar.Add("Beneficiary updated successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/patient/savings/beneficiaries");
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/patient/savings/beneficiaries");
+    }
+
+    private class BeneficiaryModel
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Relationship { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,130 @@
+﻿@page "/patient/appointments"
+@using Ithembahealth.PWA.Unified.Shared.Components.Dialogs
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudText Typo="Typo.h5" Class="mb-2">My Appointments</MudText>
+
+    <MudTabs>
+        <MudTabPanel Text="Upcoming">
+            @if (UpcomingAppointments.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">You have no upcoming appointments.</MudAlert>
+            }
+            else
+            {
+                @foreach (var appt in UpcomingAppointments)
+                {
+                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                        <div class="d-flex justify-between align-center">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">Dr. @appt.Doctor</MudText>
+                                <MudText Typo="Typo.caption">@appt.Specialty - @appt.Location</MudText>
+                                <MudText Typo="Typo.body2">Date: <b>@appt.Date.ToShortDateString()</b> at <b>@appt.Time</b></MudText>
+                            </div>
+                            <div class="d-flex flex-column align-end">
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewDetails(appt)">
+                                    Details
+                                </MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" OnClick="() => NavigateToDoctorProfile(appt)">
+                                    View Profile
+                                </MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => CancelAppointment(appt)">
+                                    Cancel
+                                </MudButton>
+                            </div>
+                        </div>
+                    </MudPaper>
+                }
+            }
+        </MudTabPanel>
+
+        <MudTabPanel Text="Past">
+            @if (PastAppointments.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">You have no past appointments.</MudAlert>
+            }
+            else
+            {
+                @foreach (var appt in PastAppointments)
+                {
+                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                        <div class="d-flex justify-between align-center">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">Dr. @appt.Doctor</MudText>
+                                <MudText Typo="Typo.caption">@appt.Specialty - @appt.Location</MudText>
+                                <MudText Typo="Typo.body2">Date: <b>@appt.Date.ToShortDateString()</b> at <b>@appt.Time</b></MudText>
+                            </div>
+                            <div class="d-flex flex-column align-end">
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewDetails(appt)">
+                                    Details
+                                </MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" OnClick="() => NavigateToDoctorProfile(appt)">
+                                    View Profile
+                                </MudButton>
+                            </div>
+                        </div>
+                    </MudPaper>
+                }
+            }
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private List<AppointmentModel> UpcomingAppointments = new()
+    {
+        new AppointmentModel { Doctor = "Teboho", Specialty = "Pediatrics", Location = "Maseru", Date = DateTime.Today.AddDays(1), Time = "10:00" },
+        new AppointmentModel { Doctor = "Makhotso", Specialty = "General", Location = "Leribe", Date = DateTime.Today.AddDays(3), Time = "09:00" }
+    };
+
+    private List<AppointmentModel> PastAppointments = new()
+    {
+        new AppointmentModel { Doctor = "Teboho", Specialty = "Pediatrics", Location = "Maseru", Date = DateTime.Today.AddDays(-10), Time = "11:00" },
+        new AppointmentModel { Doctor = "Makhotso", Specialty = "General", Location = "Leribe", Date = DateTime.Today.AddDays(-5), Time = "08:30" }
+    };
+
+    private void NavigateToDoctorProfile(AppointmentModel appt)
+    {
+        NavigationManager.NavigateTo($"/patient/doctor-profile?name={Uri.EscapeDataString(appt.Doctor)}&specialty={Uri.EscapeDataString(appt.Specialty)}&location={Uri.EscapeDataString(appt.Location)}");
+    }
+
+    private async Task CancelAppointment(AppointmentModel appt)
+    {
+        var parameters = new DialogParameters
+        {
+            ["DoctorName"] = appt.Doctor,
+            ["AppointmentDate"] = appt.Date,
+            ["AppointmentTime"] = appt.Time
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<CancelAppointmentDialog>("Cancel Appointment", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is string reason)
+        {
+            UpcomingAppointments.Remove(appt);
+            Snackbar.Add($"Appointment with Dr. {appt.Doctor} cancelled. Reason: {reason}", Severity.Warning);
+        }
+    }
+
+
+    private void ViewDetails(AppointmentModel appt)
+    {
+        NavigationManager.NavigateTo($"/patient/appointment-detail?doctor={Uri.EscapeDataString(appt.Doctor)}&specialty={Uri.EscapeDataString(appt.Specialty)}&location={Uri.EscapeDataString(appt.Location)}&date={appt.Date.ToString("yyyy-MM-dd")}&time={Uri.EscapeDataString(appt.Time)}");
+    }
+
+    private class AppointmentModel
+    {
+        public string Doctor { get; set; } = string.Empty;
+        public string Specialty { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public string Time { get; set; } = string.Empty;
+    }
+}

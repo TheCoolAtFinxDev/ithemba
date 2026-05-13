@@ -1,0 +1,6 @@
+<view class="screen">
+  <ih-appbar title="Support"></ih-appbar>
+  <ih-card>
+    <text class="p">Need help? Email support@ithembahhealth.example or call (+27) 54 052 2855</text>
+  </ih-card>
+</view>

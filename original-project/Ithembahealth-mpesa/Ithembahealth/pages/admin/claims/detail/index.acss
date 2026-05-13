@@ -1,0 +1,138 @@
+/* pages/admin/claims/detail/index.acss */
+.page {
+  padding: 16rpx;
+  background-color: #f5f7fb;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 16rpx;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #222;
+}
+
+.banner.error {
+  background-color: #ffe4e4;
+  border-radius: 12rpx;
+  padding: 12rpx 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.b-title {
+  font-weight: 600;
+  color: #b00020;
+}
+
+.b-msg {
+  display: block;
+  color: #b00020;
+  margin-top: 4rpx;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.amount {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #222;
+}
+
+.status {
+  font-size: 24rpx;
+}
+
+/* status colors same as list */
+.st-submitted { color: #ff9800; }
+.st-approved { color: #4caf50; }
+.st-paid { color: #00796b; }
+.st-rejected { color: #d32f2f; }
+.st-unknown { color: #888; }
+
+.line {
+  font-size: 24rpx;
+  color: #555;
+  margin-top: 4rpx;
+}
+
+.sub-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #444;
+  margin-top: 12rpx;
+}
+
+.spacer {
+  height: 12rpx;
+}
+
+.rejected-box {
+  margin-top: 12rpx;
+  padding-top: 8rpx;
+  border-top: 1rpx solid #eee;
+}
+
+.actions {
+  margin-top: 20rpx;
+}
+
+.btn {
+  width: 100%;
+  padding: 16rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  border: none;
+  margin-top: 12rpx;
+}
+
+.btn[disabled] {
+  opacity: 0.6;
+}
+
+.btn.approve {
+  background-color: #23b0d3;
+  color: #ffffff;
+}
+
+.btn.reject {
+  background-color: #ffffff;
+  color: #d32f2f;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: #d32f2f;
+}
+
+.reject-box {
+  margin-top: 16rpx;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #ccd5e5;
+  padding: 12rpx;
+  font-size: 24rpx;
+  background-color: #ffffff;
+}
+
+.loading {
+  text-align: center;
+  margin-top: 48rpx;
+  color: #777;
+}

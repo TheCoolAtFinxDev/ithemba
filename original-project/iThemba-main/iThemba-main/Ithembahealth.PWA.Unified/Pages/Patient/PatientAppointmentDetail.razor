@@ -1,0 +1,92 @@
+﻿@page "/patient/appointment-detail"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Patient, Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudText Typo="Typo.h5">Appointment Details</MudText>
+
+    @if (string.IsNullOrWhiteSpace(Doctor))
+    {
+        <MudAlert Severity="Severity.Warning">Invalid appointment. Missing details.</MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="pa-4 my-3" Elevation="2">
+            <MudText Typo="Typo.subtitle1">Dr. @Doctor</MudText>
+            <MudText Typo="Typo.caption">@Specialty - @Location</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">Date: <b>@Date?.ToShortDateString()</b> at <b>@Time</b></MudText>
+
+            <MudTextField @bind-Value="AppointmentNotes" Label="Doctor's Notes" Lines="3" Class="mt-3" />
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.subtitle2">Doctor Contact</MudText>
+            <MudText Typo="Typo.body2">Phone: 5800-1234</MudText>
+            <MudText Typo="Typo.body2">Email: dr.@Doctor.ToLower()@@clinic.com</MudText>
+
+            <MudDivider Class="my-4" />
+
+            @if (Date.HasValue && Date.Value >= DateTime.Today)
+            {
+                <MudText Typo="Typo.subtitle2">Cancel Appointment</MudText>
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                    Cancelling within 24 hours of the appointment may incur charges.
+                </MudAlert>
+
+                <MudTextField @bind-Value="CancelReason" Label="Reason for Cancellation" Lines="2" Class="mt-2" />
+
+                <MudButton OnClick="ConfirmCancel" Variant="Variant.Outlined" Color="Color.Error" Class="mt-2">
+                    Cancel Appointment
+                </MudButton>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                    This appointment has already passed. Cancellation is no longer available.
+                </MudAlert>
+            }
+
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string? Doctor { get; set; }
+    [Parameter] public string? Specialty { get; set; }
+    [Parameter] public string? Location { get; set; }
+    [Parameter] public DateTime? Date { get; set; }
+    [Parameter] public string? Time { get; set; }
+
+    private string? AppointmentNotes = "Fever and headaches for two days.";
+    private string? CancelReason;
+
+    private void ConfirmCancel()
+    {
+        if (string.IsNullOrWhiteSpace(CancelReason))
+        {
+            Snackbar.Add("Please provide a reason for cancellation.", Severity.Warning);
+            return;
+        }
+
+        Snackbar.Add("Appointment cancelled successfully.", Severity.Success);
+        NavigationManager.NavigateTo("/patient/appointments");
+    }
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        Doctor = query["doctor"];
+        Specialty = query["specialty"];
+        Location = query["location"];
+
+        if (DateTime.TryParse(query["date"], out var date))
+        {
+            Date = date;
+        }
+
+        Time = query["time"];
+    }
+}

@@ -1,0 +1,150 @@
+﻿@page "/admin/providers/add"
+@attribute [Authorize(Roles = "Admin")]
+@using MudBlazor
+@using Ithembahealth.PWA.Unified.Contracts
+@using Ithembahealth.PWA.Unified.ViewModels
+@inject IAuthenticationService AuthenticationService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.h5">Add Provider</MudText>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Nav.NavigateTo("/admin/providers"))">Back</MudButton>
+        </MudStack>
+
+        <EditForm Model="_reg" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudGrid GutterSize="3">
+                    <MudItem  xs="12" sm="6">
+                        <MudTextField @bind-Value="_reg.FullName" Label="Full name" Required="true" />
+                    </MudItem>
+                @*     <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_reg.LastName" Label="Last name" Required="true" />
+                    </MudItem>
+ *@
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_reg.Email" Label="Email" Required="true" For="() => _reg.Email" />
+                    </MudItem>
+                  @*   <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_reg.PhoneNumber" Label="Phone number" />
+                    </MudItem> *@
+
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_reg.Password" Label="Temporary password" InputType="InputType.Password" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_reg.ConfirmPassword" Label="Confirm password" InputType="InputType.Password" Required="true" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">The user will be created with the <b>provider</b> role.</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudDivider Class="my-2" />
+                        <MudText Typo="Typo.subtitle2">(Optional) Provider profile details</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_profile.ClinicName" Label="Clinic name" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_profile.Specialty" Label="Specialty" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_profile.Location" Label="Location / City" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_profile.MpesaMerchantCode" Label="M‑PESA merchant code" />
+                    </MudItem>
+                </MudGrid>
+                <MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+                    <MudButton Variant="Variant.Outlined" OnClick="GeneratePassword" Disabled="_busy">Generate password</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Loading="_busy" StartIcon="@Icons.Material.Filled.PersonAdd">
+                        Create Provider
+                    </MudButton>
+                </MudStack>
+
+                @if (!string.IsNullOrWhiteSpace(_message))
+                {
+                    <MudAlert Severity="@(_error ? Severity.Error : Severity.Info)" Class="mt-3">@_message</MudAlert>
+                }
+            </MudPaper>
+        </EditForm>
+    </MudStack>
+</MudContainer>
+
+@code {
+    // Use your existing RegisterViewModel so we hit the same endpoint
+    private RegisterViewModel _reg = new();
+    private ProviderProfile _profile = new(); // optional, persisted later via provider API if available
+    private bool _busy;
+    private string _message = string.Empty;
+    private bool _error;
+
+    protected override void OnInitialized()
+    {
+        // Preselect provider role, hide all end-user policy prompts (admin acts on behalf)
+        _reg.Role = "provider";
+    }
+
+    private async Task HandleSubmit()
+    {
+        _busy = true; _message = string.Empty; _error = false;
+        try
+        {
+            var resp = await AuthenticationService.Register(_reg);
+            if (resp.Success)
+            {
+                Snackbar.Add("Provider account created.", Severity.Success);
+
+                // TODO: If you have a Providers API, create/update the provider profile here using resp.UserId or email
+                // await _providersApi.UpsertProfile(new ProviderProfileDto { ... });
+
+                Nav.NavigateTo("/admin/providers");
+            }
+            else
+            {
+                _error = true;
+                _message = resp?.ValidationErrors ?? "Failed to create provider.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = true;
+            _message = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void GeneratePassword()
+    {
+        var pwd = CreateTempPassword();
+        _reg.Password = pwd;
+        _reg.ConfirmPassword = pwd;
+        Snackbar.Add($"Generated temp password: {pwd}", Severity.Info, cfg => cfg.RequireInteraction = true);
+    }
+
+    private static string CreateTempPassword()
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+        var rng = Random.Shared;
+        return new string(Enumerable.Range(0, 12).Select(_ => chars[rng.Next(chars.Length)]).ToArray());
+    }
+
+    // Minimal optional profile record (adjust to your domain models)
+    private sealed record ProviderProfile
+    {
+        public string ClinicName { get; set; } = string.Empty;
+        public string Specialty { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public string MpesaMerchantCode { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,2 @@
+@import "../../styles/theme.acss";
+.empty{padding:48rpx 24rpx;color:#777}

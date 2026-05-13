@@ -1,0 +1,119 @@
+﻿@using System.Security.Claims
+@using Ithembahealth.PWA.Unified.Auth
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudAppBar Elevation="0" Style="background-color: white; margin-top: 1px;">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                   OnClick="@OnToggleDrawer"
+                   Class="appbar-icon"
+                   Style="font-size: 2rem;" />
+
+    <MudSpacer />
+
+    <MudImage Src="/logo.png"
+              Alt="iThembaHealth"
+              Width="48"
+              Height="48"
+              Class="appbar-logo" />
+
+    <MudSpacer />
+
+    <MudMenu OffsetY="true"
+             AnchorOrigin="Origin.BottomRight"
+             TransformOrigin="Origin.TopRight"
+             Dense="true"
+             Class="profile-menu">
+        <ActivatorContent>
+            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle"
+                           Class="appbar-icon"
+                           Style="font-size: 2rem;" />
+        </ActivatorContent>
+
+        <ChildContent>
+            <MudMenuItem Disabled="true">
+                Welcome, <b>@UserName</b>
+            </MudMenuItem>
+
+            @if (IsInRole("Patient"))
+            {
+                <MudMenuItem OnClick="@(() => NavigateTo("/patient/profile"))">Profile Settings</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/patient/appointments"))">My Appointments</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/patient/savings/beneficiaries"))">Beneficiaries</MudMenuItem>
+                <MudDivider />
+                <MudMenuItem OnClick="@(() => NavigateTo("/profile/support"))">Help</MudMenuItem>
+            }
+            else if (IsInRole("Provider"))
+            {
+                <MudMenuItem OnClick="@(() => NavigateTo("/provider/profile"))">Profile</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/provider/appointments"))">Appointments</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/provider/payments"))">Payments</MudMenuItem>
+            }
+            else if (IsInRole("Admin"))
+            {
+                <MudMenuItem OnClick="@(() => NavigateTo("/admin/home"))">Dashboard</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/admin/claims"))">Claims</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/admin/providers"))">Providers</MudMenuItem>
+                <MudMenuItem OnClick="@(() => NavigateTo("/admin/patients"))">Patients</MudMenuItem>
+                @* <MudMenuItem OnClick="@(() => NavigateTo("/admin/profile"))">Profile</MudMenuItem> *@
+            }
+
+            <MudDivider />
+            <MudMenuItem OnClick="@Logout">
+                <LogoutButton />
+            </MudMenuItem>
+        </ChildContent>
+    </MudMenu>
+</MudAppBar>
+
+@code {
+    [Parameter] public EventCallback OnToggleDrawer { get; set; }
+
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    [Inject] public AuthenticationStateProvider AuthProvider { get; set; }
+
+    private ClaimsPrincipal? _user;
+    private string UserName => _user?.Identity?.Name ?? "User";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await ((CookieAuthenticationStateProvider)AuthProvider).GetAuthenticationStateAsync();
+        _user = authState.User;
+    }
+
+    private bool IsInRole(string role)
+    {
+        return _user?.IsInRole(role) == true;
+    }
+
+    private void NavigateTo(string url) => NavigationManager.NavigateTo(url);
+
+    private void Logout() => NavigationManager.NavigateTo("/login");
+}
+
+
+
+<style>
+    .appbar-logo {
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #66905e;
+    }
+
+    .appbar-icon {
+        color: #22b0d4;
+        transition: color 0.2s ease-in-out;
+    }
+
+        .appbar-icon:hover {
+            color: #75ba75;
+        }
+
+    .text-error {
+        color: red;
+    }
+
+    .font-weight-bold {
+        font-weight: 600;
+    }
+</style>
+

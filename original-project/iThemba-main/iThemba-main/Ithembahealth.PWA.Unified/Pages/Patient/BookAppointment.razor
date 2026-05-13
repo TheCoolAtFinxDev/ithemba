@@ -1,0 +1,263 @@
+﻿@page "/patient/book"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudText Typo="Typo.h5">Book Appointment</MudText>
+
+    <MudPaper Class="pa-4 my-3" Elevation="2">
+        <div class="d-flex align-items-center mb-2">
+            <MudAvatar Size="Size.Large" Icon="@Icons.Material.Filled.Person" Class="me-2" />
+            <div>
+                <MudText Typo="Typo.subtitle1">@SelectedDoctorName</MudText>
+                <MudText Typo="Typo.caption">@DoctorSpecialty - @DoctorLocation</MudText>
+            </div>
+        </div>
+
+        <MudText Typo="Typo.caption">Consultation Fee: LSL @DoctorFee</MudText>
+        <MudText Typo="Typo.caption">Wallet Balance: LSL @WalletBalance</MudText>
+
+        @if (WalletBalance < DoctorFee)
+
+
+
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                Your wallet balance is too low to book this appointment.
+            </MudAlert>
+        }
+
+        <MudDatePicker Label="Select Date" @bind-Date="SelectedDate" Required="true" Class="mt-3" MinDate="@DateTime.Today" />
+
+        <MudSelect T="string" Label="Select Time Slot" @bind-Value="SelectedTime" Required="true" Class="mt-3">
+            <MudSelectItem Value='@("09:00")'>09:00</MudSelectItem>
+            <MudSelectItem Value='@("11:00")'>11:00</MudSelectItem>
+            <MudSelectItem Value='@("14:00")'>14:00</MudSelectItem>
+        </MudSelect>
+
+
+        <MudTextField @bind-Value="DoctorNotes" Label="Doctor's Notes" Placeholder="Describe symptoms or concerns..." Lines="3" MaxLength="300" Class="mt-3" Immediate="true" />
+        <MudText Typo="Typo.caption" Class="mt-1 text-end" Style='@($"color:{(DoctorNotes?.Length > 250 ? "#d32f2f" : "inherit")}")'>
+            @(DoctorNotes?.Length ?? 0)/300
+        </MudText>
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+
+
+
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2">@ErrorMessage</MudAlert>
+        }
+
+        @if (IsLoading)
+
+
+
+        {
+            <div class="d-flex justify-center my-4">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Class="ml-2" Typo="Typo.body1">Processing your booking...</MudText>
+            </div>
+        }
+
+        <MudButton Class="mt-4" Disabled="@(!CanBook || IsLoading)" OnClick="ConfirmBooking" Variant="Variant.Filled" Color="Color.Primary">
+            Confirm Booking
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Class="mt-5 mx-2" OnClick="@(() => NavigationManager.NavigateTo("/patient/doctors"))">
+            ← Back to Doctors
+        </MudButton>
+
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string? SelectedDoctorName;
+
+    private string? DoctorSpecialty;
+
+    private string? DoctorLocation;
+
+    private DateTime? SelectedDate;
+
+    private string? SelectedTime;
+
+    private decimal WalletBalance = 160.00m;
+
+    private decimal DoctorFee = 0.00m;
+
+    private string? DoctorNotes;
+
+    private bool IsLoading = false;
+
+    private string? ErrorMessage;
+
+
+
+    protected override void OnInitialized()
+
+    {
+
+        ParseQueryParameters();
+
+    }
+
+
+
+    private void ParseQueryParameters()
+
+    {
+
+        var query = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query.TrimStart('?');
+
+        var pairs = query.Split('&', StringSplitOptions.RemoveEmptyEntries);
+
+
+
+        foreach (var pair in pairs)
+
+        {
+
+            var parts = pair.Split('=', 2);
+
+            if (parts.Length != 2) continue;
+
+
+
+            var key = parts[0];
+
+            var value = Uri.UnescapeDataString(parts[1]);
+
+
+
+            switch (key.ToLower())
+
+            {
+
+                case "doctor":
+
+                    SelectedDoctorName = value;
+
+                    break;
+
+                case "specialty":
+
+                    DoctorSpecialty = value;
+
+                    break;
+
+                case "location":
+
+                    DoctorLocation = value;
+
+                    break;
+
+                case "fee":
+
+                    if (decimal.TryParse(value, out var fee))
+
+                        DoctorFee = fee;
+
+                    break;
+
+                case "date":
+
+                    if (DateTime.TryParse(value, out var date))
+
+                        SelectedDate = date;
+
+                    break;
+
+                case "time":
+
+                    SelectedTime = value;
+
+                    break;
+
+            }
+
+        }
+
+    }
+
+
+
+    private bool CanBook => !string.IsNullOrWhiteSpace(SelectedDoctorName)
+
+        && !string.IsNullOrWhiteSpace(DoctorSpecialty)
+
+        && !string.IsNullOrWhiteSpace(DoctorLocation)
+
+        && SelectedDate != null
+
+        && !string.IsNullOrWhiteSpace(SelectedTime)
+
+        && WalletBalance >= DoctorFee;
+
+
+
+    private async Task ConfirmBooking()
+
+    {
+
+        var confirmed = await DialogService.ShowMessageBox(
+
+            "Confirm Booking",
+
+            $"Are you sure you want to book an appointment with {SelectedDoctorName} on {SelectedDate?.ToShortDateString()} at {SelectedTime}? This will deduct LSL {DoctorFee} from your wallet.",
+
+            yesText: "Yes, Confirm",
+
+            cancelText: "Cancel");
+
+
+
+        if (confirmed != true)
+
+        {
+
+            return;
+
+        }
+
+
+
+        ErrorMessage = null;
+
+
+
+        if (!CanBook)
+        {
+            ErrorMessage = "Please complete all fields or ensure sufficient balance.";
+            return;
+        }
+        try
+        {
+            IsLoading = true;
+
+            Snackbar.Add("Processing payment via M-Pesa...", Severity.Info);
+
+            await Task.Delay(3000); // simulate M-Pesa processing delay
+
+            WalletBalance -= DoctorFee;
+
+            Snackbar.Add($"Appointment with {SelectedDoctorName} booked for {SelectedDate?.ToShortDateString()} at {SelectedTime}.", Severity.Success);
+
+            NavigationManager.NavigateTo("/patient/appointments");
+
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Booking failed: {ex.Message}";
+
+        }
+        finally
+
+        {
+            IsLoading = false;
+        }
+
+    }
+}
+

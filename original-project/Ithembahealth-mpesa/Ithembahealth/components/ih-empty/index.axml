@@ -1,0 +1,1 @@
+<view class="empty center"><text class="p">{{text||'No data'}}</text></view>

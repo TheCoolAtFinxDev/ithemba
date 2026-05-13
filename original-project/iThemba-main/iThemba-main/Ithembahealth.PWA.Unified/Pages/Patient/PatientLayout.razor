@@ -1,0 +1,18 @@
+﻿@inherits LayoutComponentBase
+@attribute [Authorize(Roles = "Patient")]
+
+<div style="display: flex; flex-direction: column; height: 100%;">
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h5">@Title Portal</MudText>
+    </MudPaper>
+
+    <div style="flex: 1; overflow-y: auto; padding-bottom: 80px;">
+        @ChildContent
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

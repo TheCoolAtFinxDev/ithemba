@@ -1,0 +1,194 @@
+/* pages/appointments/detail/index.acss */
+:root {
+  --primary: #23b0d3;
+  --secondary: #66905e;
+  --bg: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --card: #ffffff;
+  --error: #e11d48;
+  --warn: #f59e0b;
+  --success: #16a34a;
+  --info: #0ea5e9;
+}
+
+.page {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 16px 14px 28px;
+  box-sizing: border-box;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* Banner */
+.banner {
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  background: #f9fafb;
+}
+.banner.error { background: #fff1f2; border-color: #fecdd3; }
+.b-title { display: block; font-weight: 700; margin-bottom: 2px; color: #9f1239; }
+.b-msg { display: block; color: #7f1d1d; }
+
+/* Header */
+.head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 6px 2px 12px;
+}
+.title { font-size: 18px; font-weight: 700; color: var(--text); }
+.refresh {
+  padding: 8px 12px; border-radius: 10px;
+  border: 1px solid var(--primary);
+  color: var(--primary); background: #f0fbff;
+}
+.refresh:active { background: #e6f7fd; }
+
+/* Skeleton */
+.skeleton { margin: 12px 2px; }
+.sk-line { height: 12px; background: #eef2f7; border-radius: 8px; margin: 8px 0; }
+.sk-line.w80 { width: 80%; }
+.sk-line.w60 { width: 60%; }
+.sk-line.w40 { width: 40%; }
+
+/* Card */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 1px rgba(31,41,55,0.02), 0 2px 6px rgba(31,41,55,0.04);
+}
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 6px;
+}
+.time { font-weight: 700; color: var(--text); }
+.line { display: block; color: var(--text); margin-top: 4px; }
+.line.small { font-size: 12px; }
+.muted { color: var(--muted); }
+
+/* Status chip */
+.status {
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border); background: #f8fafc; color: var(--muted);
+  white-space: nowrap;
+}
+.status.requested, .status.scheduled, .status.pending {
+  color: var(--info); background: #ecfeff; border-color: #bae6fd;
+}
+.status.confirmed {
+  color: var(--secondary); background: #effcf3; border-color: #c7ebd0;
+}
+.status.in-progress, .status.inprogress {
+  color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;
+}
+.status.completed, .status.done {
+  color: var(--success); background: #ecfdf5; border-color: #bbf7d0;
+}
+.status.cancelled, .status.canceled, .status.rejected {
+  color: var(--error); background: #fff1f2; border-color: #fecdd3;
+}
+.status.no-show, .status.noshow {
+  color: var(--warn); background: #fffbeb; border-color: #fde68a;
+}
+
+/* Actions */
+.actions {
+  display: flex; gap: 10px;
+  position: sticky; bottom: 0;
+  background: var(--bg);
+  padding-top: 8px;
+}
+.btn {
+  flex: 1; text-align: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.btn.outline {
+  background: #fff;
+  color: var(--primary);
+}
+.btn.cancel {
+  border-color: var(--error);
+  background: var(--error);
+}
+.btn:active { opacity: .92; }
+
+/* Small devices */
+@media (max-width: 360px) {
+  .title { font-size: 16px; }
+  .card { padding: 10px 12px; }
+  .btn { padding: 10px 12px; }
+}
+/* --- Cancel modal --- */
+.modal-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px;
+  z-index: 99;
+}
+.modal {
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.1);
+}
+.m-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.m-sub { display: block; margin-top: 4px; color: var(--muted); }
+
+.m-textarea {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  color: var(--text);
+  background: #fff;
+}
+
+.modal-actions {
+  display: flex; gap: 10px;
+  margin-top: 12px;
+}
+/* NEW: pay button styling (matches your primary brand color) */
+.actions{ display:flex; gap:10rpx; margin-top:16rpx; flex-wrap:wrap; }
+.btn.pay{
+  padding: 24rpx 28rpx;
+  border-radius: 16rpx;
+  font-weight: 700;
+  background: #23b0d3;
+  color: #fff;
+  border: 1px solid #23b0d3;
+}
+.btn[disabled]{ opacity:.6; }
+.reason {
+  /* card already gives padding, radius, shadow */
+}
+
+.reason .section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.reason-text {
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: var(--ih-text-main);
+  white-space: pre-wrap;
+}

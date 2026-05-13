@@ -1,0 +1,271 @@
+﻿@page "/admin/providers/{ProviderId:guid}"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Provider Profile</MudText>
+
+  @*   <MudGrid Class="mb-4" GutterSize="3">
+        <MudItem xs="6" sm="4" md="2">
+            <MudPaper Elevation="1" Class="pa-3 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Claims</MudText>
+                <MudText Typo="Typo.h6">@Metrics.TotalClaims</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="2">
+            <MudPaper Elevation="1" Class="pa-3 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Approved</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Success">@Metrics.ApprovedClaims</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="2">
+            <MudPaper Elevation="1" Class="pa-3 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Rejected</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Error">@Metrics.RejectedClaims</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="2">
+            <MudPaper Elevation="1" Class="pa-3 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Revenue</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Info">LSL @Metrics.TotalRevenue.ToString("N0")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="2">
+            <MudPaper Elevation="1" Class="pa-3 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Rejection Rate</MudText>
+                <MudText Typo="Typo.h6">@Metrics.RejectionRate.ToString("P0")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="2">
+            <MudPaper Elevation="1" Class="pa-3 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Appointments</MudText>
+                <MudText Typo="Typo.h6">@Metrics.TotalAppointments</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid> *@
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Clinic Name</MudText>
+                <MudText Typo="Typo.body1">@Provider.ClinicName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Doctor Name</MudText>
+                <MudText Typo="Typo.body1">@Provider.DoctorName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Email</MudText>
+                <MudText Typo="Typo.body1">@Provider.Email</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Phone Number</MudText>
+                <MudText Typo="Typo.body1">@Provider.PhoneNumber</MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Location</MudText>
+                <MudText Typo="Typo.body1">@Provider.Location</MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDivider Class="my-2" />
+                <MudText Typo="Typo.subtitle1">Professional Info</MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Specializations</MudText>
+                <MudChipSet T="string">
+                    @foreach (var spec in Provider.Specializations)
+                    {
+                        <MudChip T="Color" Color="Color.Info">@spec</MudChip>
+                    }
+                </MudChipSet>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Working Hours</MudText>
+                <MudList T="string" Dense="true">
+                    @foreach (var hour in Provider.WorkingHours)
+                    {
+                        <MudListItem>
+                            <MudListItemText>
+                                <MudText>@hour.DayOfWeek: @hour.StartTime - @hour.EndTime</MudText>
+                            </MudListItemText>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDivider Class="my-2" />
+                <MudText Typo="Typo.subtitle1">Payout Info</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">M-PESA Merchant Code</MudText>
+                <MudText Typo="Typo.body1">@Provider.MpesaMerchantCode</MudText>
+            </MudItem>
+       @*      <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Bank Account</MudText>
+                <MudText Typo="Typo.body1">@Provider.BankAccountNumber ?? "-"</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Bank Name</MudText>
+                <MudText Typo="Typo.body1">@Provider.BankName ?? "-"</MudText>
+            </MudItem> *@
+        </MudGrid>
+    </MudPaper>
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">Submitted Claims</MudText>
+
+<MudTable Items="FilteredClaims" Hover="true" Dense="true">
+    <HeaderContent>
+        <MudTh>ID</MudTh>
+        <MudTh>Patient</MudTh>
+        <MudTh>Amount</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Date</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="ID">@context.Id</MudTd>
+        <MudTd DataLabel="Patient">@context.PatientName</MudTd>
+        <MudTd DataLabel="Amount">LSL @context.Amount.ToString("F2")</MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="Color" Color="@GetChipColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Date">@context.Date.ToString("dd MMM yyyy")</MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="@(() => ViewClaim(context.Id))">
+                View
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2 mt-4">Activity Timeline</MudText>
+<MudPaper Class="pa-3" Elevation="1">
+    <MudList T ="string" Dense="true">
+        @foreach (var log in ActivityLogs)
+        {
+            <MudListItem>
+                <MudListItemText>
+                    <MudText Typo="Typo.body2">@log.Description</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@log.Timestamp.ToString("dd MMM yyyy HH:mm")</MudText>
+                </MudListItemText>
+            </MudListItem>
+        }
+    </MudList>
+</MudPaper>
+
+    <MudButton Variant="Variant.Outlined" OnClick="GoBack">Back</MudButton>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid ProviderId { get; set; }
+
+    private ProviderProfileModel Provider = new();
+
+    protected override void OnInitialized()
+    {
+        // Placeholder mock data
+        Provider = new ProviderProfileModel
+        {
+            ClinicName = "Sunshine Health Center",
+            DoctorName = "Dr. Teboho",
+            Email = "dr.teboho@sunshine.com",
+            PhoneNumber = "+266 56789012",
+            Location = "Maseru, Lesotho",
+            MpesaMerchantCode = "MPESA123456",
+            BankAccountNumber = "1234567890",
+            BankName = "Standard Lesotho Bank",
+            Specializations = new() { "Pediatrics", "General Practice" },
+            WorkingHours = new()
+            {
+                new WorkingHour { DayOfWeek = "Mon", StartTime = "08:00", EndTime = "16:00" },
+                new WorkingHour { DayOfWeek = "Tue", StartTime = "08:00", EndTime = "16:00" },
+                new WorkingHour { DayOfWeek = "Wed", StartTime = "08:00", EndTime = "16:00" },
+            }
+        };
+    }
+
+    private List<ActivityLogEntry> ActivityLogs = new()
+{
+    new() { Description = "Logged in", Timestamp = DateTime.Now.AddMinutes(-35) },
+    new() { Description = "Submitted claim for Patient Lereko", Timestamp = DateTime.Now.AddHours(-2) },
+    new() { Description = "Updated clinic profile", Timestamp = DateTime.Now.AddDays(-1) },
+    new() { Description = "Booked appointment for Patient Teboho", Timestamp = DateTime.Now.AddDays(-2) }
+};
+
+    private class ActivityLogEntry
+    {
+        public string Description { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin/providers");
+
+    private class ProviderProfileModel
+    {
+        public string ClinicName { get; set; } = "";
+        public string DoctorName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string MpesaMerchantCode { get; set; } = "";
+        public string? BankAccountNumber { get; set; }
+        public string? BankName { get; set; }
+        public List<string> Specializations { get; set; } = new();
+        public List<WorkingHour> WorkingHours { get; set; } = new();
+    }
+
+    private class WorkingHour
+    {
+        public string DayOfWeek { get; set; } = "";
+        public string StartTime { get; set; } = "";
+        public string EndTime { get; set; } = "";
+    }
+    private ProviderMetrics Metrics = new()
+    {
+        TotalClaims = 150,
+        ApprovedClaims = 120,
+        RejectedClaims = 20,
+        TotalRevenue = 48000,
+        RejectionRate = 0.1333, // e.g. 13.33%
+        TotalAppointments = 200
+    };
+
+    private class ProviderMetrics
+    {
+        public int TotalClaims { get; set; }
+        public int ApprovedClaims { get; set; }
+        public int RejectedClaims { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public double RejectionRate { get; set; }
+        public int TotalAppointments { get; set; }
+    }
+    private List<ClaimSummary> AllClaims = new()
+{
+    new() { Id = "CLM-001", PatientName = "Lereko", Amount = 600, Status = "Approved", Date = DateTime.Today.AddDays(-2) },
+    new() { Id = "CLM-002", PatientName = "Teboho", Amount = 800, Status = "Pending", Date = DateTime.Today.AddDays(-5) }
+};
+
+    private List<ClaimSummary> FilteredClaims => AllClaims; // Add filters later
+
+    private void ViewClaim(string id) =>
+        NavigationManager.NavigateTo($"/admin/claims/1");
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    public class ClaimSummary
+    {
+        public string Id { get; set; } = "";
+        public string PatientName { get; set; } = "";
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "";
+        public DateTime Date { get; set; }
+    }
+
+}

@@ -1,0 +1,63 @@
+﻿@page "/usage-policy"
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6 px-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Usage Policy</MudText>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.body1">
+            Welcome to iThembaHealth. This Usage Policy outlines the acceptable and expected behavior when accessing or interacting with our platform, services, and content. All users are required to comply with this policy as a condition of use.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">1. Purpose of Use</MudText>
+        <MudText Typo="Typo.body2">
+            The iThembaHealth platform is designed exclusively for health-related services, including appointment scheduling, provider-patient communication, health savings management, and medical claims submission. Any use outside this scope is strictly prohibited.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">2. User Responsibilities</MudText>
+        <MudText Typo="Typo.body2">
+            Users are expected to:
+            <ul>
+                <li>Provide accurate and up-to-date information during registration and usage.</li>
+                <li>Use the platform in a respectful, lawful, and non-disruptive manner.</li>
+                <li>Maintain confidentiality of login credentials.</li>
+                <li>Comply with all health, financial, and privacy laws applicable in their jurisdiction.</li>
+            </ul>
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">3. Prohibited Activities</MudText>
+        <MudText Typo="Typo.body2">
+            You may not:
+            <ul>
+                <li>Impersonate another user or provide false information.</li>
+                <li>Interfere with the security or functionality of the system.</li>
+                <li>Submit fraudulent claims or abuse the health savings plan.</li>
+                <li>Attempt to reverse-engineer, hack, or modify any aspect of the platform.</li>
+            </ul>
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">4. Enforcement</MudText>
+        <MudText Typo="Typo.body2">
+            Violations of this Usage Policy may result in warnings, temporary suspensions, or permanent bans from the platform. Severe infractions may be reported to relevant authorities.
+        </MudText>
+    </MudPaper>
+</MudContainer>
+<MudDivider Class="my-4" />
+
+<MudButton Variant="Variant.Text"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.ArrowBack"
+           OnClick="GoBack">
+    Back
+</MudButton>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl);
+    }
+}

@@ -1,0 +1,87 @@
+﻿@page "/admin/providers/edit/{ProviderId:guid}"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Edit Provider</MudText>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudForm @ref="_form">
+            <MudTextField Label="Clinic Name" @bind-Value="Provider.ClinicName" Required="true" />
+            <MudTextField Label="Doctor Name" @bind-Value="Provider.DoctorName" Required="true" />
+            <MudTextField Label="Specialty" @bind-Value="Provider.Specialty" />
+            <MudTextField Label="Phone Number" @bind-Value="Provider.PhoneNumber" Required="true" />
+            <MudTextField Label="Email" @bind-Value="Provider.Email" Required="true" />
+            <MudTextField Label="Location" @bind-Value="Provider.Location" />
+
+            <MudDivider Class="my-3" />
+
+            <MudText Typo="Typo.subtitle2">Payout Information</MudText>
+            <MudTextField Label="M-PESA Merchant Code" @bind-Value="Provider.MpesaMerchantCode" />
+            <MudTextField Label="Bank Account Number" @bind-Value="Provider.BankAccountNumber" />
+            <MudTextField Label="Bank Name" @bind-Value="Provider.BankName" />
+
+            <MudSwitch T="bool" Label="Is Active" @bind-Checked="Provider.IsActive" />
+            <MudSwitch T="bool" Label="Is Verified" @bind-Checked="Provider.IsVerified" />
+
+            <MudButton Class="mt-4" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Save Changes</MudButton>
+            <MudButton Class="mt-4 ml-2" Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid ProviderId { get; set; }
+
+    private MudForm _form;
+    private ProviderModel Provider = new();
+
+    protected override void OnInitialized()
+    {
+        // Placeholder logic
+        Provider = new ProviderModel
+        {
+            Id = ProviderId,
+            ClinicName = "Dr. Makhotso Clinic",
+            DoctorName = "Dr. Makhotso",
+            Specialty = "Pediatrics",
+            PhoneNumber = "58910231",
+            Email = "clinic@example.com",
+            Location = "Maseru",
+            MpesaMerchantCode = "123456",
+            BankAccountNumber = "1122334455",
+            BankName = "FNB",
+            IsActive = true,
+            IsVerified = true
+        };
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            // Simulate saving
+            NavigationManager.NavigateTo("/admin/providers");
+        }
+    }
+
+    private void Cancel() => NavigationManager.NavigateTo("/admin/providers");
+
+    private class ProviderModel
+    {
+        public Guid Id { get; set; }
+        public string ClinicName { get; set; } = "";
+        public string DoctorName { get; set; } = "";
+        public string Specialty { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string MpesaMerchantCode { get; set; } = "";
+        public string? BankAccountNumber { get; set; }
+        public string? BankName { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsVerified { get; set; }
+    }
+}

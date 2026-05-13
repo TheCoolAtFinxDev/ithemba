@@ -1,0 +1,64 @@
+﻿@page "/admin/patients/{Id:guid}/beneficiaries"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Patient Beneficiaries</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled=true>
+            + Add Beneficiary
+        </MudButton>
+
+        <MudTable Items="Beneficiaries" Dense="true" Hover="true" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Relationship</MudTh>
+                <MudTh>Phone</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.FullName</MudTd>
+                <MudTd>@context.Relationship</MudTd>
+                <MudTd>@context.Phone</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Disabled=true StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" Disabled=true StartIcon="@Icons.Material.Filled.Delete">Delete</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    public List<BeneficiaryRecord> Beneficiaries = new()
+    {
+        new() { Id = Guid.NewGuid(), FullName = "Lerato Mokoena", Relationship = "Child", Phone = "+26650000001" },
+        new() { Id = Guid.NewGuid(), FullName = "Thabo Mokoena", Relationship = "Spouse", Phone = "+26650000002" }
+    };
+
+    private void AddBeneficiary()
+    {
+        NavigationManager.NavigateTo($"/admin/patients/{Id}/beneficiaries/add");
+    }
+
+    private void EditBeneficiary(Guid beneficiaryId)
+    {
+        NavigationManager.NavigateTo($"/admin/patients/{Id}/beneficiaries/edit/{beneficiaryId}");
+    }
+
+    private void DeleteBeneficiary(Guid beneficiaryId)
+    {
+        Beneficiaries.RemoveAll(b => b.Id == beneficiaryId);
+    }
+
+    public class BeneficiaryRecord
+    {
+        public Guid Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Relationship { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+    }
+}

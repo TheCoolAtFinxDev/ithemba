@@ -1,0 +1,96 @@
+﻿@page "/provider/claims/{ClaimId:int}"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Claim Details</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Patient Name</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.PatientName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Beneficiary</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.Beneficiary</MudText>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Clinic / Doctor</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.ClinicName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Date of Visit</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.Date.ToString("dd MMM yyyy")</MudText>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Amount</MudText>
+                <MudText Typo="Typo.subtitle1">LSL @_claim.Amount.ToString("F2")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Status</MudText>
+                <MudChip T="object" Color="@GetChipColor(_claim.Status)" Size="Size.Small">
+                    @_claim.Status
+                </MudChip>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudText Color="Color.Secondary">Description</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.Description</MudText>
+            </MudItem>
+
+            @if (!string.IsNullOrWhiteSpace(_claim.Attachment))
+            {
+                <MudItem xs="12">
+                    <MudText Color="Color.Secondary">Attachment</MudText>
+                    <MudLink Href="@_claim.Attachment" Target="_blank">View Uploaded File</MudLink>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <MudButton Variant="Variant.Outlined" OnClick="GoBack">Back</MudButton>
+</MudContainer>
+
+@code {
+    [Parameter] public int ClaimId { get; set; }
+
+    private ClaimDetailModel _claim = new();
+
+    protected override void OnInitialized()
+    {
+        // Simulate claim fetch by ID
+        _claim = MockClaims.FirstOrDefault(c => c.Id == ClaimId) ?? new ClaimDetailModel();
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo("/provider/claims");
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private class ClaimDetailModel
+    {
+        public int Id { get; set; }
+        public string ClinicName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string PatientName { get; set; } = "";
+        public string Beneficiary { get; set; } = "";
+        public string? Attachment { get; set; }
+    }
+
+    private List<ClaimDetailModel> MockClaims => new()
+    {
+        new() { Id = 1, ClinicName = "Hope Medical", Date = DateTime.Today.AddDays(-5), Amount = 1200, Status = "Approved", Description = "X-ray Scan", PatientName = "Lereko Mokoena", Beneficiary = "Self", Attachment = "/files/receipt1.pdf" },
+        new() { Id = 2, ClinicName = "Dr. Makhotso", Date = DateTime.Today.AddDays(-3), Amount = 450, Status = "Pending", Description = "Consultation", PatientName = "Thato Mokoena", Beneficiary = "Spouse - Thato" }
+    };
+}

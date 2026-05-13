@@ -1,0 +1,77 @@
+﻿@page "/admin/claims"
+@using MudBlazor
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-2">Claims Management</MudText>
+
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudTextField @bind-Value="SearchTerm" Label="Search by patient or provider" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-2" />
+    </MudPaper>
+
+    <MudTable Items="FilteredClaims" Hover="true" Elevation="1" Class="mb-4">
+        <HeaderContent>
+            <MudTh>Claim ID</MudTh>
+            <MudTh>Patient</MudTh>
+            <MudTh>Provider</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Patient">@context.PatientName</MudTd>
+            <MudTd DataLabel="Provider">@context.ProviderName</MudTd>
+            <MudTd DataLabel="Amount">LSL @context.Amount.ToString("F2")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="Color" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Date">@context.Date.ToString("dd MMM yyyy")</MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ViewClaim(context.Id)">View</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private string SearchTerm = "";
+
+    private List<ClaimSummary> Claims = new()
+    {
+        new() { Id = 1, PatientName = "Lereko", ProviderName = "Dr. Makhotso", Amount = 650, Status = "Approved", Date = DateTime.Today.AddDays(-3) },
+        new() { Id = 2, PatientName = "Thato", ProviderName = "Dr. Teboho", Amount = 480, Status = "Pending", Date = DateTime.Today.AddDays(-2) },
+        new() { Id = 3, PatientName = "Boitumelo", ProviderName = "Dr. Mohale", Amount = 300, Status = "Rejected", Date = DateTime.Today.AddDays(-5) },
+    };
+
+    private List<ClaimSummary> FilteredClaims => Claims
+        .Where(c => string.IsNullOrWhiteSpace(SearchTerm)
+            || c.PatientName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || c.ProviderName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private void ViewClaim(int id)
+    {
+        NavigationManager.NavigateTo($"/admin/claims/{id}");
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    public class ClaimSummary
+    {
+        public int Id { get; set; }
+        public string PatientName { get; set; } = "";
+        public string ProviderName { get; set; } = "";
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "";
+        public DateTime Date { get; set; }
+    }
+}

@@ -1,0 +1,58 @@
+﻿@page "/provider/profile"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Provider Profile</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Clinic / Doctor Name</MudText>
+                <MudText Typo="Typo.subtitle1">@_provider.ClinicName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Email</MudText>
+                <MudText Typo="Typo.subtitle1">@_provider.Email</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Phone</MudText>
+                <MudText Typo="Typo.subtitle1">@_provider.Phone</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">M-PESA Merchant Code</MudText>
+                <MudText Typo="Typo.subtitle1">@_provider.MerchantCode</MudText>
+            </MudItem>
+@*             <MudItem xs="12">
+                <MudText Color="Color.Secondary">Banking Details</MudText>
+                <MudText Typo="Typo.subtitle1">@_provider.BankDetails</MudText>
+            </MudItem> *@
+        </MudGrid>
+    </MudPaper>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               OnClick="@(() => NavigationManager.NavigateTo("/provider/profile/edit"))">
+        Edit Profile
+    </MudButton>
+</MudContainer>
+
+@code {
+    private ProviderProfileModel _provider = new()
+        {
+            ClinicName = "Hope Medical Centre",
+            Email = "info@hopemedical.ls",
+            Phone = "+266 5123 4567",
+            MerchantCode = "MP123456",
+            BankDetails = "FNB Lesotho, Acc: 1234567890"
+        };
+
+    private class ProviderProfileModel
+    {
+        public string ClinicName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string MerchantCode { get; set; } = "";
+        public string BankDetails { get; set; } = "";
+    }
+}

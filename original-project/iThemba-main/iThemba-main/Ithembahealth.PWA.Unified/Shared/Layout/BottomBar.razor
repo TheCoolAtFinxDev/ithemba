@@ -1,0 +1,83 @@
+﻿@using Ithembahealth.PWA.Unified.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<AuthorizeView>
+    <Authorized>
+        @if (!string.IsNullOrWhiteSpace(Role))
+        {
+            <MudPaper Elevation="6" Style="position:fixed; bottom:0; left:0; right:0; height:58px; background:white; z-index:1000;">
+                <MudGrid Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Style="height:100%;">
+                    @if (Role == "patient")
+                    {
+                        @BottomBarItem(Icons.Material.Filled.Home, "Home", "/patient/home", "patient/home")
+                        @BottomBarItem(Icons.Material.Filled.LocalHospital, "Doctors", "/patient/doctors", "patient/doctors")
+                        @BottomBarItem(Icons.Material.Filled.AccountBalanceWallet, "Wallet", "/patient/wallet", "patient/wallet")
+                        @BottomBarItem(Icons.Material.Filled.Settings, "Profile", "/patient/profile", "patient/profile")
+                    }
+                    else if (Role == "provider")
+                    {
+                        @BottomBarItem(Icons.Material.Filled.Home, "Home", "/provider/home", "provider/home")
+                        @BottomBarItem(Icons.Material.Filled.Event, "Appointments", "/provider/appointments", "provider/appointments")
+                        @BottomBarItem(Icons.Material.Filled.AttachMoney, "Payments", "/provider/payments", "provider/payments")
+                    }
+                    else if (Role == "admin")
+                    {
+                        @BottomBarItem(Icons.Material.Filled.Dashboard, "Dashboard", "/admin/home", "admin/home")
+                        @BottomBarItem(Icons.Material.Filled.People, "Patients", "/admin/patients", "admin/patients")
+                        @BottomBarItem(Icons.Material.Filled.LocalHospital, "Providers", "/admin/providers", "admin/providers")
+                    }
+                </MudGrid>
+            </MudPaper>
+
+            @if (Role == "patient")
+            {
+                <div style="position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%); z-index: 1100; text-align: center;">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               Style="font-size: 0.85rem; font-weight: 500; padding: 0.5rem 1rem; border-radius: 24px; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"
+                               OnClick="@OnAddClicked">
+                        Book Appointment
+                    </MudButton>
+                </div>
+            }
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public EventCallback OnAddClicked { get; set; }
+
+    private string? Role;
+    private string CurrentRoute => NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLowerInvariant();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        Role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value?.ToLowerInvariant();
+    }
+
+    private void Navigate(string route)
+    {
+        if (!CurrentRoute.Equals(route.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
+            NavigationManager.NavigateTo(route);
+    }
+
+    private string GetIconColor(string route)
+    {
+        return CurrentRoute.StartsWith(route.TrimStart('/'), StringComparison.OrdinalIgnoreCase)
+            ? "#66905e"
+            : "#888888";
+    }
+
+    private RenderFragment BottomBarItem(string icon, string label, string href, string matchRoute) => @<MudItem xs="4" Class="text-center">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <MudIconButton Icon="@icon"
+                           Style='@($"font-size: 1.6rem; color:@GetIconColor(matchRoute); margin-bottom:2px;")'
+                           OnClick="@(() => Navigate(href))" />
+            <MudText Typo="Typo.caption" Style="font-size: 0.70rem;margin-top:-12px;">@label</MudText>
+        </div>
+    </MudItem>;
+}

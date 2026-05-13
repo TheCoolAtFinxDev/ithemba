@@ -1,0 +1,60 @@
+<!-- pages/admin/claims/detail/index.axml -->
+<view class="page">
+
+  <view a:if="{{err}}" class="banner error">
+    <text class="b-title">Error</text>
+    <text class="b-msg">{{err}}</text>
+  </view>
+
+  <view class="header">
+    <text class="title">Claim Detail</text>
+  </view>
+
+  <view a:if="{{loading}}" class="loading">
+    <text>Loading...</text>
+  </view>
+
+  <view a:if="{{!loading && item}}">
+    <view class="card">
+      <view class="row">
+        <text class="amount">{{item.amountText}}</text>
+        <text class="status {{item.statusSlug}}">{{item.statusText}}</text>
+      </view>
+
+      <text class="line">Claim ID: {{item.id}}</text>
+      <text class="line">Appointment: {{item.apptId}}</text>
+      <text class="line">Patient: {{item.patientId}}</text>
+      <text class="line">Provider: {{item.providerId}}</text>
+
+      <view class="spacer"></view>
+
+      <text class="line">Hold ID: {{item.holdId || '-'}}</text>
+      <text class="line">Approved at: {{item.approvedAt || '-'}}</text>
+      <text class="line">Paid at: {{item.paidAt || '-'}}</text>
+      <text class="line">Rejected at: {{item.rejectedAt || '-'}}</text>
+
+      <view a:if="{{item.rejectionReason}}" class="rejected-box">
+        <text class="sub-title">Rejection reason</text>
+        <text class="line">{{item.rejectionReason}}</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <button class="btn approve" a:if="{{item.status==='Submitted'}}" onTap="onApprove" disabled="{{working}}">
+        {{ working && action==='approve' ? 'Approving...' : 'Approve & pay provider' }}
+      </button>
+
+      <view class="reject-box">
+        <textarea
+          class="textarea"
+          placeholder="Reason for rejection (optional)"
+          value="{{rejectReason}}"
+          onInput="onRejectReason" />
+        <button class="btn reject" a:if="{{item.status==='Submitted'}}" onTap="onReject" disabled="{{working}}">
+          {{ working && action==='reject' ? 'Rejecting...' : 'Reject claim' }}
+        </button>
+      </view>
+    </view>
+  </view>
+
+</view>

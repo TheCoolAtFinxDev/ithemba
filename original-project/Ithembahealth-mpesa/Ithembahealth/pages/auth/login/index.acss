@@ -1,0 +1,82 @@
+.screen {
+  background: #ffffff;
+  min-height: 100vh;
+  padding: 40rpx;
+}
+
+.container {
+  margin-top: 80rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 48rpx;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.label {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.phone-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  border: 2rpx solid #d0d0d0;
+  border-radius: 12rpx;
+  padding: 18rpx;
+}
+
+.prefix {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #23b0d3;
+}
+
+.input {
+  flex: 1;
+  height: 90rpx;
+  padding-left: 12rpx;
+  border: none;
+  font-size: 32rpx;
+}
+
+.btn-wrap {
+  margin-top: 20rpx;
+}
+
+.btn-primary {
+  width: 100%;
+  height: 96rpx;
+  background: #23b0d3;
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.link-wrap {
+  margin-top: 20rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.link {
+  color: #23b0d3;
+  font-size: 28rpx;
+}
+
+.error {
+  color: #d9534f;
+  text-align: center;
+  margin-top: 24rpx;
+  font-size: 28rpx;
+}

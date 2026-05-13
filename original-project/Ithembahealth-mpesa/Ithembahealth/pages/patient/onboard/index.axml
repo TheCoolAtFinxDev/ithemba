@@ -1,0 +1,18 @@
+<view class="wrap">
+  <view class="row"><text class="label">First name</text>
+    <input class="inp" placeholder="First name" value="{{firstName}}" onInput="onFirst" />
+  </view>
+  <view class="row"><text class="label">Last name</text>
+    <input class="inp" placeholder="Last name" value="{{lastName}}" onInput="onLast" />
+  </view>
+  <view class="row"><text class="label">Date of birth</text>
+    <input class="inp" placeholder="YYYY-MM-DD" value="{{dob}}" onInput="onDob" />
+  </view>
+  <view class="row"><text class="label">National ID</text>
+    <input class="inp" placeholder="e.g. 123456789" value="{{nid}}" onInput="onNid" />
+  </view>
+
+  <button class="btn" onTap="submit" loading="{{loading}}">Create Patient Profile</button>
+
+  <view a:if="{{err}}" class="err">{{err}}</view>
+</view>

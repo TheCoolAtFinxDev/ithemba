@@ -1,0 +1,5 @@
+@import "../../styles/theme.acss";
+.btn{composes:btn from "../../styles/theme.acss"}
+.btn-primary{composes:btn-primary from "../../styles/theme.acss"}
+.btn-outline{composes:btn-outline from "../../styles/theme.acss"}
+.btn-link{composes:btn-link from "../../styles/theme.acss"}

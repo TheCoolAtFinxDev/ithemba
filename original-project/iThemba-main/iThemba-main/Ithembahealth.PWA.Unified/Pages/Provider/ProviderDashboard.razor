@@ -1,0 +1,88 @@
+﻿@page "/provider/home"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<ProviderLayout Title="Provider">
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+        <MudText Typo="Typo.h5" Class="mb-3">Welcome Back, Dr. Makhotso</MudText>
+
+        <!-- Quick Summary Cards -->
+        <MudGrid Class="mb-4" GutterSize="3">
+            <MudItem xs="6" sm="4">
+                <MudPaper Elevation="1" Class="pa-4 text-center">
+                    <MudText Typo="Typo.caption">Total Claims</MudText>
+                    <MudText Typo="Typo.h6">58</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="4">
+                <MudPaper Elevation="1" Class="pa-4 text-center">
+                    <MudText Typo="Typo.caption">Upcoming Appointments</MudText>
+                    <MudText Typo="Typo.h6">5</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="4">
+                <MudPaper Elevation="1"
+                          Class="pa-4 text-center hoverable"
+                          Style="cursor: pointer;"
+                          @onclick="@(() => NavigationManager.NavigateTo("/provider/dashboard"))">
+                    <MudText Typo="Typo.caption">Total Earned</MudText>
+                    <MudText Typo="Typo.h6">LSL 23,400</MudText>
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+
+        <!-- Shortcuts -->
+        <MudGrid Class="mb-4" GutterSize="3">
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="pa-3 hoverable" @onclick="@(() => NavigationManager.NavigateTo("/provider/claims"))">
+                    <MudText><MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />View Claims</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="pa-3 hoverable" @onclick="@(() => NavigationManager.NavigateTo("/provider/appointments"))">
+                    <MudText><MudIcon Icon="@Icons.Material.Filled.Event" Class="mr-2" />View Appointments</MudText>
+                </MudPaper>
+            </MudItem>
+@*             <MudItem xs="12" sm="4">
+                <MudPaper Class="pa-3 hoverable" @onclick="@(() => NavigationManager.NavigateTo("/provider/claims/submit"))">
+                    <MudText><MudIcon Icon="@Icons.Material.Filled.AddCircle" Class="mr-2" />Submit New Claim</MudText>
+                </MudPaper>
+            </MudItem> *@
+        </MudGrid>
+
+        <!-- Upcoming Appointments -->
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Upcoming Appointments</MudText>
+        <MudPaper Elevation="0">
+            @foreach (var appt in UpcomingAppointments)
+            {
+                <div class="d-flex justify-between align-center pa-3 border-bottom">
+                    <div>
+                        <MudText Typo="Typo.subtitle2">@appt.PatientName</MudText>
+                        <MudText Typo="Typo.caption">@appt.Date.ToString("dd MMM yyyy") - @appt.Time</MudText>
+                    </div>
+                    <MudChip T="Color" Color="Color.Info" Size="Size.Small">@appt.Purpose</MudChip>
+                </div>
+            }
+        </MudPaper>
+    </MudContainer>
+
+    @code {
+        private List<Appointment> UpcomingAppointments = new()
+        {
+        new() { PatientName = "Lereko Mokoena", Date = DateTime.Today.AddDays(1), Time = "09:00 AM", Purpose = "Consultation" },
+        new() { PatientName = "Thato Mokoena", Date = DateTime.Today.AddDays(1), Time = "11:00 AM", Purpose = "Follow-up" },
+        new() { PatientName = "Lerato Mokoena", Date = DateTime.Today.AddDays(2), Time = "10:30 AM", Purpose = "Lab Test" }
+        };
+
+        private class Appointment
+        {
+            public string PatientName { get; set; } = "";
+            public DateTime Date { get; set; }
+            public string Time { get; set; } = "";
+            public string Purpose { get; set; } = "";
+        }
+    }
+</ProviderLayout>

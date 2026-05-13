@@ -1,0 +1,7 @@
+<view class="section">
+  <slot/>
+  <view class="row space-between">
+    <text class="h2">{{title}}</text>
+    <button a:if="{{actionText}}" onTap="go">{{actionText}}</button>
+  </view>
+</view>

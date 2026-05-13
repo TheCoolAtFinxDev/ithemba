@@ -1,0 +1,81 @@
+/* pages/booking/index.acss */
+@import "../../styles/theme.acss";@import "../../styles/util.acss";
+
+/* Error banner */
+.banner.error { background:#fff1f0; color:#a8071a; border:1rpx solid #ffa39e; padding:20rpx; border-radius:12rpx; margin:16rpx; }
+.b-title{ font-weight:600; display:block; }
+.b-msg{ display:block; margin-top:4rpx; }
+
+/* Search & date rows */
+.search-row, .date-row { display:flex; gap:12rpx; padding:0 16rpx; margin:12rpx 0; }
+.q-input, .date-input { flex:1; background:#fff; border:1rpx solid #e5e5e5; border-radius:10rpx; padding:14rpx 16rpx; }
+.q-btn, .date-btn { padding:14rpx 18rpx; background:#23b0d3; color:#fff; border-radius:10rpx; }
+
+/* Card */
+.card { background:#fff; border-radius:16rpx; margin:16rpx; padding:16rpx; box-shadow:0 2rpx 10rpx rgba(0,0,0,0.04); }
+.card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8rpx; }
+.clinic { font-weight:700; font-size:30rpx; }
+.book-btn { background:#66905e; color:#fff; padding:10rpx 18rpx; border-radius:10rpx; }
+
+/* Lines */
+.doc { display:block; font-size:28rpx; margin:6rpx 0; }
+.spec { display:block; color:#595959; margin:2rpx 0 6rpx; }
+.loc { display:block; color:#8c8c8c; }
+
+/* Slots */
+.slot-strip { margin-top:12rpx; padding-bottom:4rpx; white-space:nowrap; }
+.slot-pill-wrap { display:inline-block; margin-right:10rpx; }
+.slot-pill { background:#f5f5f5; border:1rpx solid #d9d9d9; border-radius:999rpx; padding:10rpx 16rpx; }
+.slot-pill--selected { background:#1677ff; color:#fff; border-color:#1677ff; }
+.slot-actions { margin-top:12rpx; text-align:right; }
+.confirm-btn { background:#1677ff; color:#fff; padding:12rpx 18rpx; border-radius:10rpx; }
+
+/* Empty */
+.empty { text-align:center; color:#8c8c8c; margin:24rpx 0; }
+/* Containers */
+.field { margin: 20rpx 24rpx 0; }
+.label { display:block; font-size: 28rpx; color:#333; margin-bottom: 12rpx; }
+
+/* Input-like date box */
+.date-box{
+  height: 88rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid #E5E5E5;
+  border-radius: 12rpx;
+  background: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Text + placeholder */
+.date-box text { font-size: 28rpx; color:#222; }
+.placeholder { color:#999; }
+
+/* Icon */
+.calendar-ico { font-size: 32rpx; opacity: .8; }
+
+/* (Optional) keep your search bar aligned visually */
+.search-row{
+  margin: 24rpx;
+  display:flex;
+  gap: 16rpx;
+}
+.q-input{
+  flex:1;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid #E5E5E5;
+  border-radius: 12rpx;
+  background:#FFF;
+  font-size: 28rpx;
+}
+.q-btn{
+  height: 88rpx;
+  padding: 0 28rpx;
+  border-radius: 12rpx;
+  background:#2E7D32;
+  color:#FFF;
+  font-size: 28rpx;
+}

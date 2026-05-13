@@ -1,0 +1,1 @@
+<view class="card" onTap="tap"><slot></slot></view>

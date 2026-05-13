@@ -1,0 +1,158 @@
+﻿@page "/admin/providers"
+@using Ithembahealth.PWA.Unified.Shared.Components
+@using MudBlazor
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.h5">Providers</MudText>
+            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled=true OnClick="AddProvider">
+                Add Provider
+            </MudButton>
+        </MudStack>
+
+        <MudPaper Class="pa-3" Elevation="1">
+            <MudGrid GutterSize="3">
+                <MudItem xs="12" sm="6" md="6">
+                    <MudTextField @bind-Value="SearchTerm" Label="Search by name, clinic, or specialty" Immediate="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Search" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="6" Class="d-flex justify-end">
+                    <MudSelect T="int" Label="Page size" @bind-Value="PageSize" Dense="true" Class="w-32">
+                        <MudSelectItem Value="10">10</MudSelectItem>
+                        <MudSelectItem Value="20">20</MudSelectItem>
+                        <MudSelectItem Value="40">40</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- List (not cards) -->
+        <MudPaper Elevation="1">
+            <MudList T="string" Dense="true">
+                @if (PagedItems.Count == 0)
+                {
+                    <MudListItem>
+                        <MudText Color="Color.Secondary">No providers found.</MudText>
+                    </MudListItem>
+                }
+                else
+                {
+                    @foreach (var p in PagedItems)
+                    {
+                        <MudListItem Class="py-2">
+                            <MudAvatar Icon="@Icons.Material.Filled.Person" Class="me-2" />
+                            <MudListItemText>
+                                <div class="d-flex align-center gap-2">
+                                    <MudText Typo="Typo.subtitle2">@p.Name</MudText>
+                                    <MudChip Size="Size.Small" Variant="Variant.Outlined">@p.Specialty</MudChip>
+                                </div>
+                                <MudText Typo="Typo.caption">@p.Clinic • @p.Location</MudText>
+                            </MudListItemText>
+                            <MudListItemMeta>
+                                <MudStack Direction="Row" Spacing="1">
+                                    <MudButton Disabled=true Variant="Variant.Text" Size="Size.Small" OnClick="() => ViewProvider(p.Id)">View</MudButton>
+                                    <MudButton Disabled=true Variant="Variant.Text" Size="Size.Small" OnClick="() => EditProvider(p.Id)">Edit</MudButton>
+                                </MudStack>
+                            </MudListItemMeta>
+                        </MudListItem>
+                        <MudDivider />
+                    }
+                }
+            </MudList>
+        </MudPaper>
+
+        <!-- Pager -->
+        <Pager PageIndex="@PageIndex"
+               TotalPages="@TotalPages"
+               HasPreviousPage="@HasPreviousPage"
+               HasNextPage="@HasNextPage"
+               MaxButtons="7"
+               OnClick="OnPageClick" />
+    </MudStack>
+</MudContainer>
+
+@code {
+    // NOTE: Map your API model into this lightweight VM for the list.
+    // Replace with your actual types/properties if you already have them.
+    private sealed record ProviderRow(Guid Id, string Name, string Clinic, string Specialty, string Location);
+
+    private List<ProviderRow> All = new();
+    private string _searchTerm = string.Empty;
+    private int _pageIndex = 0;
+    private int _pageSize = 10;
+
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set { _searchTerm = value ?? string.Empty; _pageIndex = 0; Recompute(); }
+    }
+
+    private int PageIndex
+    {
+        get => _pageIndex;
+        set { _pageIndex = Math.Clamp(value, 0, Math.Max(0, TotalPages - 1)); Recompute(); }
+    }
+
+    private int PageSize
+    {
+        get => _pageSize;
+        set { _pageSize = value; _pageIndex = 0; Recompute(); }
+    }
+
+    private int TotalPages { get; set; } = 1;
+    private bool HasPreviousPage => PageIndex > 0;
+    private bool HasNextPage => PageIndex < TotalPages - 1;
+
+    private List<ProviderRow> Filtered = new();
+    private List<ProviderRow> PagedItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: replace this with API call to load providers
+        // Example mapping: All = apiProviders.Select(p => new ProviderRow(p.Id, p.FullName, p.ClinicName, p.Specialty, p.City)).ToList();
+        if (All.Count == 0)
+        {
+            // temporary sample to visualize
+            for (int i = 1; i <= 40; i++)
+            {
+                All.Add(new ProviderRow(Guid.NewGuid(), $"Dr. Example {i}", "Example Clinic", i % 2 == 0 ? "GP" : "Dentist", "Maseru"));
+            }
+        }
+        Recompute();
+    }
+
+    private void Recompute()
+    {
+        var term = _searchTerm.Trim();
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            Filtered = All;
+        }
+        else
+        {
+            Filtered = All.Where(p =>
+                (p.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (p.Clinic?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (p.Specialty?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (p.Location?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+        }
+
+        TotalPages = Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)PageSize));
+        _pageIndex = Math.Clamp(_pageIndex, 0, TotalPages - 1);
+        PagedItems = Filtered.Skip(_pageIndex * _pageSize).Take(_pageSize).ToList();
+        StateHasChanged();
+    }
+
+    private Task OnPageClick(int toIndex)
+    {
+        PageIndex = toIndex;
+        return Task.CompletedTask;
+    }
+
+    private void AddProvider() => Nav.NavigateTo("/admin/providers/add");
+    private void ViewProvider(Guid id) => Nav.NavigateTo($"/admin/providers/{id}");
+    private void EditProvider(Guid id) => Nav.NavigateTo($"/admin/providers/{id}/edit");
+}

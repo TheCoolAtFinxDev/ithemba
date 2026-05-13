@@ -1,0 +1,13 @@
+﻿@using Ithembahealth.PWA.Unified.Auth
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+    <p>Redirecting to login...</p>
+
+@code {
+    protected override void OnInitialized()
+    {
+
+            Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}", forceLoad: true);
+    }
+}

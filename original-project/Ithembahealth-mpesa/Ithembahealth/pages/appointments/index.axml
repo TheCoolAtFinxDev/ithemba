@@ -1,0 +1,51 @@
+<view class="page">
+  <!-- Error -->
+  <view a:if="{{err}}" class="banner error">
+    <text class="b-title">Error</text>
+    <text class="b-msg">{{err}}</text>
+  </view>
+
+  <!-- Header -->
+  <view class="head">
+    <text class="title">My Appointments</text>
+    <button class="refresh" onTap="refresh">Refresh</button>
+  </view>
+  <view class="search-bar">
+    <input class="search-input"
+           placeholder="Search appointments..."
+           value="{{search}}"
+           onInput="onSearch" />
+  </view>
+  
+  <!-- Tabs -->
+  <view class="tabs">
+    <button class="tab {{tab==='upcoming'?'active':''}}" onTap="showUpcoming">Upcoming</button>
+    <button class="tab {{tab==='past'?'active':''}}" onTap="showPast">Past</button>
+  </view>
+
+  <!-- Empty -->
+  <view a:if="{{!loading && list.length===0}}" class="empty">
+    <text>{{ tab==='upcoming' ? 'No upcoming appointments' : 'No past appointments' }}</text>
+  </view>
+
+<!-- List -->
+<view a:if="{{list && list.length}}">
+  <block a:for="{{list}}" a:key="id">
+    <view
+      class="card"
+      onTap="openDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="row">
+        <text class="time">{{item.label}}</text>
+        <text class="status {{item.statusSlug}}">{{item.statusText}}</text>
+      </view>
+      <text class="line">{{item.clinic || 'Clinic'}}</text>
+      <text class="line">Dr {{item.doctor || ''}}</text>
+      <text class="line">{{item.appointmentDate || ''}}</text>
+
+    </view>
+  </block>
+</view>
+
+</view>

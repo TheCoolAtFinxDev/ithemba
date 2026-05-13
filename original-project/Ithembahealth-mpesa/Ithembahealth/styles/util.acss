@@ -1,0 +1,7 @@
+.row{display:flex;flex-direction:row;align-items:center}
+.col{display:flex;flex-direction:column}
+.space-between{justify-content:space-between}
+.full{width:100%}
+.gap-12{display:flex;flex-direction:column;gap:12rpx}
+.center{display:flex;align-items:center;justify-content:center}
+.grid1{display:grid;grid-template-columns:1fr;gap:12rpx}

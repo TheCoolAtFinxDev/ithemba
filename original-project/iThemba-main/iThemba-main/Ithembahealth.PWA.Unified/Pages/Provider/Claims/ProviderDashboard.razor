@@ -1,0 +1,116 @@
+﻿@page "/provider/dashboard"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-3">Claims Summary</MudText>
+    <!-- Overview Metrics -->
+    <MudGrid Class="mb-4" GutterSize="3">
+        <MudItem xs="6" sm="3">
+            <MudPaper Elevation="1" Class="pa-4 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Claims</MudText>
+                <MudText Typo="Typo.h6">58</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Elevation="1" Class="pa-4 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Approved</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Success">41</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Elevation="1" Class="pa-4 text-center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Pending</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Warning">12</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Elevation="1" Class="pa-4 text-center hoverable"  >
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Earned</MudText>
+                <MudText Typo="Typo.h6">LSL 23,400</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Quick Actions -->
+    <MudGrid Class="mb-4" GutterSize="3">
+        <MudItem xs="12" sm="3">
+            <MudPaper Class="pa-3 hoverable" @onclick="@(() => NavigationManager.NavigateTo("/provider/claims/submit"))">
+                <MudText Typo="Typo.body2"><MudIcon Icon="@Icons.Material.Filled.AddCircle" Class="mr-2" />Submit Claim</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudPaper Class="pa-3 hoverable" @onclick="@(() => NavigationManager.NavigateTo("/provider/claims"))">
+                <MudText Typo="Typo.body2"><MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />View Claims</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudPaper Class="pa-3 hoverable" @onclick="@(() => NavigationManager.NavigateTo("/provider/payments"))">
+                <MudText Typo="Typo.body2"><MudIcon Icon="@Icons.Material.Filled.Payments" Class="mr-2" />Payment Schedule</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Recent Activity -->
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Recent Claims</MudText>
+    <MudPaper Elevation="0">
+        @foreach (var claim in RecentClaims)
+        {
+            <MudLink Href='@($"/provider/claims/{claim.Id}")' Style="text-decoration: none; color: inherit;">
+                <div class="d-flex justify-between align-center pa-3 border-bottom">
+                    <div>
+                        <MudText Typo="Typo.subtitle2">@claim.PatientName</MudText>
+                        <MudText Typo="Typo.caption">@claim.Date.ToString("dd MMM yyyy") - @claim.Description</MudText>
+                    </div>
+                    <div class="text-end">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Primary">LSL @claim.Amount.ToString("F2")</MudText>
+                        <MudChip T="Color" Color="@GetChipColor(claim.Status)" Size="Size.Small">@claim.Status</MudChip>
+                    </div>
+                </div>
+            </MudLink>
+        }
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+    private List<ClaimActivity> RecentClaims = new()
+    {
+        new() { Id = 1, PatientName = "Lereko Mokoena", Date = DateTime.Today.AddDays(-1), Amount = 450, Status = "Pending", Description = "Consultation" },
+        new() { Id = 2, PatientName = "Thato Mokoena", Date = DateTime.Today.AddDays(-2), Amount = 1200, Status = "Approved", Description = "Lab Work" },
+        new() { Id = 3, PatientName = "Lerato Mokoena", Date = DateTime.Today.AddDays(-3), Amount = 700, Status = "Rejected", Description = "Scan" }
+    };
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private class ClaimActivity
+    {
+        public int Id { get; set; }
+        public string PatientName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+}
+
+<style>
+    .hoverable {
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .hoverable:hover {
+        background-color: #f5f5f5;
+    }
+
+    .border-bottom {
+        border-bottom: 1px solid #e0e0e0;
+    }
+</style>

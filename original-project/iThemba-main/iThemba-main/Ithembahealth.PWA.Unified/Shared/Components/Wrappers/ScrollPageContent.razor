@@ -1,0 +1,9 @@
+﻿@inherits LayoutComponentBase
+
+<div class="scroll-wrapper">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

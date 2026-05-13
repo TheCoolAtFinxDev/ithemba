@@ -1,0 +1,55 @@
+<view class="screen">
+  <ih-appbar title="IthembaHealth"></ih-appbar>
+
+  <!-- Wallet Summary (tap to open detail) -->
+  <view class="mt-16">
+    <ih-card onTap="toWallet">
+      <view class="row space-between">
+        <text class="h2">Wallet</text>
+        <text class="p">Tap to view</text>
+      </view>
+      <view class="mt-8 row space-between">
+        <text class="p">Available Balance</text>
+        <text class="h2">{{ walletBalanceDisplay }}</text>
+      </view>
+      <view class="mt-8 row space-between">
+        <text class="p">Health Savings</text>
+        <text class="p">{{ walletSavingsDisplay }}</text>
+      </view>
+      <view class="mt-8 row space-between">
+        <text class="p">Last Updated</text>
+        <text class="p">{{ walletUpdatedDisplay }}</text>
+      </view>
+    </ih-card>
+  </view>
+
+  <view class="mt-16">
+    <ih-section title="Overview"></ih-section>
+    <ih-card>
+      <view class="row space-between">
+        <text class="p">Signed in as</text>
+        <text class="h2">{{ phoneDisplay }}</text>
+      </view>
+      <view class="mt-8 row space-between">
+        <text class="p">Role</text>
+        <text class="p">{{ roleDisplay }}</text>
+      </view>
+    </ih-card>
+  </view>
+<!-- Booking quick action -->
+<ih-section title="Booking">
+  <view style="padding:16rpx 0;">
+    <ih-button type="primary" onTap="toBooking">Book an appointment</ih-button>
+  </view>
+</ih-section>
+
+  <view class="mt-16 grid1">
+    <ih-button type="primary" text="Appointments" onTap="toAppointments"/>
+    <ih-button type="primary" text="Claims" onTap="toClaims"/>
+    <!-- <ih-button type="outline" text="Profile" onTap="toProfile"/> -->
+    <ih-button type="outline" text="Support" onTap="toSupport"/>
+    <ih-button type="link" text="Logout" onTap="logout"/>
+  </view>
+
+  <view a:if="{{hasError}}" class="mt-12 error">{{errorMsg}}</view>
+</view>

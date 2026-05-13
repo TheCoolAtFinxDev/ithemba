@@ -1,0 +1,27 @@
+/* Brand */
+.c-primary{color:#23b0d3} .c-secondary{color:#66905e}
+.bg-primary{background:#23b0d3} .bg-white{background:#ffffff}
+
+/* Typography */
+.h1{font-size:40rpx;font-weight:700;color:#1f1f1f}
+.h2{font-size:32rpx;font-weight:600;color:#222}
+.p{font-size:28rpx;color:#555;line-height:1.6}
+
+/* Containers */
+.screen{min-height:100vh;background:#ffffff;padding:32rpx}
+.card{background:#fff;border:1px solid #eee;border-radius:16rpx;padding:24rpx}
+
+/* Inputs */
+.input{border:1px solid #e0e0e0;border-radius:12rpx;padding:20rpx;font-size:28rpx;color:#222}
+
+/* Buttons */
+.btn{border-radius:12rpx;padding:20rpx;text-align:center;font-size:28rpx}
+.btn-primary{background:#23b0d3;color:#fff}
+.btn-outline{background:#fff;color:#66905e;border:1px solid #66905e}
+.btn-link{background:#fff;color:#23b0d3}
+
+/* Spacing */
+.mt-8{margin-top:8rpx}.mt-12{margin-top:12rpx}.mt-16{margin-top:16rpx}.mt-24{margin-top:24rpx}
+
+/* Status */
+.error{color:#b00020;font-size:24rpx}

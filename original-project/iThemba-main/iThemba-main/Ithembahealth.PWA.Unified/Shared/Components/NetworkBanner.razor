@@ -1,0 +1,53 @@
+﻿@* @using Ithembahealth.PWA.Unified.Services
+@inject NetworkService Net
+@implements IDisposable
+
+@if (!online)
+{
+    <div class="net-banner">
+        <MudAlert Severity="Severity.Warning" Dense="true" Elevation="0">
+            You’re offline. Some actions won’t work.
+            <MudButton Size="Size.Small" Class="ms-2" OnClick="Retry">Retry</MudButton>
+        </MudAlert>
+    </div>
+}
+
+@code {
+    private bool online = true;
+    private HttpClient? _http;
+
+    [Inject] public IHttpClientFactory? HttpFactory { get; set; } // if you prefer a factory
+
+    protected override async Task OnInitializedAsync()
+    {
+        Net.ConnectivityChanged += OnChange;
+        online = Net.IsOnline;
+        await Net.InitializeAsync();
+    }
+
+    private void OnChange(bool isOnline)
+    {
+        online = isOnline;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Retry()
+    {
+        try
+        {
+            var http = HttpFactory?.CreateClient() ?? new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
+            // Ping a small, public endpoint (choose one your app can reach when online)
+            var _ = await http.GetAsync("manifest.webmanifest?ts=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            Net.MarkOnline();
+        }
+        catch
+        {
+            // still offline; do nothing
+        }
+    }
+
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+
+    public void Dispose() => Net.ConnectivityChanged -= OnChange;
+}
+ *@

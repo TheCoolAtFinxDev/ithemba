@@ -1,0 +1,51 @@
+﻿@page "/patient/profile"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5">My Profile</MudText>
+    <MudPaper Class="pa-4 mt-3" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle1">Full Name</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">Thabo Mokoena</MudText>
+
+                <MudText Typo="Typo.subtitle1">Email</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">thabo@example.com</MudText>
+
+                <MudText Typo="Typo.subtitle1">Phone</MudText>
+                <MudText Typo="Typo.body1">+266 5890 1234</MudText>
+            </MudItem>
+        </MudGrid>
+
+        <div class="mt-4 d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@EditProfile">Edit Profile</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="@GoToChangePassword">Change Password</MudButton>
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4" Elevation="1">
+        <MudList T="object" Dense="true">
+            <MudListItem OnClick="@(() => NavigationManager.NavigateTo("/profile/support"))">
+                <MudListItemIcon><MudIcon Icon="@Icons.Material.Filled.SupportAgent" /></MudListItemIcon>
+                <MudListItemText>Contact Support</MudListItemText>
+            </MudListItem>
+            <MudListItem OnClick="@(() => NavigationManager.NavigateTo("/profile/faq"))">
+                <MudListItemIcon><MudIcon Icon="@Icons.Material.Filled.HelpOutline" /></MudListItemIcon>
+                <MudListItemText>FAQs</MudListItemText>
+            </MudListItem>
+        </MudList>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private void EditProfile()
+    {
+        NavigationManager.NavigateTo("/patient/profile/edit");
+    }
+
+    private void GoToChangePassword()
+    {
+        NavigationManager.NavigateTo("/profile/change-password");
+    }
+}

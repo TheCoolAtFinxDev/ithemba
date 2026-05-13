@@ -1,0 +1,11 @@
+<view class="screen">
+  <ih-appbar title="IthembaHealth"></ih-appbar>
+  <view class="hero">
+    <text class="h1">Your health, simplified</text>
+    <text class="p mt-12">Book doctors, track claims, and manage your health savings.</text>
+  </view>
+  <view class="mt-24">
+    <ih-button type="primary" text="Get Started" onTap="goTerms"/>
+    <ih-button type="link" text="Sign in" onTap="goLogin" class="mt-12"/>
+  </view>
+</view>

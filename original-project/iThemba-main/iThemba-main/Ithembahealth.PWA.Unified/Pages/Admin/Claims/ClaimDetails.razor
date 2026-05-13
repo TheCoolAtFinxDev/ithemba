@@ -1,0 +1,197 @@
+﻿@page "/admin/claims/{ClaimId:int}"
+@using Ithembahealth.PWA.Unified.Shared.Components.Dialogs
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-2">Claim Details</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Clinic / Doctor</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.ClinicName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Date of Visit</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.Date.ToString("dd MMM yyyy")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Amount</MudText>
+                <MudText Typo="Typo.subtitle1">LSL @_claim.Amount.ToString("F2")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Status</MudText>
+                <MudChip T=Color Color="@GetChipColor(_claim.Status)" Size="Size.Small">@_claim.Status</MudChip>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Beneficiary</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.Beneficiary</MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Color="Color.Secondary">Description</MudText>
+                <MudText Typo="Typo.subtitle1">@_claim.Description</MudText>
+            </MudItem>
+            @if (!string.IsNullOrWhiteSpace(_claim.Attachment))
+            {
+                <MudItem xs="12">
+                    <MudText Color="Color.Secondary">Attachment</MudText>
+                    <MudLink Href="@_claim.Attachment" Target="_blank">View Uploaded Document</MudLink>
+                </MudItem>
+            }
+
+            @if (_claim.Status == "Approved" || _claim.Status == "Rejected")
+            {
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Secondary">Decision Timestamp</MudText>
+                    <MudText Typo="Typo.subtitle2">@_claim.DecisionTimestamp?.ToString("dd MMM yyyy hh:mm tt")</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Secondary">Processed By</MudText>
+                    <MudText Typo="Typo.subtitle2">@_claim.ApprovedBy</MudText>
+                </MudItem>
+            }
+
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Admin Notes</MudText>
+                <MudList T="string" Dense="true">
+                    @foreach (var note in Notes)
+                    {
+                        <MudListItem>
+                            <MudListItemText>
+                                <MudText Typo="Typo.body2">@note.Content</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@note.Timestamp.ToString("dd MMM yyyy HH:mm")</MudText>
+                            </MudListItemText>
+                        </MudListItem>
+                    }
+                </MudList>
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="OpenNoteDialog" Class="mt-2">Add Note</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Action History</MudText>
+    <MudPaper Class="pa-3 mb-4" Elevation="1">
+        <MudList T="string">
+            @foreach (var entry in _claim.AuditTrail)
+            {
+                <MudListItem>
+                    <MudListItemText>
+                        <MudText Typo="Typo.body2">@entry.Timestamp.ToString("dd MMM yyyy HH:mm") - <b>@entry.Action</b> by @entry.Actor</MudText>
+                    </MudListItemText>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+
+    @if (_claim.Status == "Pending")
+    {
+        <MudStack Row="true" Spacing="2" Class="mb-4">
+            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="@(() => ConfirmAction("Approve"))">Approve</MudButton>
+            <MudButton Color="Color.Error" Variant="Variant.Outlined" OnClick="@(() => ConfirmAction("Reject"))">Reject</MudButton>
+        </MudStack>
+    }
+
+    <MudButton Variant="Variant.Outlined" OnClick="@(() => NavigationManager.NavigateTo("/admin/claims"))">Back</MudButton>
+</MudContainer>
+
+@code {
+    [Parameter] public int ClaimId { get; set; }
+
+    private AdminClaimDetail _claim = new();
+    private List<AdminNote> Notes = new();
+    
+    protected override void OnInitialized()
+    {
+        _claim = new AdminClaimDetail
+        {
+            Id = ClaimId,
+            ClinicName = "Dr. Makhotso Clinic",
+            Date = DateTime.Today.AddDays(-4),
+            Amount = 650,
+            Status = "Pending",
+            Beneficiary = "Child - Lereko",
+            Description = "X-ray",
+            Attachment = "/files/xray_receipt.pdf",
+            AuditTrail = new()
+            {
+                new() { Timestamp = DateTime.Today.AddDays(-4), Action = "Submitted", Actor = "Provider" },
+                new() { Timestamp = DateTime.Today.AddDays(-3), Action = "Viewed", Actor = "Admin Khauhelo" },
+            }
+        };
+
+        Notes = new()
+        {
+            new AdminNote { Content = "Initial submission verified.", Timestamp = DateTime.Today.AddDays(-2) }
+        };
+    }
+
+    private async Task OpenNoteDialog()
+    {
+        var parameters = new DialogParameters { ["NoteContent"] = "" };
+        var dialog = await DialogService.ShowAsync<NoteDialog>("Add Note", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is string newNote)
+        {
+            Notes.Add(new AdminNote { Content = newNote, Timestamp = DateTime.Now });
+        }
+    }
+
+    private async Task ConfirmAction(string action)
+    {
+        var confirm = await DialogService.ShowMessageBox($"Confirm {action}",
+            $"Are you sure you want to {action.ToLower()} this claim?",
+            yesText: "Yes", noText: "No");
+
+        if (confirm == true)
+        {
+            _claim.Status = action == "Approve" ? "Approved" : "Rejected";
+            _claim.ApprovedBy = "Admin Khauhelo";
+            _claim.DecisionTimestamp = DateTime.Now;
+            _claim.AuditTrail.Add(new AuditEntry
+            {
+                Timestamp = DateTime.Now,
+                Action = action,
+                Actor = "Admin Khauhelo"
+            });
+        }
+    }
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private class AdminNote
+    {
+        public string Content { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
+
+    private class AdminClaimDetail
+    {
+        public int Id { get; set; }
+        public string ClinicName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "Pending";
+        public string Description { get; set; } = "";
+        public string Beneficiary { get; set; } = "";
+        public string? Attachment { get; set; }
+        public string? ApprovedBy { get; set; }
+        public DateTime? DecisionTimestamp { get; set; }
+        public List<AuditEntry> AuditTrail { get; set; } = new();
+    }
+
+    private class AuditEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public string Action { get; set; } = "";
+        public string Actor { get; set; } = "";
+    }
+}

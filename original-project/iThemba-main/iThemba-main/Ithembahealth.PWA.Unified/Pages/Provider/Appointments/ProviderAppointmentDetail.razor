@@ -1,0 +1,104 @@
+﻿@page "/provider/appointments/{AppointmentId:int}"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Appointment Details</MudText>
+
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Patient</MudText>
+                <MudText Typo="Typo.subtitle1">@_appointment.PatientName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Date & Time</MudText>
+                <MudText Typo="Typo.subtitle1">@_appointment.Date.ToString("dd MMM yyyy hh:mm tt")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Reason</MudText>
+                <MudText Typo="Typo.subtitle1">@_appointment.Reason</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Color="Color.Secondary">Status</MudText>
+                <MudChip T="object" Color="@GetChipColor(_appointment.Status)">
+                    @_appointment.Status
+                </MudChip>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!_appointment.IsConfirmed)
+    {
+        <MudPaper Elevation="1" Class="pa-4 mb-4">
+            <MudText Typo="Typo.subtitle2" Class="mb-2">Confirm Appointment with OTP</MudText>
+            <MudTextField T="string" Label="Enter OTP" @bind-Value="_otp" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmOtp" Class="mt-2">
+                Confirm Appointment
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.ReceiptLong"
+                   OnClick="@(() => NavigationManager.NavigateTo($"/provider/claims/submit/{AppointmentId}"))">
+            Submit Claim
+        </MudButton>
+    }
+
+    <MudButton Variant="Variant.Outlined" OnClick="@(() => NavigationManager.NavigateTo("/provider/appointments"))" Class="mt-3">
+        Back to Appointments
+    </MudButton>
+</MudContainer>
+
+@code {
+    [Parameter] public int AppointmentId { get; set; }
+
+    private AppointmentDetailModel _appointment = new();
+    private string _otp = "";
+
+    private string ClaimSubmissionUrl => $"/provider/claims/submit?appointmentId={AppointmentId}";
+
+    protected override void OnInitialized()
+    {
+        // Replace with actual API/service call
+        _appointment = MockAppointments.FirstOrDefault(a => a.Id == AppointmentId) ?? new();
+    }
+
+    private void ConfirmOtp()
+    {
+        if (_otp == "123456") // Simulate OTP check
+        {
+            _appointment.IsConfirmed = true;
+            _appointment.Status = "Confirmed";
+        }
+    }
+
+    private Color GetChipColor(string status) => status switch
+    {
+        "Confirmed" => Color.Success,
+        "Pending" => Color.Warning,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    private class AppointmentDetailModel
+    {
+        public int Id { get; set; }
+        public string PatientName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string Reason { get; set; } = "";
+        public string Status { get; set; } = "Pending";
+        public bool IsConfirmed { get; set; } = false;
+    }
+
+    private List<AppointmentDetailModel> MockAppointments => new()
+    {
+        new() { Id = 1, PatientName = "Lereko Mokoena", Date = DateTime.Now.AddHours(1), Reason = "Consultation", Status = "Pending", IsConfirmed = false },
+        new() { Id = 2, PatientName = "Thato Mokoena", Date = DateTime.Now.AddHours(-3), Reason = "Follow-up", Status = "Confirmed", IsConfirmed = true },
+        new() { Id = 3, PatientName = "Tsietsi Mokone", Date = DateTime.Now.AddHours(-3), Reason = "Follow-up", Status = "Confirmed", IsConfirmed = true },
+
+    };
+}

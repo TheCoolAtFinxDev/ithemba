@@ -1,0 +1,67 @@
+﻿@page "/preferences"
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">App Preferences</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <!-- Shared preferences -->
+        <MudSwitch T="bool" @bind-Checked="_notificationsEnabled" Color="Color.Primary" Label="Enable Push Notifications" />
+        <MudSwitch T="bool" @bind-Checked="_darkModeEnabled" Color="Color.Primary" Label="Dark Mode" Class="mt-3" />
+
+        @if (_userRole == "patient")
+        {
+            <MudSwitch T="bool" @bind-Checked="_mpesaOtpEnabled" Color="Color.Primary" Label="Use M-PESA OTP for Claims" Class="mt-3" />
+        }
+        @if (_userRole == "provider")
+        {
+            <MudSwitch T="bool" @bind-Checked="_autoClaimSubmit" Color="Color.Primary" Label="Auto-submit Claims After Appointment" Class="mt-3" />
+        }
+        @if (_userRole == "admin")
+        {
+            <MudSwitch T="bool" @bind-Checked="_claimApprovalSummary" Color="Color.Primary" Label="Enable Claim Approvals Summary" Class="mt-3" />
+        }
+    </MudPaper>
+
+    <MudDivider Class="my-4" />
+
+    <div class="d-flex justify-end gap-2">
+        <MudButton Variant="Variant.Outlined" OnClick="CancelChanges">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save Changes</MudButton>
+    </div>
+</MudContainer>
+
+@code {
+    private bool _notificationsEnabled = true;
+    private bool _darkModeEnabled = false;
+    private bool _mpesaOtpEnabled = true;
+    private bool _autoClaimSubmit = false;
+    private bool _claimApprovalSummary = false;
+
+    private string _userRole = "patient"; // default fallback
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var roleClaim = user.FindFirst(c => c.Type == "role")?.Value;
+            _userRole = roleClaim ?? "patient"; // fallback role
+        }
+
+        // TODO: Load saved preferences from API or local store
+    }
+
+    private void SaveChanges()
+    {
+        // Persist preferences here based on _userRole
+    }
+
+    private void CancelChanges()
+    {
+        // Reload or reset preferences
+    }
+}
+

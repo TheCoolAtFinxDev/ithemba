@@ -1,0 +1,2 @@
+@import "../../styles/theme.acss";@import "../../styles/util.acss";
+.doc{max-height:60vh;border:1px solid #eee;border-radius:16rpx;padding:24rpx;overflow:auto}

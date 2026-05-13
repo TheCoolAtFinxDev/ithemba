@@ -1,0 +1,67 @@
+﻿@page "/patient/doctor-profile"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudText Typo="Typo.h5" Class="mb-3">Doctor Profile</MudText>
+
+    @if (!string.IsNullOrWhiteSpace(DoctorName))
+    {
+        <MudPaper Class="pa-4" Elevation="2">
+            <MudText Typo="Typo.h6">@DoctorName</MudText>
+            <MudText Typo="Typo.subtitle2">@Specialty - @Location</MudText>
+
+            <MudDivider Class="my-2" />
+
+            <MudText Typo="Typo.body2" Class="mb-2"><b>Bio:</b> Dr. @DoctorName is a highly experienced @Specialty based in @Location, dedicated to providing exceptional care to patients in Lesotho.</MudText>
+
+            <MudText Typo="Typo.body2" Class="mb-2"><b>Availability:</b></MudText>
+            <ul>
+                <li>Monday: 09:00 - 12:00</li>
+                <li>Wednesday: 14:00 - 17:00</li>
+                <li>Friday: 10:00 - 13:00</li>
+            </ul>
+
+            <MudDivider Class="my-2" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GoToBooking">
+                Book Appointment
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-2" OnClick="GoToDoctorAppointments">
+                View Past Appointments with Dr. @DoctorName
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error">Doctor information is missing.</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private string? DoctorName;
+    private string? Specialty;
+    private string? Location;
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        DoctorName = query["name"];
+        Specialty = query["specialty"];
+        Location = query["location"];
+    }
+
+
+    private void GoToBooking()
+    {
+        NavigationManager.NavigateTo($"/patient/book?doctor={Uri.EscapeDataString(DoctorName)}&specialty={Uri.EscapeDataString(Specialty)}&location={Uri.EscapeDataString(Location)}");
+    }
+
+    private void GoToDoctorAppointments()
+    {
+        NavigationManager.NavigateTo($"/patient/appointments?filterDoctor={Uri.EscapeDataString(DoctorName)}");
+    }
+}

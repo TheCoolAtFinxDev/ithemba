@@ -1,0 +1,13 @@
+
+<view class="screen">
+  <ih-appbar title="Profile"></ih-appbar>
+  <ih-card>
+    <text class="h2">{{ nameDisplay }}</text>
+    <text class="p mt-8">Phone: {{ phoneDisplay }}</text>
+    <text class="p mt-8">Role: {{ roleDisplay }}</text>
+  </ih-card>
+  <view class="mt-16 grid1">
+    <!-- <ih-button type="outline" text="Edit Profile" onTap="edit"/> -->
+    <ih-button type="link" text="Back to Home" onTap="home"/>
+  </view>
+</view>

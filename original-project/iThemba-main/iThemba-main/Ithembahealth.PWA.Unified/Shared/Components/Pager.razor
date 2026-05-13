@@ -1,0 +1,36 @@
+﻿
+<MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="py-2">
+    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
+        <MudIconButton Icon="@Icons.Material.Filled.FirstPage" Disabled="@(!HasPreviousPage)" OnClick="@(() => OnClick.InvokeAsync(0))" />
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Disabled="@(!HasPreviousPage)" OnClick="@(() => OnClick.InvokeAsync(PageIndex - 1))" />
+    </MudStack>
+
+    <MudButtonGroup Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small">
+        @foreach (var i in VisiblePages())
+        {
+            var isActive = i == PageIndex;
+            <MudButton Variant="@(isActive? Variant.Filled: Variant.Outlined)" DisableElevation="true"
+                       OnClick="@(() => OnClick.InvokeAsync(i))">
+                @(i + 1)
+            </MudButton>
+        }
+    </MudButtonGroup>
+
+    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Disabled="@(!HasNextPage)" OnClick="@(() => OnClick.InvokeAsync(PageIndex + 1))" />
+        <MudIconButton Icon="@Icons.Material.Filled.LastPage" Disabled="@(!HasNextPage)" OnClick="@(() => OnClick.InvokeAsync(TotalPages - 1))" />
+    </MudStack>
+</MudStack>
+
+@code {
+    private IEnumerable<int> VisiblePages()
+    {
+        // show a window around current page
+        var window = MaxButtons <= 0 ? 5 : MaxButtons;
+        var start = Math.Max(0, PageIndex - window / 2);
+        var end = Math.Min(TotalPages - 1, start + window - 1);
+        start = Math.Max(0, end - window + 1);
+        for (var i = start; i <= end; i++)
+            yield return i;
+    }
+}

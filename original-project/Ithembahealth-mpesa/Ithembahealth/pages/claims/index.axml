@@ -1,0 +1,21 @@
+<view class="screen">
+  <ih-appbar title="Claims"></ih-appbar>
+  <view a:if="{{items && items.length}}">
+    <block a:for="{{items}}" a:for-item="x" a:key="id">
+      <ih-card>
+        <view class="row space-between">
+          <text class="h2">{{x.clinic}}</text>
+          <text class="p">{{x.amount}}</text>
+        </view>
+        <view class="mt-8 row space-between">
+          <text class="p">{{x.date}}</text>
+          <text class="p">{{x.status}}</text>
+        </view>
+        <view class="mt-12">
+          <button class="btn btn-link" onTap="open" data-id="{{x.id}}">View</button>
+        </view>
+      </ih-card>
+    </block>
+  </view>
+  <ih-empty a:else text="No claims yet"></ih-empty>
+</view>

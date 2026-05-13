@@ -1,0 +1,94 @@
+<view class="page-wrap">
+  <ih-appbar title="Wallet" />
+
+  <!-- Summary -->
+  <view class="summary section-gap">
+    <view class="stat">
+      <text class="label">Available Balance</text>
+      <text class="meta">Usable for payments & fees</text>
+            <text class="value">{{balanceDisplay}}</text>
+      <text class="meta">Updated {{updatedDisplay}}</text>
+    </view>
+    <view class="stat">
+      <text class="label">Total Saved</text>
+      <text class="meta">Total amount contributed</text>
+            <text class="value">{{savingsDisplay}}</text>
+      <text class="meta">Currency {{currency}}</text>
+    </view>
+  </view>
+
+  <!-- Top-up -->
+  <view class="topup section-gap card">
+    <view class="row">
+      <input
+        class="input"
+        placeholder="Amount (e.g., 100)"
+        value="{{amountInput}}"
+        onInput="handleAmountInput"
+      />
+      <!-- <button class="btn btn-outline" onTap="topUpManual">Record</button> -->
+    </view>
+    <view class="actions">
+      <button class="btn btn-primary" onTap="topUpMpesa">Submit Top-Up</button>
+      <!-- <button class="btn btn-outline" onTap="refresh">Refresh</button> -->
+    </view>
+  </view>
+
+  <!-- Errors -->
+  <view a:if="{{err}}" class="error section-gap card">
+    {{err}}
+  </view>
+
+  <!-- History -->
+  <!-- History -->
+<view class="history section-gap card">
+  <text class="section-title">Transaction history</text>
+
+  <view a:if="{{!transactions.length}}" class="empty">
+    No transactions yet.
+  </view>
+
+  <view a:if="{{transactions.length>0}}" class="tx-list">
+    <block a:for="{{transactions}}" a:key="id">
+      <view class="tx">
+
+        <view class="left">
+
+          <!-- Title row -->
+          <view class="title-row">
+            <text class="title">{{item.title || item.type}}</text>
+
+            <!-- Fee tag -->
+            <text a:if="{{(item.title||item.type||'').toLowerCase().indexOf('fee')>-1}}"
+                  class="fee-tag">
+              (Fee)
+            </text>
+          </view>
+
+          <!-- Note (M-Pesa ref, adjustments, etc.) -->
+          <text a:if="{{item.statusText}}" class="sub note">
+            {{item.statusText}}
+          </text>
+
+          <!-- Date -->
+          <text class="sub date">{{item.dateText || item.createdAt}}</text>
+
+        </view>
+
+        <view class="right">
+          <text class="amt {{item.amountClass}}">
+            {{item.amountText || item.amount}}
+          </text>
+          
+        </view>
+
+      </view>
+    </block>
+  </view>
+
+  <view a:if="{{hasMore}}" class="loadmore">
+    Scroll for more…
+  </view>
+</view>
+
+</view>

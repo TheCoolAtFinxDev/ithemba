@@ -1,0 +1,95 @@
+﻿@page "/provider/claims/submit/{AppointmentId:int}"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Submit Claim for Appointment</MudText>
+
+    <MudForm @ref="_form">
+        <MudTextField Label="Clinic / Provider" @bind-Value="_claim.ClinicName" ReadOnly="true" />
+        <MudTextField Label="Patient Name" @bind-Value="_claim.PatientName" ReadOnly="true" />
+        <MudDatePicker Label="Date of Visit" @bind-Date="_claim.Date" ReadOnly="true" />
+        <MudNumericField T="decimal" Label="Amount (LSL)" @bind-Value="_claim.Amount" ReadOnly="true" />
+
+        <MudTextField Label="Description" @bind-Value="_claim.Description" Required="true" />
+
+        <MudTextField Label="Attach Supporting Document"
+                      Placeholder="Choose file"
+                      ReadOnly="true"
+                      Value="@_fileName"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                      OnAdornmentClick="@PickFile" />
+
+        <div class="mt-4 d-flex justify-end gap-2">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitClaimAsync">Submit Claim</MudButton>
+        </div>
+    </MudForm>
+</MudContainer>
+
+@code {
+    [Parameter] public int AppointmentId { get; set; }
+
+    private MudForm _form;
+    private string _fileName = "";
+    private ProviderClaimModel _claim = new();
+
+    protected override void OnInitialized()
+    {
+        // Simulated lookup — replace with real appointment data
+        var appointment = MockAppointments.FirstOrDefault(a => a.Id == AppointmentId);
+        if (appointment != null)
+        {
+            _claim = new ProviderClaimModel
+                {
+                    ClinicName = "Hope Medical", // Replace with logged-in provider clinic
+                    PatientName = appointment.PatientName,
+                    Date = appointment.Date,
+                    Amount = appointment.EstimatedAmount
+                };
+        }
+    }
+
+    private async Task SubmitClaimAsync()
+    {
+        await _form.Validate();
+        if (_form.IsValid)
+        {
+            Snackbar.Add("Claim submitted successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/provider/dashboard");
+        }
+    }
+
+    private void Cancel() => NavigationManager.NavigateTo("/provider/appointments");
+
+    private void PickFile()
+    {
+        // Simulated file upload – replace with actual upload logic
+        _fileName = "supporting_document.pdf";
+    }
+
+    private class ProviderClaimModel
+    {
+        public string ClinicName { get; set; } = "";
+        public string PatientName { get; set; } = "";
+        public DateTime ? Date { get; set; } = DateTime.Today;
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = "";
+    }
+
+    private class AppointmentStub
+    {
+        public int Id { get; set; }
+        public string PatientName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public decimal EstimatedAmount { get; set; }
+    }
+
+    private List<AppointmentStub> MockAppointments => new()
+    {
+        new() { Id = 1, PatientName = "Lereko Mokoena", Date = DateTime.Today.AddDays(-1), EstimatedAmount = 450 },
+        new() { Id = 2, PatientName = "Thato Mokoena", Date = DateTime.Today.AddDays(-2), EstimatedAmount = 900 },
+    };
+}

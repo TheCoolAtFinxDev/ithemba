@@ -1,0 +1,103 @@
+.ith-section-header {
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: #2d2d2d;
+  cursor: pointer;
+}
+
+.info-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+}
+
+.info-row i {
+  margin-top: 2px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Visit code display */
+.visit-code {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 10px;
+  color: #00B9D6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skeleton loader */
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 6px;
+}
+.w-75 { width: 75%; }
+.w-50 { width: 50%; }
+.w-40 { width: 40%; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Cancel button */
+.btn-cancel {
+  background: #fff;
+  color: #E53935;
+  border: 2px solid #E53935;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-cancel:hover { background: #E53935; color: #fff; }
+
+/* Status badges (same as list) */
+.status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.st-requested  { background: #FFF3E0; color: #E65100; }
+.st-scheduled  { background: #E3F2FD; color: #1565C0; }
+.st-confirmed  { background: #E8F5E9; color: #2E7D32; }
+.st-rescheduled { background: #F3E5F5; color: #6A1B9A; }
+.st-checkedin  { background: #E0F7FA; color: #00695C; }
+.st-inprogress { background: #E8EAF6; color: #283593; }
+.st-completed  { background: #F1F8E9; color: #33691E; }
+.st-cancelled  { background: #FFEBEE; color: #B71C1C; }
+.st-unknown    { background: #F5F5F5; color: #616161; }
+
+/* Cancel modal */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal-sheet {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+}

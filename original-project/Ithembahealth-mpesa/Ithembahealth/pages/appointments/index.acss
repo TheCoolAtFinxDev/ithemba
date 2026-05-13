@@ -1,0 +1,209 @@
+/* pages/appointments/index.acss */
+
+/* ====== Color tokens (from theme.js) ====== */
+:root {
+  /* ACSS doesn't support JS theme import, so we mirror your palette here */
+  --primary: #23b0d3;
+  --secondary: #66905e;
+  --bg: #ffffff;
+  --text: #1f2937;          /* slate-800 */
+  --muted: #6b7280;         /* slate-500 */
+  --border: #e5e7eb;        /* slate-200 */
+  --card: #ffffff;
+  --error: #e11d48;         /* rose-600 */
+  --success: #16a34a;       /* green-600 */
+  --warn: #f59e0b;          /* amber-500 */
+  --info: #0ea5e9;          /* sky-500 */
+}
+
+/* ====== Page ====== */
+.page {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 16px 14px 28px;
+  box-sizing: border-box;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* ====== Banner (Error/Info) ====== */
+.banner {
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  background: #f9fafb;
+}
+.banner.error {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+.b-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: #9f1239; /* deep rose */
+}
+.b-msg {
+  display: block;
+  color: #7f1d1d;
+}
+
+/* ====== Header ====== */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 2px 12px;
+}
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.refresh {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  background: #f0fbff;
+}
+.refresh:active {
+  background: #e6f7fd;
+}
+
+/* ====== Tabs ====== */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin: 8px 2px 14px;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+.tab.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+/* ====== Empty State ====== */
+.empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+/* ====== Cards ====== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 1px rgba(31,41,55,0.02), 0 2px 6px rgba(31,41,55,0.04);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+/* time label (SAST string like "09:00 - 09:30") */
+.time {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* secondary lines */
+.line {
+  display: block;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ====== Status Chip ====== */
+.status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* map common slugs to colors */
+.status.requested,
+.status.scheduled,
+.status.pending {
+  color: var(--info);
+  background: #ecfeff;
+  border-color: #bae6fd;
+}
+.status.confirmed {
+  color: var(--secondary);
+  background: #effcf3;
+  border-color: #c7ebd0;
+}
+.status.in-progress,
+.status.inprogress {
+  color: #7c3aed;         /* violet */
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+.status.completed,
+.status.done {
+  color: var(--success);
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+.status.cancelled,
+.status.canceled,
+.status.rejected {
+  color: var(--error);
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+.status.no-show,
+.status.noshow {
+  color: var(--warn);
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+/* ====== Utilities ====== */
+.hidden { display: none; }
+
+button {
+  line-height: 1.2;
+}
+
+/* Better tap feedback */
+button:active,
+.view:active {
+  opacity: 0.9;
+}
+
+/* Small screens spacing polish */
+@media (max-width: 360px) {
+  .title { font-size: 16px; }
+  .refresh { padding: 7px 10px; }
+  .tab { padding: 8px 10px; }
+  .card { padding: 10px 12px; }
+}

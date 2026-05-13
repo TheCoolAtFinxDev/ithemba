@@ -1,0 +1,123 @@
+<!-- pages/appointments/detail/index.axml --> 
+<view class="page">
+
+  <!-- Error banner -->
+  <view a:if="{{err}}" class="banner error">
+    <text class="b-title">Error</text>
+    <text class="b-msg">{{err}}</text>
+  </view>
+
+  <!-- Header -->
+  <view class="head">
+    <text class="title">Appointment</text>
+    <button class="refresh" onTap="refresh">Refresh</button>
+  </view>
+
+  <!-- Skeleton / loading -->
+  <view a:if="{{loading}}" class="skeleton">
+    <view class="sk-line w80"></view>
+    <view class="sk-line w60"></view>
+    <view class="sk-line w40"></view>
+  </view>
+
+  <!-- Card -->
+  <view a:if="{{item && !loading}}" class="card">
+
+    <view class="row">
+      <text class="time">{{item.label}}</text>
+      <text class="status {{item.statusSlug}}">{{item.statusText}}</text>
+    </view>
+
+    <text class="line">
+      <text class="muted">Clinic:</text> {{item.clinic || 'Clinic'}}
+    </text>
+
+    <text a:if="{{item.doctor}}" class="line">
+      <text class="muted">Doctor:</text> Dr {{item.doctor}}
+    </text>
+
+    <text a:if="{{item.beneficiaryId}}" class="line">
+      <text class="muted">Beneficiary:</text> {{item.beneficiaryId}}
+    </text>
+
+    <text a:if="{{item.reason}}" class="line">
+      <text class="muted">Note:</text> {{item.reason}}
+    </text>
+
+    <text class="line small muted">Date: {{item.appointmentDate}}</text>
+  </view>
+
+  <!-- Reason for visit -->
+  <view
+    a:if="{{item && (item.reason || item.reasonText || item.note)}}"
+    class="card section-gap reason"
+  >
+    <text class="section-title">Reason for visit</text>
+    <text class="reason-text">
+      {{item.reason || item.reasonText || item.note}}
+    </text>
+  </view>
+
+  <!-- Actions -->
+  <view a:if="{{item && !loading}}" class="actions">
+    <button class="btn cancel" a:if="{{canCancel}}" onTap="openCancelNote">Cancel</button>
+    <button a:if="{{canReschedule}}"
+    class="btn"
+    onTap="onReschedule">
+Reschedule
+</button>
+</view>
+
+  <!-- NEW: Pay action -->
+  <view class="actions">
+    <!-- …your existing action buttons… -->
+    <!-- <button a:if="{{canPay && !paying}}" class="btn pay" onTap="doPay">Pay now</button> -->
+    <!-- <button a:if="{{canPay && paying}}" class="btn pay" disabled="true">Processing…</button> -->
+  </view>
+
+<!-- put this *below* your existing Pay actions, without changing them -->
+<view a:if="{{item && !loading}}" class="actions">
+  <button
+    a:if="{{canSendOtp && !sendingOtp}}"
+    class="btn outline"
+    onTap="doRequestOtp">
+    Get visit code
+  </button>
+  <button
+    a:if="{{canSendOtp && sendingOtp}}"
+    class="btn outline"
+    disabled="true">
+    Sending…
+  </button>
+</view>
+
+<view a:if="{{otpRequested}}" class="card">
+  <text class="line small muted">
+    A one-time visit code has been sent to your phone. Show it to the clinic when you arrive.
+  </text>
+</view>
+  <!-- === end OTP section === -->
+
+  <!-- Cancel note modal -->
+  <view a:if="{{showCancel}}" class="modal-mask">
+    <view class="modal">
+      <text class="m-title">Cancel appointment</text>
+      <text class="m-sub">Optionally tell the doctor why you’re cancelling.</text>
+
+      <textarea
+        class="m-textarea"
+        placeholder="Reason (optional)"
+        value="{{cancelNote}}"
+        maxlength="240"
+        autoHeight="true"
+        onInput="onCancelNoteInput"
+      />
+
+      <view class="modal-actions">
+        <button class="btn outline" onTap="closeCancelNote">Keep appointment</button>
+        <button class="btn cancel" onTap="submitCancelNote">Confirm cancel</button>
+      </view>
+    </view>
+  </view>
+
+</view>

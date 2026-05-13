@@ -1,0 +1,9 @@
+﻿@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthProvider
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
+    <MudNavLink Href="/admin" Match="NavLinkMatch.Prefix">Admin</MudNavLink>
+    <MudNavLink Href="/patient" Match="NavLinkMatch.Prefix">Patient</MudNavLink>
+    <MudNavLink Href="/provider" Match="NavLinkMatch.Prefix">Provider</MudNavLink>
+</MudNavMenu>

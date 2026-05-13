@@ -1,0 +1,68 @@
+﻿@page "/admin/support"
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Support Tickets</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudTable Items="@tickets" Hover="true" Bordered="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Subject</MudTh>
+                <MudTh>User</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Created</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Subject</MudTd>
+                <MudTd>@context.UserEmail</MudTd>
+                <MudTd>
+                    <MudChip T=Color Color="@GetStatusColor(context.Status)" Variant="Variant.Filled">@context.Status</MudChip>
+                </MudTd>
+                <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Text" OnClick="@(() => ViewDetails(context.Id))">
+                        View
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<SupportTicket> tickets = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Replace with API call
+        tickets = new List<SupportTicket>
+        {
+            new() { Id = Guid.NewGuid(), Subject = "Issue with appointment", UserEmail = "user1@example.com", Status = "Open", CreatedAt = DateTime.UtcNow.AddDays(-1) },
+            new() { Id = Guid.NewGuid(), Subject = "Wallet balance error", UserEmail = "user2@example.com", Status = "In Progress", CreatedAt = DateTime.UtcNow.AddDays(-2) },
+            new() { Id = Guid.NewGuid(), Subject = "App not loading", UserEmail = "user3@example.com", Status = "Closed", CreatedAt = DateTime.UtcNow.AddDays(-5) }
+        };
+    }
+
+    private void ViewDetails(Guid ticketId)
+    {
+        NavigationManager.NavigateTo($"/admin/support/{ticketId}");
+    }
+
+    private Color GetStatusColor(string status) => status.ToLower() switch
+    {
+        "open" => Color.Error,
+        "in progress" => Color.Warning,
+        "closed" => Color.Success,
+        _ => Color.Default
+    };
+
+    public class SupportTicket
+    {
+        public Guid Id { get; set; }
+        public string Subject { get; set; } = "";
+        public string UserEmail { get; set; } = "";
+        public string Status { get; set; } = "";
+        public DateTime CreatedAt { get; set; }
+    }
+}

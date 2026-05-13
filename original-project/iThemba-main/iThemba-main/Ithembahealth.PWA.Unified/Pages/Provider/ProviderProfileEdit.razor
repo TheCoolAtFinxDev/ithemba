@@ -1,0 +1,76 @@
+﻿@page "/provider/profile/edit"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Edit Profile</MudText>
+
+    <MudForm @ref="_form">
+        <MudTextField Label="Clinic Name" @bind-Value="_profile.ClinicName" Required="true" />
+        <MudTextField Label="Doctor Name" @bind-Value="_profile.DoctorName" Required="true" />
+        <MudTextField Label="Contact Number" @bind-Value="_profile.Contact" Required="true" />
+        <MudTextField Label="Email Address" @bind-Value="_profile.Email" Required="true" />
+        <MudTextField Label="Location" @bind-Value="_profile.Location" />
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.subtitle1">M-PESA Details</MudText>
+        <MudTextField Label="M-PESA Merchant Code" @bind-Value="_profile.MerchantCode" Required="true" />
+        <MudTextField Label="Verify M-PESA Code" @bind-Value="_mpesaCode" Placeholder="Enter code sent via SMS" />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="VerifyMpesaCode" Class="mt-2">
+            Verify M-PESA
+        </MudButton>
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex justify-end gap-2 mt-3">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Save Changes</MudButton>
+        </div>
+    </MudForm>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private ProviderProfileModel _profile = new();
+    private string _mpesaCode = "";
+
+    private async Task Save()
+    {
+        await _form.Validate();
+        if (_form.IsValid)
+        {
+            // TODO: Save to backend
+            Snackbar.Add("Profile updated successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/provider/profile");
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/provider/profile");
+    }
+
+    private void VerifyMpesaCode()
+    {
+        if (_mpesaCode == "123456") // Simulated
+        {
+            Snackbar.Add("M-PESA code verified successfully!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Invalid M-PESA code.", Severity.Error);
+        }
+    }
+
+    private class ProviderProfileModel
+    {
+        public string ClinicName { get; set; } = "";
+        public string DoctorName { get; set; } = "";
+        public string Contact { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string MerchantCode { get; set; } = "";
+    }
+}

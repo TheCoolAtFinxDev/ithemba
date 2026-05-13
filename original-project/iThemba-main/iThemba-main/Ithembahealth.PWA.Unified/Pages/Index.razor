@@ -1,0 +1,67 @@
+﻿@page "/"
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="d-flex flex-column align-center justify-center px-2" Style="min-height: 100vh; background-color: #ffffff;">
+    <MudPaper Elevation="3" Class="pa-6" Style="width: 100%; max-width: 500px; text-align: center;">
+        
+        <MudImage Src="logo.png" Alt="iThembaHealth" Width="100" Class="mb-4 mx-auto" Style="border-radius: 50%;" />
+
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-2">
+            Welcome to iThembaHealth
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mb-4">
+            "iThemba" means hope – and hope begins with health. Our platform offers a flexible health savings plan designed for Basotho to manage medical expenses easily and securely through M-PESA.
+        </MudText>
+
+        <MudDivider Class="my-3" />
+
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2">Why Choose iThemba?</MudText>
+        <MudList T="string" Dense="true">
+            <MudListItem><MudListItemText>✔️ Save for medical expenses securely</MudListItemText></MudListItem>
+            <MudListItem><MudListItemText>✔️ Use funds for yourself and your beneficiaries</MudListItemText></MudListItem>
+            <MudListItem><MudListItemText>✔️ Pay for private healthcare, meds, dentists, labs</MudListItemText></MudListItem>
+            <MudListItem><MudListItemText>✔️ Fast, M-PESA-powered claims and authorization</MudListItemText></MudListItem>
+            <MudListItem><MudListItemText>✔️ Minimal admin: R67/year registration</MudListItemText></MudListItem>
+        </MudList>
+
+        <MudDivider Class="my-3" />
+
+        <MudText Typo="Typo.caption" Class="mb-2">
+            All members are verified by Vodacom M-PESA under the Money Laundering and Proceeds of Crime Regulations (2019).
+        </MudText>
+
+        <MudDivider Class="my-3" />
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudStack Direction="Row" Spacing="2" Justify="Justify.Center">
+                <MudButton Href="/login" Color="Color.Primary" Variant="Variant.Filled">Log In</MudButton>
+                <MudButton Href="/register" Color="Color.Secondary" Variant="Variant.Outlined">Create Account</MudButton>
+            </MudStack>
+        </MudHidden>
+
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <MudStack Direction="Column" Spacing="2">
+                <MudButton Href="/login" Color="Color.Primary" Variant="Variant.Filled" FullWidth="true">Log In</MudButton>
+                <MudButton Href="/register" Color="Color.Secondary" Variant="Variant.Outlined" FullWidth="true">Create Account</MudButton>
+            </MudStack>
+        </MudHidden>
+
+
+        <MudDivider Class="my-3" />
+
+        <MudText Typo="Typo.caption">
+            <MudLink Href="/terms-and-conditions">Terms & Conditions</MudLink> | 
+            <MudLink Href="/privacy-policy">Privacy Policy</MudLink> |
+            <MudLink Href="https://www.ithembahealth.com" Target="_blank">Visit Website</MudLink>
+        </MudText>
+
+        <MudText Typo="Typo.caption" Class="mt-2">
+            Follow us on 
+            <MudLink Href="https://twitter.com/ithembahealth" Target="_blank">Twitter</MudLink>, 
+            <MudLink Href="https://facebook.com/ithembahealth" Target="_blank">Facebook</MudLink> or 
+            WhatsApp us: +266 590 33663
+        </MudText>
+
+    </MudPaper>
+</MudContainer>

@@ -1,0 +1,119 @@
+﻿@page "/admin/reports"
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Reports</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="SearchTerm" Label="Search by ID or Type" Variant="Variant.Outlined" Immediate="true" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudDatePicker @bind-Date="StartDate" Label="From" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudDatePicker @bind-Date="EndDate" Label="To" />
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="ApplyFilters">Filter</MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.Download" OnClick="ExportReports">Export All</MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => NavigationManager.NavigateTo("/admin/reports/create"))">
+                    + Create New Report
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudTable Items="FilteredReports" Hover="true" Dense="true" Bordered="true">
+        <HeaderContent>
+            <MudTh>Report ID</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Generated For</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Id</MudTd>
+            <MudTd>@context.Type</MudTd>
+            <MudTd>@context.Target</MudTd>
+            <MudTd>@context.Date.ToString("dd MMM yyyy")</MudTd>
+            <MudTd>
+                <MudChip T=Color Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+            <MudTd>
+                <MudTooltip Text="Preview report">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" OnClick="@(() => PreviewReport(context))" />
+                </MudTooltip>
+                <MudTooltip Text="Download report">
+                    <MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Default" OnClick="@(() => DownloadReport(context))" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private string SearchTerm = string.Empty;
+    private DateTime? StartDate;
+    private DateTime? EndDate;
+
+    private List<ReportRecord> AllReports = new()
+    {
+        new() { Id = "RPT-001", Type = "TaxStatement", Target = "Patient: Lereko", Date = DateTime.Today.AddDays(-5), Status = "Ready", FileUrl = "/files/report-tax-lekeko.pdf" },
+        new() { Id = "RPT-002", Type = "ClaimSummary", Target = "Provider: Dr. Makhotso", Date = DateTime.Today.AddDays(-10), Status = "Ready", FileUrl = "/files/claims-makhotso.pdf" },
+        new() { Id = "RPT-003", Type = "MonthlyUsage", Target = "System", Date = DateTime.Today.AddDays(-20), Status = "Generating", FileUrl = "" }
+    };
+
+    private List<ReportRecord> FilteredReports => AllReports
+        .Where(r =>
+            (string.IsNullOrEmpty(SearchTerm) || r.Id.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) || r.Type.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (!StartDate.HasValue || r.Date >= StartDate.Value) &&
+            (!EndDate.HasValue || r.Date <= EndDate.Value))
+        .ToList();
+
+    private void ApplyFilters() { /* Filters already live-bound */ }
+
+    private void ExportReports()
+    {
+        // Simulate export: In production, export via CSV/XLS or ZIP archive
+        Console.WriteLine("Export initiated.");
+    }
+
+    private void PreviewReport(ReportRecord report)
+    {
+        if (!string.IsNullOrEmpty(report.FileUrl))
+            NavigationManager.NavigateTo(report.FileUrl, true);
+    }
+
+    private void DownloadReport(ReportRecord report)
+    {
+        if (!string.IsNullOrEmpty(report.FileUrl))
+            NavigationManager.NavigateTo(report.FileUrl, true);
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Ready" => Color.Success,
+        "Generating" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private class ReportRecord
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Target { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public string Status { get; set; } = "Ready";
+        public string FileUrl { get; set; } = string.Empty;
+    }
+}

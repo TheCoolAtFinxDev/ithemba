@@ -1,0 +1,48 @@
+<!-- pages/admin/claims/index.axml -->
+<view class="page">
+
+  <!-- Error banner -->
+  <view a:if="{{err}}" class="banner error">
+    <text class="b-title">Error</text>
+    <text class="b-msg">{{err}}</text>
+  </view>
+
+  <!-- Header -->
+  <view class="header">
+    <text class="title">Claims (Admin)</text>
+  </view>
+
+  <!-- Status filter pills -->
+  <view class="filters">
+    <button class="pill {{status==='Submitted'?'pill--active':''}}" data-status="Submitted" onTap="changeStatus">Submitted</button>
+    <button class="pill {{status==='Approved'?'pill--active':''}}" data-status="Approved" onTap="changeStatus">Approved</button>
+    <button class="pill {{status==='Paid'?'pill--active':''}}" data-status="Paid" onTap="changeStatus">Paid</button>
+    <button class="pill {{status==='Rejected'?'pill--active':''}}" data-status="Rejected" onTap="changeStatus">Rejected</button>
+    <button class="pill {{!status?'pill--active':''}}" data-status="" onTap="changeStatus">All</button>
+  </view>
+
+  <!-- Loading -->
+  <view a:if="{{loading}}" class="loading">
+    <text>Loading...</text>
+  </view>
+
+  <!-- List -->
+  <view a:if="{{list && list.length}}">
+    <block a:for="{{list}}" a:for-item="c" a:key="id">
+      <view class="card" data-id="{{c.id}}" onTap="openDetail">
+        <view class="row">
+          <text class="amount">{{c.amountText}}</text>
+          <text class="status {{c.statusSlug}}">{{c.statusText}}</text>
+        </view>
+        <text class="line small">Claim {{c.shortId}}</text>
+        <text class="line small">Appointment {{c.apptShortId}}</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- Empty -->
+  <view a:if="{{!loading && (!list || !list.length)}}" class="empty">
+    <text>No claims found.</text>
+  </view>
+
+</view>

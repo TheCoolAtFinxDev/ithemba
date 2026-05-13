@@ -1,0 +1,17 @@
+﻿@* <MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6">M-PESA Payment Authorization</MudText>
+        <MudText Typo="Typo.body2" Class="mb-2">
+            An authorization prompt has been sent to your M-PESA phone number.
+        </MudText>
+
+        <MudTextField Label="Phone Number" ReadOnly="true" Value="@_userPhone" />
+        <MudTextField Label="Enter OTP" @bind-Value="_otpCode" />
+
+        <MudStack Row Class="mt-4 justify-end">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmPayment">Confirm</MudButton>
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+ *@

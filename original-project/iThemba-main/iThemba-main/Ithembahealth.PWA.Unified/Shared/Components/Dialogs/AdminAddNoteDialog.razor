@@ -1,0 +1,18 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudTextField Label="Note" @bind-Value="NoteContent" Lines="3" FullWidth="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Save" Color="Color.Primary">Save</MudButton>
+        <MudButton OnClick="Cancel" Color="Color.Default">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string NoteContent { get; set; } = "";
+
+    private void Save() => MudDialog.Close(DialogResult.Ok(NoteContent));
+    private void Cancel() => MudDialog.Cancel();
+
+}

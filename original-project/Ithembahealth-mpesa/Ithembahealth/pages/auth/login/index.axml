@@ -1,0 +1,62 @@
+<view class="screen">
+
+  <ih-appbar title="Sign in"></ih-appbar>
+
+  <view class="container">
+
+    <!-- PHONE FIELD -->
+    <view class="field">
+      <text class="label">Phone Number</text>
+
+      <view class="phone-row">
+        <text class="prefix">+266</text>
+
+        <!-- flicker-proof: DO NOT bind value -->
+        <input
+          class="input digits"
+          type="number"
+          maxlength="8"
+          placeholder="5xxxxxxx"
+          onInput="onDigitsTyping"
+        />
+      </view>
+    </view>
+
+    <!-- PASSWORD FIELD -->
+    <view class="field">
+      <text class="label">Password</text>
+      <input
+        class="input"
+password ="true"
+        placeholder="Password"
+        onInput="onPassTyping"
+      />
+    </view>
+
+    <view class="btn-wrap">
+      <button class="btn-primary"
+              loading="{{loading}}"
+              disabled="{{loading}}"
+              onTap="submit">
+        Sign in
+      </button>
+    </view>
+    
+    <!-- NEW: Create Account full-width button -->
+    <view class="btn-wrap">
+      <button class="btn-secondary" onTap="toRegister">
+        Create account
+      </button>
+    </view>
+    
+    <view class="link-wrap">
+      <text class="link" onTap="forgotPass">Forgot password?</text>
+      <text class="link" onTap="toTerms">Terms & Privacy</text>
+    </view>
+    
+    <!-- ERROR -->
+    <text a:if="{{errorMsg}}" class="error">{{errorMsg}}</text>
+
+  </view>
+
+</view>

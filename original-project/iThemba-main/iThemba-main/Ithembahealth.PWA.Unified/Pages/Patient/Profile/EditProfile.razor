@@ -1,0 +1,54 @@
+﻿@page "/patient/profile/edit"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Patient")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Edit Profile</MudText>
+
+    <MudForm @ref="_form">
+        <MudTextField Label="Full Name" @bind-Value="_user.FullName" Required="true" />
+        <MudTextField Label="Email Address" @bind-Value="_user.Email" Required="true" />
+        <MudTextField Label="Phone Number" @bind-Value="_user.Phone" Required="true" />
+
+ @*        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle2">Change Password</MudText>
+
+        <MudTextField Label="New Password" @bind-Value="_user.NewPassword" InputType="InputType.Password" />
+        <MudTextField Label="Confirm Password" @bind-Value="_user.ConfirmPassword" InputType="InputType.Password" / *@
+
+        <div class="mt-4 d-flex justify-end gap-2">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChangesAsync">Save</MudButton>
+        </div>
+    </MudForm>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private EditProfileModel _user = new();
+
+    private async Task SaveChangesAsync()
+    {
+        await _form.Validate();
+        if (_form.IsValid)
+        {
+            Snackbar.Add("Profile updated successfully.", Severity.Success);
+            NavigationManager.NavigateTo("/patient/profile");
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/patient/profile");
+    }
+
+    private class EditProfileModel
+    {
+        public string FullName { get; set; } = "Jane Doe";
+        public string Email { get; set; } = "jane@example.com";
+        public string Phone { get; set; } = "+266 5000 0000";
+        public string NewPassword { get; set; } = "";
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "ih-appbar": "/components/ih-appbar/index",
+    "ih-card": "/components/ih-card/index",
+    "ih-empty": "/components/ih-empty/index"
+  }
+}

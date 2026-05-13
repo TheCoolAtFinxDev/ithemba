@@ -1,0 +1,66 @@
+﻿@page "/terms-and-conditions"
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6 px-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Terms & Conditions</MudText>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.body1">
+            These Terms & Conditions ("Terms") govern your access to and use of iThembaHealth’s services and platform. By registering an account or using the services, you agree to be bound by these Terms.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">1. Eligibility</MudText>
+        <MudText Typo="Typo.body2">
+            You must be at least 18 years old or have the supervision of a legal guardian to use iThembaHealth. You agree that the information you provide is accurate and that you will keep it updated.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">2. Account Responsibilities</MudText>
+        <MudText Typo="Typo.body2">
+            You are responsible for maintaining the security of your account and password. Any activity that occurs under your account is your responsibility. Notify us immediately if you suspect unauthorized access.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">3. Platform Usage</MudText>
+        <MudText Typo="Typo.body2">
+            Our services must be used for lawful purposes. Misuse of the system, including submitting false claims, disrupting services, or engaging in fraudulent activity, is grounds for termination.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">4. Privacy</MudText>
+        <MudText Typo="Typo.body2">
+            We are committed to protecting your privacy. Personal and health-related information is stored securely and processed according to applicable privacy laws and our Privacy Policy.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">5. Limitation of Liability</MudText>
+        <MudText Typo="Typo.body2">
+            iThembaHealth is provided "as is." We are not liable for indirect damages, data loss, service interruptions, or third-party actions.
+        </MudText>
+
+        <MudText Typo="Typo.h6" Class="mt-4 mb-2">6. Changes to Terms</MudText>
+        <MudText Typo="Typo.body2">
+            We reserve the right to update these Terms at any time. Continued use after changes constitutes your acceptance of the new Terms.
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mt-4">
+            If you have any questions about these Terms, please contact our support team.
+        </MudText>
+    </MudPaper>
+</MudContainer>
+
+<MudDivider Class="my-4" />
+
+<MudButton Variant="Variant.Text"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.ArrowBack"
+           OnClick="GoBack">
+    Back
+</MudButton>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl);
+    }
+}

@@ -1,0 +1,162 @@
+﻿@inherits LayoutComponentBase
+@using Ithembahealth.PWA.Unified.Auth
+@using Ithembahealth.PWA.Unified.Services
+@using Ithembahealth.PWA.Unified.Shared.Components
+@using Ithembahealth.PWA.Unified.Shared.Components.Drawers
+@using Ithembahealth.PWA.Unified.Shared.Components.Loaders
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@inject LoaderService Loader
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<MudThemeProvider Theme="@customTheme"/>
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider></MudPopoverProvider>
+
+
+<MudLayout Style="height: 100vh; display: flex; flex-direction: column; overflow: hidden;">
+
+    <!-- TOP APP BAR -->
+    @if (ShouldShowAppBarAndDrawer)
+    {
+        <AppBar OnToggleDrawer="ToggleDrawer" />
+    }
+
+    <!-- LEFT DRAWER -->
+    @if (ShouldShowAppBarAndDrawer)
+    {
+        <MudDrawer @bind-Open="@_drawerOpen" Elevation="2" Color="Color.Default" Variant="DrawerVariant.Responsive">
+            <MudDrawerHeader>
+                <MudText Typo="Typo.subtitle1" Class="pa-2">Navigation</MudText>
+            </MudDrawerHeader>
+            <MudNavMenu>
+                @if (Role == "patient")
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.Home" Href="/patient/home">Home</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.LocalHospital" Href="/patient/doctors">Doctors</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Event" Href="/patient/appointments">Appointments</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.AccountBalanceWallet" Href="/patient/wallet">Wallet</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Settings" Href="/patient/profile">Profile</MudNavLink>
+                }
+                else if (Role == "provider")
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.Home" Href="/provider/home">Home</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Event" Href="/provider/appointments">Appointments</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.AttachMoney" Href="/provider/payments">Payments</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Settings" Href="/provider/profile">Profile</MudNavLink>
+                }
+                else if (Role == "admin")
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.Dashboard" Href="/admin/home">Dashboard</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.People" Href="/admin/patients">Patients</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.LocalHospital" Href="/admin/providers">Providers</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.MedicalServices" Href="/admin/claims">Claims</MudNavLink>
+                }
+                <LogoutButton />
+            </MudNavMenu>
+        </MudDrawer>
+    }
+
+    <!-- MAIN CONTENT SCROLLS -->
+
+    <MudMainContent Style="flex: 1; overflow-y: auto;">
+        <div class="scrollable-content">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-4 px-3">
+                @Body
+        </MudContainer>
+    </div>
+    </MudMainContent>
+
+    <!-- BOTTOM BAR -->
+    @if (ShouldShowBottomBar)
+    {
+        <div style="height: 72px;"></div>
+        <BottomBar OnAddClicked="OpenBookingDrawer" />
+    }
+
+    @if (ShowBookingDrawer)
+    {
+        <BookingDrawer IsOpen="@ShowBookingDrawer" IsOpenChanged="@((bool val) => ShowBookingDrawer = val)" />
+    }
+
+    <Loader IsVisible="@Loader.IsVisible" Message="@Loader.Message" />
+
+</MudLayout>
+
+
+@code {
+    private ClaimsPrincipal? _user;
+    private string? Role => _user?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value?.ToLowerInvariant();
+
+    private bool ShouldShowAppBarAndDrawer =>
+        !HiddenAppShellRoutes.Any(route =>
+            NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Equals(route.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+
+
+    private readonly string[] HiddenAppShellRoutes = new[]
+    {
+    "login",
+    "Register",
+        "privacy-policy",
+            "terms-and-conditions",
+                "usage-policy",
+    "splash",
+    "onboarding",
+    ""
+};
+
+
+    private bool ShouldShowBottomBar =>
+        !string.IsNullOrWhiteSpace(Role) &&
+        !HiddenBottomBarRoutes.Any(route =>
+            NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+                .Equals(route.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+
+    private readonly string[] HiddenBottomBarRoutes = new[]
+    {
+    "login",
+    "splash",
+    "onboarding",
+    ""
+    };
+
+
+    private bool _drawerOpen = true;
+    private bool ShowBookingDrawer = false;
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private void OpenBookingDrawer() => ShowBookingDrawer = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loader.OnStateChanged += HandleLoaderChangedAsync;
+        var authState = await ((CookieAuthenticationStateProvider)AuthenticationStateProvider).GetAuthenticationStateAsync();
+        _user = authState.User;
+    }
+
+
+    private async Task HandleLoaderChangedAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Loader.OnStateChanged -= HandleLoaderChangedAsync;
+    }
+
+
+    MudTheme customTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#23b0d3",
+            Secondary = "#66905e",
+            Background = "#ffffff",
+            AppbarBackground = "#23b0d3",
+            DrawerBackground = MudBlazor.Colors.Shades.White
+        }
+    };
+}

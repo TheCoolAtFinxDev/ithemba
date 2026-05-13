@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "ih-appbar": "/components/ih-appbar/index",
+    "ih-button": "/components/ih-button/index"
+  }
+}

@@ -1,0 +1,80 @@
+﻿@page "/patient/home"
+@using Ithembahealth.PWA.Unified.Services
+@inject UserSessionService Session
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Patient")]
+
+<PatientLayout Title="Patient">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="py-4 px-3">
+        <!-- Welcome -->
+        <MudText Typo="Typo.h5" GutterBottom="true">Welcome, @Session.Email</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mb-4">Your health, your power.</MudText>
+
+        <MudGrid GutterSize="3">
+
+            <!-- Wallet Summary -->
+            <MudItem xs="12" sm="6">
+                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column justify-between">
+                    <MudText Typo="Typo.subtitle1">Wallet Balance</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">LSL 220.00</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle"
+                               OnClick="@(() => NavigationManager.NavigateTo("/patient/wallet"))" Class="mt-2">
+                        Top Up
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Last Appointment -->
+            <MudItem xs="12" sm="6">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.subtitle1" GutterBottom="true">Last Appointment</MudText>
+                    <MudText Typo="Typo.body2">Dr. Makhotso - General Practitioner</MudText>
+                    <MudText Typo="Typo.caption">07 July 2025</MudText>
+                    <MudChip T="string" Color="Color.Success">Success</MudChip>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Quick Actions -->
+            <MudItem xs="12">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.subtitle1" GutterBottom="true">Quick Access</MudText>
+                    <MudGrid>
+                        <MudItem xs="3" Class="text-center">
+                            <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Primary"
+                                           Size="Size.Large"
+                                           Style="font-size:2rem;"
+                                           OnClick="@(() => NavigationManager.NavigateTo("/patient/doctors"))" />
+                            <MudText Typo="Typo.body1" Class="mt-1">Doctors</MudText>
+                        </MudItem>
+
+                        <MudItem xs="4" Class="text-center">
+                            <MudIconButton Icon="@Icons.Material.Filled.Savings" Color="Color.Primary"
+                                           Size="Size.Large"
+                                           Style="font-size:2rem;"
+                                           OnClick="@(() => NavigationManager.NavigateTo("/patient/savings"))" />
+                            <MudText Typo="Typo.body1" Class="mt-1">Savings</MudText>
+                        </MudItem>
+
+                        <MudItem xs="3" Class="text-center">
+                            <MudIconButton Icon="@Icons.Material.Filled.EventNote" Color="Color.Primary"
+                                           Size="Size.Large"
+                                           Style="font-size:2rem;"
+                                           OnClick="@(() => NavigationManager.NavigateTo("/patient/appointments"))" />
+                            <MudText Typo="Typo.body1" Class="mt-1">Appointments</MudText>
+                        </MudItem>
+
+    @*                     <MudItem xs="3" Class="text-center">
+                            <MudIconButton Icon="@Icons.Material.Filled.ReceiptLong"
+                                           Color="Color.Primary"
+                                           Size="Size.Large"
+                                           Style="font-size:2rem;"
+                                           OnClick="@(() => NavigationManager.NavigateTo("/savings/claims"))" />
+                            <MudText Typo="Typo.body1" Class="mt-1">Submit Claim</MudText>
+                        </MudItem> *@
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+    </MudContainer>
+</PatientLayout>

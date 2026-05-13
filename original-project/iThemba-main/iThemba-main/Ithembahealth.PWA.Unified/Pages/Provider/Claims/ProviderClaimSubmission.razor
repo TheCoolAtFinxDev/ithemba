@@ -1,0 +1,62 @@
+﻿@page "/provider/claims/submit"
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Provider")]
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-3">
+    <MudText Typo="Typo.h5" Class="mb-3">Submit New Claim</MudText>
+
+    <MudForm @ref="_form">
+        <MudTextField Label="Patient Name" @bind-Value="_claim.PatientName" Required="true" />
+
+        <MudTextField Label="Service Description" @bind-Value="_claim.ServiceDescription" Required="true" />
+
+        <MudNumericField T="decimal" Label="Amount (LSL)" @bind-Value="_claim.Amount"
+                         Required="true" Adornment="Adornment.End" AdornmentText="LSL" />
+
+        <MudDatePicker Label="Date of Visit"
+                       @bind-Date="_claim.VisitDate"
+                       Required="true" />
+
+        <MudTextField Label="Patient OTP"
+                      @bind-Value="_claim.OTP"
+                      Required="true"
+                      HelperText="Enter the OTP provided by the patient." />
+
+        <div class="mt-4 d-flex justify-end gap-2">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync">Submit</MudButton>
+        </div>
+    </MudForm>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private ProviderClaimModel _claim = new();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            // TODO: Save to backend
+            Snackbar.Add("Claim submitted successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/provider/claims");
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/provider/claims");
+    }
+
+    private class ProviderClaimModel
+    {
+        public string PatientName { get; set; } = "";
+        public string ServiceDescription { get; set; } = "";
+        public decimal Amount { get; set; }
+        public DateTime? VisitDate { get; set; } = DateTime.Today;
+        public string OTP { get; set; } = "";
+    }
+}
