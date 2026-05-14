@@ -3,103 +3,140 @@
   <!-- Sidebar -->
   <div class="ith-sidebar d-flex flex-column p-3">
     <div class="d-flex align-items-center gap-2 mb-4 px-2 pt-2">
-      <div style="width:32px;height:32px;background:#4A7C59;border-radius:50%;display:flex;align-items:center;justify-content:center">
+      <div style="width:32px;height:32px;background:#E53935;border-radius:10px;display:flex;align-items:center;justify-content:center">
         <i class="bi bi-heart-pulse-fill text-white" style="font-size:14px"></i>
       </div>
-      <span style="font-weight:700;color:#2d2d2d">iThemba Admin</span>
+      <span style="font-weight:700;color:#1a1a2e;font-size:15px">iThemba <span style="color:#E53935">Admin</span></span>
     </div>
-    <div class="text-muted px-2 mb-2" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Main Menu</div>
-    <a class="d-flex align-items-center gap-3 px-3 py-2 mb-1 text-decoration-none rounded-3" style="background:#e8f8fb;color:#00B9D6;font-weight:500">
+
+    <div class="text-muted px-2 mb-2" style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600">Main Menu</div>
+
+    <a class="sidebar-link" [class.sidebar-link--active]="section==='dashboard'" (click)="setSection('dashboard')">
       <i class="bi bi-speedometer2"></i> Dashboard
     </a>
-    <a class="d-flex align-items-center gap-3 px-3 py-2 mb-1 text-decoration-none rounded-3 text-muted">
+    <a class="sidebar-link" [class.sidebar-link--active]="section==='users'" (click)="setSection('users')">
       <i class="bi bi-people"></i> Users
     </a>
-    <a class="d-flex align-items-center gap-3 px-3 py-2 mb-1 text-decoration-none rounded-3 text-muted">
+    <a class="sidebar-link" [class.sidebar-link--active]="section==='providers'" (click)="setSection('providers')">
       <i class="bi bi-hospital"></i> Providers
+      <span *ngIf="stats && stats.providers > 0" class="ms-auto badge-count">{{ stats.providers }}</span>
     </a>
-    <a class="d-flex align-items-center gap-3 px-3 py-2 mb-1 text-decoration-none rounded-3 text-muted">
+    <a class="sidebar-link" [class.sidebar-link--active]="section==='claims'" (click)="setSection('claims')">
       <i class="bi bi-file-medical"></i> Claims
+      <span *ngIf="stats && stats.pendingClaims > 0" class="ms-auto badge-count badge-count--orange">{{ stats.pendingClaims }}</span>
     </a>
-    <a class="d-flex align-items-center gap-3 px-3 py-2 mb-1 text-decoration-none rounded-3 text-muted">
-      <i class="bi bi-shield-lock"></i> Roles & Permissions
-    </a>
-    <a class="d-flex align-items-center gap-3 px-3 py-2 mb-1 text-decoration-none rounded-3 text-muted">
-      <i class="bi bi-bar-chart"></i> Reports
-    </a>
+
     <div class="mt-auto">
-      <a class="d-flex align-items-center gap-3 px-3 py-2 text-decoration-none rounded-3 text-muted" style="cursor:pointer" (click)="logout()">
+      <a class="sidebar-link text-muted" (click)="logout()">
         <i class="bi bi-box-arrow-left"></i> Logout
       </a>
     </div>
   </div>
 
-  <!-- Main content -->
-  <div style="margin-left:260px;flex:1;background:#f5f7fb">
+  <!-- Main -->
+  <div style="margin-left:260px;flex:1;background:#f5f7fb;min-height:100vh">
+
     <!-- Topbar -->
     <div class="ith-navbar px-4 d-flex align-items-center justify-content-between">
-      <h6 style="margin:0;font-weight:700">Admin Dashboard</h6>
+      <h6 style="margin:0;font-weight:700;text-transform:capitalize">
+        {{ section === 'dashboard' ? 'Dashboard' : section === 'users' ? 'Users' : section === 'providers' ? 'Providers' : 'Claims' }}
+      </h6>
       <div class="d-flex align-items-center gap-3">
         <i class="bi bi-bell" style="font-size:20px;color:#9e9e9e"></i>
         <div style="width:36px;height:36px;background:#E53935;border-radius:50%;display:flex;align-items:center;justify-content:center">
-          <i class="bi bi-person-fill text-white"></i>
+          <span style="color:#fff;font-size:13px;font-weight:700">{{ userName[0] }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Dashboard content -->
-    <div class="p-4">
-      <h5 style="font-weight:700">Welcome, {{userName}}</h5>
-      <p class="text-muted">Platform overview</p>
+    <!-- ── DASHBOARD ── -->
+    <div *ngIf="section === 'dashboard'" class="p-4">
+      <div class="mb-4">
+        <h5 style="font-weight:700;margin-bottom:4px">Welcome, {{ userName }}</h5>
+        <p class="text-muted" style="font-size:13px">Here's the platform at a glance</p>
+      </div>
 
-      <!-- Stats -->
+      <!-- Stat cards -->
       <div class="row g-4 mb-4">
         <div class="col-md-3">
-          <div class="ith-card p-4">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted" style="font-size:13px">Total Users</span>
-              <i class="bi bi-people" style="color:#00B9D6;font-size:20px"></i>
-            </div>
-            <div style="font-size:32px;font-weight:700">0</div>
+          <div class="stat-card" style="border-left:4px solid #00B9D6" (click)="setSection('users')">
+            <div class="stat-card__label"><i class="bi bi-people me-1"></i>Patients</div>
+            <div class="stat-card__value">{{ stats?.patients ?? '—' }}</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="ith-card p-4">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted" style="font-size:13px">Active Providers</span>
-              <i class="bi bi-hospital" style="color:#4A7C59;font-size:20px"></i>
-            </div>
-            <div style="font-size:32px;font-weight:700">0</div>
+          <div class="stat-card" style="border-left:4px solid #4A7C59" (click)="setSection('providers')">
+            <div class="stat-card__label"><i class="bi bi-hospital me-1"></i>Verified Providers</div>
+            <div class="stat-card__value">{{ stats?.providers ?? '—' }}</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="ith-card p-4">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted" style="font-size:13px">Pending Claims</span>
-              <i class="bi bi-file-earmark-text" style="color:#FF9800;font-size:20px"></i>
-            </div>
-            <div style="font-size:32px;font-weight:700">0</div>
+          <div class="stat-card" style="border-left:4px solid #9C27B0" (click)="setSection('claims')">
+            <div class="stat-card__label"><i class="bi bi-calendar3 me-1"></i>Appointments</div>
+            <div class="stat-card__value">{{ stats?.appointments ?? '—' }}</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="ith-card p-4">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted" style="font-size:13px">Total HSA Funds</span>
-              <i class="bi bi-wallet2" style="color:#9C27B0;font-size:20px"></i>
+          <div class="stat-card" style="border-left:4px solid #FF9800;cursor:pointer" (click)="setSection('claims')">
+            <div class="stat-card__label"><i class="bi bi-file-earmark-text me-1"></i>Pending Claims</div>
+            <div class="stat-card__value" [style.color]="stats && stats.pendingClaims > 0 ? '#E65100' : 'inherit'">
+              {{ stats?.pendingClaims ?? '—' }}
             </div>
-            <div style="font-size:32px;font-weight:700">R 0</div>
           </div>
         </div>
       </div>
 
-      <!-- Recent activity -->
-      <div class="ith-card p-4">
-        <h6 style="font-weight:700;margin-bottom:16px">Recent Activity</h6>
-        <div class="text-center text-muted py-4">
-          <i class="bi bi-activity" style="font-size:32px;opacity:0.3"></i>
-          <p class="mt-2 mb-0" style="font-size:14px">No recent activity</p>
+      <!-- Quick actions -->
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="ith-card p-4" style="cursor:pointer;transition:box-shadow 0.2s" (click)="setSection('claims')">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;background:#FFF3E0;border-radius:12px;display:flex;align-items:center;justify-content:center">
+                <i class="bi bi-file-medical" style="font-size:20px;color:#FF9800"></i>
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:15px">Claims Queue</div>
+                <div style="font-size:12px;color:#9e9e9e">{{ stats?.pendingClaims ?? 0 }} awaiting review</div>
+              </div>
+            </div>
+            <button class="btn btn-sm w-100" style="background:#FF9800;color:#fff;border-radius:8px;font-weight:600;font-size:13px">
+              Review Claims <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="ith-card p-4" style="cursor:pointer;transition:box-shadow 0.2s" (click)="setSection('providers')">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;background:#E8F5E9;border-radius:12px;display:flex;align-items:center;justify-content:center">
+                <i class="bi bi-patch-check" style="font-size:20px;color:#4A7C59"></i>
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:15px">Provider Verification</div>
+                <div style="font-size:12px;color:#9e9e9e">Approve new providers</div>
+              </div>
+            </div>
+            <button class="btn btn-sm w-100" style="background:#4A7C59;color:#fff;border-radius:8px;font-weight:600;font-size:13px">
+              Manage Providers <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- ── USERS ── -->
+    <div *ngIf="section === 'users'" class="p-4">
+      <app-admin-users />
+    </div>
+
+    <!-- ── PROVIDERS ── -->
+    <div *ngIf="section === 'providers'" class="p-4">
+      <app-admin-providers />
+    </div>
+
+    <!-- ── CLAIMS ── -->
+    <div *ngIf="section === 'claims'" class="p-4">
+      <app-admin-claims />
+    </div>
+
   </div>
 </div>
