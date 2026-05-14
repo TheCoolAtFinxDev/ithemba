@@ -21,7 +21,7 @@ export const roleGuard = (role: 'PATIENT' | 'PROVIDER' | 'ADMIN'): CanActivateFn
     return false;
   }
 
-  if (auth.role?.toUpperCase() === role) return true;
+  if (auth.hasRole(role)) return true;
 
   router.navigate(['/unauthorized']);
   return false;

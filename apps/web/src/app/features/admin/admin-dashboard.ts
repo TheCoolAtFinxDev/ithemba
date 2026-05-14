@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { NgIf, NgClass } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AdminUsers } from './sections/admin-users';
 import { AdminClaims } from './sections/admin-claims';
@@ -24,14 +25,21 @@ interface Stats {
 export class AdminDashboard implements OnInit {
   private auth = inject(AuthService);
   private http = inject(HttpClient);
+  private router = inject(Router);
 
   userName = '';
+  adminInitials = '';
   section = 'dashboard';
   stats: Stats | null = null;
 
   ngOnInit() {
     this.auth.profile$.subscribe(p => {
+      if (p && !this.auth.hasRole('ADMIN')) {
+        this.router.navigate(['/unauthorized']);
+        return;
+      }
       this.userName = p?.fullName?.split(' ')[0] ?? 'Admin';
+      this.adminInitials = (p?.fullName ?? 'A').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
     });
     this.loadStats();
   }

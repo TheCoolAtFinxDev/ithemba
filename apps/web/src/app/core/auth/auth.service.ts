@@ -54,7 +54,10 @@ export class AuthService {
 
  get role(): string {
   return this.profile?.roles?.[0]?.role?.name ?? 'PATIENT';
-  
+}
+
+hasRole(roleName: string): boolean {
+  return this.profile?.roles?.some((ur: any) => ur.role?.name === roleName) ?? false;
 }
 
 get permissions(): string[] {
@@ -115,7 +118,7 @@ private redirectByRole(): void {
   logout(): void {
     this.oauth.logOut();
     this._profile$.next(null);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
 private async syncProfile(): Promise<void> {
@@ -124,10 +127,19 @@ private async syncProfile(): Promise<void> {
     ? JSON.parse(atob(this.oauth.getAccessToken().split('.')[1]))['sub']
     : null;
 
+  // Derive role from WSO2 groups/roles claim (falls back to PATIENT)
+  const wso2Roles: string[] = claims['roles'] ?? claims['groups'] ?? [];
+  const role = wso2Roles.includes('ADMIN') ? 'ADMIN'
+    : wso2Roles.includes('PROVIDER') ? 'PROVIDER'
+    : 'PATIENT';
+
+  const fullName = [claims['given_name'], claims['family_name']]
+    .filter(Boolean).join(' ') || claims['name'] || 'User';
+
   const dto = {
     email: claims['email'] ?? claims['username'] ?? (sub ? `${sub}@wso2.local` : undefined),
-    fullName: claims['name'] ?? claims['given_name'] ?? 'User',
-    role: 'PATIENT',
+    fullName,
+    role,
   };
 
   try {

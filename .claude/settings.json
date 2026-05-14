@@ -11,7 +11,23 @@
       "Bash(curl -s http://localhost:3000/api/health)",
       "Bash(./smoke-test.sh)",
       "Bash(./git-push.sh \"admin portal UI complete\")",
-      "Bash(./git-push.sh \"provider time off, hours, stats + patient home appointments\")"
+      "Bash(./git-push.sh \"provider time off, hours, stats + patient home appointments\")",
+      "Bash(npx nx *)",
+      "Bash(pm2 restart *)",
+      "Bash(sudo -n systemctl reload nginx)",
+      "Bash(curl -s http://169.239.181.30/api/patients/nonexistent/beneficiaries)",
+      "Bash(NX_IGNORE_UNSUPPORTED_TS_SETUP=true npx nx build web --skip-nx-cache --verbose)",
+      "Bash(curl -sk \"https://identity.golink.co.ls/oauth2/oidcdiscovery/.well-known/openid-configuration\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['issuer']\\)\")",
+      "Bash(gh repo *)",
+      "Bash(gh auth *)",
+      "Bash(git -C /home/developer/ithemba remote get-url origin)",
+      "Bash(git -C /home/developer/ithemba add CLAUDE.md README.md)",
+      "Bash(git -C /home/developer/ithemba status --short)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

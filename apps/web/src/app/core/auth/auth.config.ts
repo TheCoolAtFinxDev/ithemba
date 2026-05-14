@@ -3,7 +3,6 @@ import { environment } from '../../../environments/environment';
 
 export const authConfig: AuthConfig = {
   issuer: environment.wso2Issuer,
-  //discoveryDocumentUrl: 'https://identity.golink.co.ls/oauth2/oidcdiscovery/.well-known/openid-configuration',
   redirectUri: environment.wso2RedirectUri,
   clientId: environment.wso2ClientId,
   responseType: 'code',
@@ -12,6 +11,8 @@ export const authConfig: AuthConfig = {
   requireHttps: environment.production,
   useSilentRefresh: false,
   clearHashAfterLogin: true,
-  skipIssuerCheck: true,
-  strictDiscoveryDocumentValidation: false,
+  // WSO2 issuer matches discovery doc — no longer needs to be skipped
+  skipIssuerCheck: false,
+  // Discovery doc is standard — strict validation can be enabled
+  strictDiscoveryDocumentValidation: false, // keep off: WSO2 omits some optional fields
 };

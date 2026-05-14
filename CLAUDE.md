@@ -31,22 +31,35 @@ iThemba means "hope". This is a health savings scheme for Basotho (people of Les
 ├── apps/
 │   ├── api/src/                    ← NestJS API
 │   │   ├── app/app.module.ts       ← root module (imports all modules)
-│   │   ├── auth/                   ← WSO2 JWT, guards, decorators, RBAC
+│   │   ├── auth/                   ← WSO2 JWT, guards, RBAC, decorators
 │   │   ├── prisma/                 ← PrismaService + PrismaModule (global)
-│   │   ├── patients/               ← patient profile, onboarding, HSA
-│   │   ├── providers/              ← provider profile, search, slots, hours
-│   │   └── appointments/           ← booking, OTP, status transitions
+│   │   ├── patients/               ← patient profile, onboarding, HSA, beneficiaries
+│   │   ├── providers/              ← provider profile, search, slots, hours, time off
+│   │   ├── appointments/           ← booking, OTP send + verify, status transitions
+│   │   ├── claims/                 ← submit, review, approve/reject, pay
+│   │   └── admin/                  ← users, providers, roles, permissions, stats
 │   └── web/src/app/               ← Angular PWA
-│       ├── core/auth/              ← AuthService, guards, interceptor, OIDC
-│       ├── app.routes.ts           ← all routes
+│       ├── core/auth/              ← AuthService, authGuard, roleGuard, interceptor, OIDC
+│       ├── app.routes.ts           ← all routes (roleGuard on all portals)
 │       └── features/
 │           ├── landing/            ← public landing page
-│           ├── patient/            ← patient portal (bottom nav)
-│           │   └── onboarding/     ← 3-step patient onboarding
+│           ├── unauthorized/       ← 403 page with role-aware redirect
+│           ├── patient/            ← patient portal (bottom nav: Home | Appointments | Claims)
+│           │   ├── onboarding/     ← 3-step patient onboarding
+│           │   ├── appointments/   ← list, detail, book, reschedule, OTP
+│           │   ├── book/           ← find doctor, slot picker, booking flow
+│           │   ├── wallet/         ← HSA balance, top-up, transaction history
+│           │   ├── claims/         ← patient claims list
+│           │   ├── beneficiaries/  ← add/remove covered family members
+│           │   └── profile/        ← personal details, address, sign out
 │           ├── provider/           ← provider portal (sidebar nav)
 │           │   ├── onboarding/     ← 3-step provider onboarding
-│           │   └── appointments/   ← appointment queue component
-│           └── admin/              ← admin portal (sidebar nav)
+│           │   ├── appointments/   ← appointment queue + OTP verify & check-in modal
+│           │   ├── claims/         ← submit claims, view history
+│           │   ├── timeoff/        ← manage time off blocks
+│           │   └── profile/        ← profile edit + working hours editor
+│           └── admin/              ← admin portal (sidebar nav, red brand)
+│               └── sections/       ← admin-users, admin-providers, admin-claims
 ├── prisma/
 │   ├── schema.prisma               ← 29 tables + RBAC
 │   ├── seed.ts                     ← roles + permissions seed
@@ -68,7 +81,7 @@ iThemba means "hope". This is a health savings scheme for Basotho (people of Les
 | Database | Supabase PostgreSQL |
 | Auth | WSO2 IS 7.2 (OIDC/OAuth2 + PKCE) |
 | Notifications | Novu (self-hosted at talk.golink.co.ls) |
-| Frontend | Angular 19 (standalone components, signals) |
+| Frontend | Angular 19 (standalone components) |
 | CSS | Bootstrap 5 + Bootstrap Icons |
 | Process manager | PM2 |
 | Web server | Nginx |
@@ -110,15 +123,27 @@ PORT=3000
 
 | App | Client ID | Purpose |
 |---|---|---|
-| ithemba-api | jwaADZBObZ3IIenbRWsfoGlytNka | Resource server (M2M) |
-| ithemba-pwa | qK58RLdy2ehhqhvtzUhBgB7m1v4a | SPA (PKCE auth code flow) |
+| ithemba-api | jwaADZBObZ3IIenbRWsfoGlytNka | Resource server — API validates tokens against this audience |
+| ithemba-pwa | qK58RLdy2ehhqhvtzUhBgB7m1v4a | SPA — authorization code + PKCE (S256), JWT access tokens |
 
 **WSO2 admin:** admin / Mg2Q4VVm8MgJLqK5dBEn
 
 **Test users:**
 - Patient: testpatient@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn
-- Patient 2: testpatient2@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn  
+- Patient 2: testpatient2@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn
 - Provider: testprovider@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn
+
+**Required WSO2 settings for ithemba-pwa:**
+- Token type: JWT (not opaque — backend validates via JWKS)
+- PKCE: Mandatory, S256
+- Allowed redirect URIs: `http://169.239.181.30`, `https://app.ithembahealth.com`
+- Allowed origins: same as redirect URIs
+- Scopes: `openid profile email roles`
+- Requested attributes (in access token): email, given_name, family_name, name, roles
+- Allowed audience: `jwaADZBObZ3IIenbRWsfoGlytNka`
+
+**WSO2 Groups (must match DB role names exactly):**
+- `ADMIN`, `PROVIDER`, `PATIENT` — roles flow from WSO2 groups into JWT, then into DB on first sync
 
 ---
 
@@ -133,9 +158,11 @@ PORT=3000
 - `patients` — patient records (linked to user_profile)
 - `providers` — provider records (linked to user_profile)
 - `appointments` — bookings with status history
+- `appointment_otps` — 6-digit visit codes (isUsed, expiresAtUtc)
 - `health_savings_accounts` — HSA per patient
-- `savings_transactions` — deposit/debit history
+- `savings_transactions` — deposit/debit history (Deposit, Debit, ClaimPayment)
 - `provider_claims` — claims submitted by providers
+- `beneficiaries` — family members covered under a patient's HSA
 - `roles` — dynamic roles (PATIENT, PROVIDER, ADMIN + custom)
 - `permissions` — resource:action pairs
 - `role_permissions` — many-to-many
@@ -159,33 +186,48 @@ npx tsx prisma/seed-providers.ts  # test providers
 ## Completed Modules ✅
 
 ### Backend (NestJS)
-- **Auth** — WSO2 JWT validation, `/auth/sync`, `/auth/me`, auto role assignment
-- **RBAC** — Dynamic roles + permissions, `PermissionsGuard`, `@RequirePermission()`
-- **Patients** — Onboarding (creates patient + HSA + R67 fee), profile, address
+- **Auth** — WSO2 JWT validation (JWKS + issuer + audience), `/auth/sync` (role auto-detection from WSO2 groups claim), `/auth/me`, `RolesGuard`, `PermissionsGuard`
+- **RBAC** — Dynamic roles + permissions, `@Roles()` decorator, `@RequirePermission()`, admin controller protected by `RolesGuard('ADMIN')`
+- **Patients** — Onboarding (patient + HSA + R67 fee), profile read/update (phone, DOB, national ID), address update, `GET /patients/:id`
 - **Providers** — Profile, search, slots (30-min), working hours, time off, onboarding
-- **Appointments** — Book, cancel, reschedule, confirm, OTP/visit code, provider actions (accept/check-in/complete/no-show)
+- **Appointments** — Book, cancel, reschedule, confirm, OTP send, **OTP verify + auto check-in**, provider actions (accept/reject/check-in/start/complete/no-show/cancel)
+- **Wallet/HSA** — Balance, top-up (M-Pesa stub), transaction history
+- **Claims** — Submit (provider, post-completed appointment), provider history, patient view, admin list with status filter, approve (5% fee + account debit), reject
+- **Beneficiaries** — List, add, soft-delete (isActive: false)
+- **Admin** — Users list + lock/unlock, role assignment, provider verification, stats, roles CRUD, permissions CRUD
 
 ### Frontend (Angular)
 - **Landing page** — Hero, how it works, patient CTA, provider CTA
-- **Auth flow** — WSO2 OIDC login, token interceptor, role-based redirect
-- **Patient portal** — Dashboard (bottom nav), onboarding (3 steps)
-- **Provider portal** — Dashboard (sidebar), onboarding (3 steps), appointment queue
+- **Auth flow** — WSO2 OIDC PKCE login, Bearer token interceptor, `authGuard` + `roleGuard` on all portal routes, unauthorized page (role-aware redirect)
+- **Patient portal**
+  - Home — live HSA balance card, quick actions (Find Doctor, Appointments, Beneficiaries, Claims), upcoming appointments preview
+  - Appointments — list (upcoming/past tabs), appointment detail, book flow (search providers, slot picker, confirm), reschedule, cancel, OTP send + display
+  - Wallet — balance, top-up bottom-sheet (M-Pesa), transaction history
+  - Claims — claims list with status badges
+  - Beneficiaries — list with relationship badges, add modal, remove
+  - Profile — personal details (phone, DOB, national ID), address, logout with confirmation
+- **Provider portal**
+  - Dashboard — live stats (today's count, checked-in, completed this week, pending claims)
+  - Appointments — queue with filter chips, **OTP verify & check-in modal** (6-digit input), accept/reject/complete/no-show
+  - Claims — submit claim for completed appointment, claim history
+  - Time Off — add/remove time-off blocks
+  - Profile — profile edit (firstName, lastName, clinic, specialization, phone, location, about), working hours editor (7-day grid with availability toggle + time pickers)
+- **Admin portal**
+  - Dashboard — 4 stat cards (patients, providers, appointments, pending claims)
+  - Users — debounced search, role badges, lock/unlock, role assignment, provider verification
+  - Providers — pending verification zone + verified table
+  - Claims — status filter chips, approve/reject modal with 5% fee breakdown
 
 ---
 
-## Pending Modules 🔲
+## Pending / Future Work 🔲
 
-### Backend
-- **Wallet/HSA** — top-up (M-Pesa stub), balance, transaction history
-- **Claims** — submit, review, approve/reject, pay
-- **Admin API** — user management, lock/unlock, role assignment
-- **RBAC API** — CRUD for roles and permissions (admin UI)
-
-### Frontend
-- **Patient appointments** — find doctor, slot picker, booking flow, appointment list, visit code
-- **Patient wallet** — HSA balance, top-up, transaction history
-- **Admin portal** — users, claims review, roles & permissions management
-- **Provider claims** — submit claim after completed appointment
+- **Novu SMS** — `NOVU_API_KEY` is empty; OTP send is stubbed with a TODO comment
+- **Annual admin fee** — R67 deducted every January (needs a PM2 cron or scheduled job)
+- **C-Pay integration** — Blocked, waiting for API docs from Chaperone
+- **M-Pesa real integration** — Top-up currently creates a real DB transaction but makes no actual M-Pesa call
+- **Provider email notifications** — Appointment accepted/rejected, claim approved/rejected
+- **Patient SMS notifications** — Appointment reminders, visit code delivery
 
 ---
 
@@ -195,7 +237,7 @@ npx tsx prisma/seed-providers.ts  # test providers
 |---|---|
 | Registration fee | R67 once-off (deducted on HSA creation) |
 | Annual admin fee | R67 (deducted every January — TODO: scheduled job) |
-| Transaction fee | 5% (on all payments) |
+| Transaction fee | 5% (on all claim payments) |
 | Min monthly contribution | R500 |
 | Max monthly contribution | R10,000 |
 | Lump sum AML threshold | R50,000+ |
@@ -211,15 +253,16 @@ npx tsx prisma/seed-providers.ts  # test providers
 ```css
 --ith-teal:    #00B9D6   /* primary, app bars, buttons */
 --ith-green:   #4A7C59   /* provider, book buttons, accents */
---ith-danger:  #E53935   /* cancel, danger */
+--ith-danger:  #E53935   /* admin, cancel, danger */
 --ith-bg:      #f5f7fb   /* page background */
 ```
 
 - Patient portal: **mobile-first, bottom navigation** (Home | Appointments | Claims)
-- Provider portal: **Dasher-style sidebar** navigation
-- Admin portal: **Dasher-style sidebar** navigation
+- Provider portal: **Dasher-style sidebar** (green brand)
+- Admin portal: **Dasher-style sidebar** (red brand)
 - Font: system-ui / Segoe UI
 - Cards: white, `border-radius: 12px`, subtle shadow
+- Angular components: standalone only — always list `NgIf`, `NgFor`, `NgClass`, `FormsModule`, `DecimalPipe`, `DatePipe` explicitly in `imports[]`
 
 ---
 
@@ -229,9 +272,11 @@ npx tsx prisma/seed-providers.ts  # test providers
 # Build API + restart PM2 + smoke test
 cd ~/ithemba && ./deploy.sh
 
-# Build Angular + reload Nginx
+# Build Angular (Nginx serves from dist/ directly — no reload needed)
 NX_IGNORE_UNSUPPORTED_TS_SETUP=true npx nx build web --skip-nx-cache
-sudo systemctl reload nginx
+
+# Restart API after build
+pm2 restart ithemba-api
 
 # Commit + push current branch
 ./git-push.sh "feat: description"
@@ -245,14 +290,27 @@ git checkout main && git merge feat/xxx && GIT_TERMINAL_PROMPT=1 GIT_ASKPASS="" 
 ## API Endpoints (implemented)
 
 ### Auth
-- `POST /api/auth/sync` — upsert profile + assign role
+- `POST /api/auth/sync` — upsert profile + assign role from WSO2 groups
 - `GET /api/auth/me` — profile with roles + permissions
 
 ### Patients
 - `GET /api/patients/profile`
+- `PUT /api/patients/profile` — update phone, DOB, national ID
 - `PUT /api/patients/profile/address`
 - `POST /api/v1/users/:id/patient/onboard`
 - `GET /api/patients/:patientId`
+- `GET /api/patients/:id/wallet`
+- `POST /api/patients/:id/wallet/topup`
+- `GET /api/patients/:id/wallet/transactions`
+- `GET /api/patients/:id/beneficiaries`
+- `POST /api/patients/:id/beneficiaries`
+- `DELETE /api/patients/:id/beneficiaries/:beneficiaryId`
+- `GET /api/patients/:id/appointments`
+- `POST /api/patients/:id/appointments`
+- `GET /api/patients/:id/appointments/:aptId`
+- `PUT .../cancel`, `.../reschedule`, `.../confirm`
+- `POST .../otp/send`
+- `GET /api/patients/:id/claims`
 
 ### Providers
 - `GET /api/v1/providers/profile/Me`
@@ -264,45 +322,53 @@ git checkout main && git merge feat/xxx && GIT_TERMINAL_PROMPT=1 GIT_ASKPASS="" 
 - `GET /api/v1/providers/profile/details`
 - `GET /api/v1/providers/profile/slots`
 - `GET/POST/DELETE /api/v1/providers/:id/time-off`
-
-### Appointments
-- `GET/POST /api/patients/:id/appointments`
-- `GET /api/patients/:id/appointments/:aptId`
-- `PUT .../cancel`
-- `PUT .../reschedule`
-- `PUT .../confirm`
-- `POST .../otp/send`
 - `GET /api/v1/providers/:id/appointments`
 - `GET /api/v1/providers/:id/appointments/:aptId`
 - `PUT .../accept|reject|check-in|start|complete|no-show|cancel`
+- `POST .../verify-otp` — verify patient visit code + auto check-in
+- `GET /api/v1/providers/:id/claims`
+- `POST /api/v1/providers/:id/claims`
+
+### Admin (requires ADMIN role)
+- `GET /api/admin/stats`
+- `GET /api/admin/users`
+- `PUT /api/admin/users/:id/lock`, `.../unlock`
+- `POST /api/admin/users/:id/roles`
+- `PUT /api/admin/providers/:id/verify`
+- `GET /api/admin/claims`
+- `PUT /api/admin/claims/:id/approve`, `.../reject`
+- `GET /api/admin/roles`
+- `POST /api/admin/roles`
+- `GET /api/admin/permissions`
+- `POST /api/admin/roles/:id/permissions`
 
 ---
 
 ## Key Design Decisions
 
-1. **No Role enum in UserProfile** — roles are fully dynamic via `UserRole` table
+1. **No Role enum in UserProfile** — roles are fully dynamic via `UserRole` table; WSO2 groups flow into DB roles on first sync
 2. **WSO2 sub = UserProfile.id** — no separate auth tables
 3. **Session pooler only** — app server IPv4 only, Supabase IPv6 not reachable
-4. **PermissionsGuard reads DB** — in-memory cache for now, Redis later
-5. **`isVerified: false` on provider onboard** — admin must approve before provider appears in search
-6. **Visit code = 6-digit OTP** — stored in `appointment_otps`, sent via Novu SMS
-7. **R67 fee recorded as transaction** — balance stays 0 until patient tops up
+4. **`RolesGuard` on admin controller** — non-admin JWTs get 403 on all `/api/admin/*` routes
+5. **`roleGuard` on all frontend routes** — patients can't navigate to provider portal by URL manipulation, and vice versa
+6. **JWT access tokens only** — backend validates via JWKS; WSO2 must be set to JWT token type (not opaque)
+7. **Audience validation** — backend rejects tokens not issued with `aud: jwaADZBObZ3IIenbRWsfoGlytNka`
+8. **`isVerified: false` on provider onboard** — admin must verify before provider appears in search
+9. **Visit code = 6-digit OTP** — stored in `appointment_otps`, verified by provider before check-in; verification atomically transitions appointment to CheckedIn
+10. **R67 fee recorded as transaction** — balance stays 0 until patient tops up; fee is a Debit transaction record
+11. **5% claim fee** — on claim approval, `net = amount * 1.05`; debits patient's HSA balance and creates a ClaimPayment transaction
+12. **Angular standalone components** — never use NgModules; always import `NgIf`, `NgFor`, `NgClass`, `FormsModule`, pipes in the component's `imports[]`
 
 ---
 
 ## Current Branch
 
 ```
-main  ← stable, all completed modules merged
+feat/patient-appointments-ui  ← active development
+main                          ← stable
 ```
 
-Next feature branch to create:
+Merge when ready:
 ```bash
-git checkout -b feat/patient-appointments-ui
+git checkout main && git merge feat/patient-appointments-ui && GIT_TERMINAL_PROMPT=1 GIT_ASKPASS="" git push
 ```
-
-This will build the patient-side booking flow:
-- Find doctor (search + provider cards)
-- Slot picker (date + 30-min pills matching screenshots)
-- My appointments list (upcoming/past tabs)
-- Appointment detail + visit code screen

@@ -1,109 +1,181 @@
-# Ithemba
+# iThemba Health Savings Platform
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+**iThemba** (Sesotho: *hope*) is a digital health savings scheme for Basotho — the people of Lesotho. Members save for private healthcare and pay providers directly via M-Pesa or C-Pay.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+> Built by [FinX Pty Ltd](https://finx.co.za)
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+---
 
-## Generate a library
+## Live Environment
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+| | URL |
+|---|---|
+| Patient / Provider app | http://169.239.181.30 |
+| API | http://169.239.181.30/api |
+| Swagger docs | http://169.239.181.30/api/docs |
+| Identity (WSO2 IS 7.2) | https://identity.golink.co.ls/console |
+
+---
+
+## What It Does
+
+- **Patients** open an HSA (Health Savings Account), top it up via M-Pesa, find doctors, book 30-minute appointments, manage beneficiaries, and track claims
+- **Providers** (doctors / clinics) manage their appointment queue, verify patients with a 6-digit OTP visit code, submit claims after completed visits, and manage working hours and time off
+- **Admins** manage users, verify providers, approve/reject claims, and manage RBAC roles and permissions
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| API | NestJS 10 · Passport JWT · Swagger |
+| ORM | Prisma 7 · PostgreSQL |
+| Database | Supabase PostgreSQL (eu-west-1) |
+| Auth | WSO2 IS 7.2 · OIDC / OAuth2 + PKCE |
+| Notifications | Novu (self-hosted at talk.golink.co.ls) |
+| Frontend | Angular 19 · Standalone components |
+| CSS | Bootstrap 5 · Bootstrap Icons |
+| Process manager | PM2 |
+| Web server | Nginx |
+| Monorepo | Nx 22 |
+
+---
+
+## Monorepo Structure
+
+```
+ithemba/
+├── apps/
+│   ├── api/src/                    NestJS API
+│   │   ├── auth/                   WSO2 JWT strategy, RolesGuard, PermissionsGuard
+│   │   ├── patients/               HSA, profile, beneficiaries, wallet
+│   │   ├── providers/              Profile, search, slots, hours, time off
+│   │   ├── appointments/           Booking, OTP send + verify, status machine
+│   │   ├── claims/                 Submit, approve, reject, pay (5% fee)
+│   │   └── admin/                  Users, providers, roles, permissions
+│   └── web/src/app/                Angular PWA
+│       ├── core/auth/              OIDC client, authGuard, roleGuard, interceptor
+│       └── features/
+│           ├── landing/            Public landing page
+│           ├── patient/            Mobile portal (bottom nav: Home | Appointments | Claims)
+│           │   ├── appointments/   Book · list · detail · OTP
+│           │   ├── wallet/         HSA balance · top-up · history
+│           │   ├── claims/         Claims list
+│           │   ├── beneficiaries/  Add / remove covered family members
+│           │   └── profile/        Personal details · address · sign out
+│           ├── provider/           Desktop portal (sidebar nav)
+│           │   ├── appointments/   Queue · OTP verify & check-in
+│           │   ├── claims/         Submit · history
+│           │   ├── timeoff/        Manage time off blocks
+│           │   └── profile/        Profile · working hours
+│           └── admin/              Admin portal (sidebar nav)
+│               └── sections/       Users · Providers · Claims
+├── prisma/
+│   ├── schema.prisma               29 tables + RBAC
+│   ├── seed.ts                     Roles + permissions
+│   └── seed-providers.ts           4 test providers
+├── deploy.sh                       Build API + restart PM2 + smoke test
+├── smoke-test.sh                   API health checks
+├── git-push.sh                     Commit + push current branch
+└── .env                            Secrets (not committed)
 ```
 
-## Run tasks
+---
 
-To build the library use:
+## Development Setup
 
-```sh
-npx nx build pkg1
+### Prerequisites
+
+- Node.js 20+
+- Access to Supabase project `seodrkgpfytwofwozitt`
+
+### Install
+
+```bash
+git clone https://github.com/TheCoolAtFinxDev/ithemba
+cd ithemba
+npm install
+# Copy .env and fill in secrets (see CLAUDE.md for the full template)
+npx prisma generate
 ```
 
-To run any task with Nx use:
+### Run locally
 
-```sh
-npx nx <target> <project-name>
+```bash
+npx nx serve api        # NestJS on :3000
+npx nx serve web        # Angular on :4200
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Seed the database
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Versioning and releasing
-
-To version and release the library use
-
-```
-npx nx release
+```bash
+export $(cat .env | grep -v '^#' | grep -v '^$' | xargs)
+npm run seed                       # RBAC roles + permissions
+npx tsx prisma/seed-providers.ts   # 4 test provider accounts
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+---
 
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Deploy (production)
 
-## Keep TypeScript project references up to date
+```bash
+# Build API + restart PM2 + smoke test
+./deploy.sh
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
+# Build Angular (Nginx serves from dist/ automatically)
+NX_IGNORE_UNSUPPORTED_TS_SETUP=true npx nx build web --skip-nx-cache
 
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
+# Push branch
+./git-push.sh "feat: description"
 
-```sh
-npx nx sync
+# Merge to main
+git checkout main && git merge feat/xxx && git push
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+---
 
-```sh
-npx nx sync:check
+## Test Accounts
+
+| Role | Email | Password |
+|---|---|---|
+| Patient | testpatient@ithembahealth.com | Mg2Q4VVm8MgJLqK5dBEn |
+| Patient 2 | testpatient2@ithembahealth.com | Mg2Q4VVm8MgJLqK5dBEn |
+| Provider | testprovider@ithembahealth.com | Mg2Q4VVm8MgJLqK5dBEn |
+| WSO2 admin | admin | Mg2Q4VVm8MgJLqK5dBEn |
+
+---
+
+## Business Rules
+
+| Rule | Value |
+|---|---|
+| Registration fee | R67 once-off (deducted on HSA creation) |
+| Annual admin fee | R67 (January — scheduled job pending) |
+| Transaction fee | 5% on all claim payments |
+| Min monthly contribution | R500 |
+| Max monthly contribution | R10,000 |
+| AML lump-sum threshold | R50,000+ |
+| Cash withdrawals | Not allowed |
+| Transfers out | Not allowed |
+| Visit code OTP | 6-digit · 1-hour expiry · SMS via Novu |
+| Appointment slot | 30 minutes |
+
+---
+
+## Brand
+
+```
+--ith-teal:   #00B9D6   primary · app bars · buttons
+--ith-green:  #4A7C59   provider · booking · accents
+--ith-red:    #E53935   admin · danger · cancel
+--ith-bg:     #f5f7fb   page background
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+Cards: white · `border-radius: 12px` · subtle shadow · font: system-ui
 
-## Set up CI!
+---
 
-### Step 1
+## License
 
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Proprietary — © 2025 FinX Pty Ltd. All rights reserved.

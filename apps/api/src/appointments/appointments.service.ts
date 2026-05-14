@@ -4,7 +4,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import {
   BookAppointmentDto, CancelAppointmentDto, RescheduleAppointmentDto,
-  SendOtpDto, ProviderAppointmentActionDto,
+  SendOtpDto, ProviderAppointmentActionDto, VerifyVisitCodeDto,
 } from './appointments.dto';
 
 function generateOTP(): string {
@@ -338,6 +338,61 @@ export class AppointmentsService {
           },
         });
       }
+
+      return updated;
+    });
+  }
+
+  async verifyVisitCode(
+    userProfileId: string, providerId: string,
+    appointmentId: string, dto: VerifyVisitCodeDto,
+  ) {
+    const provider = await this.verifyProviderOwnership(userProfileId, providerId);
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, providerId: provider.id },
+    });
+    if (!appointment) throw new NotFoundException('Appointment not found');
+
+    if (!['Scheduled', 'Confirmed', 'Requested', 'Rescheduled'].includes(appointment.status)) {
+      throw new BadRequestException('Cannot verify visit code for this appointment status');
+    }
+
+    const otp = await this.prisma.appointmentOTP.findFirst({
+      where: {
+        appointmentId,
+        isUsed: false,
+        expiresAtUtc: { gte: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!otp) throw new BadRequestException('No valid visit code found. Ask the patient to request a new code.');
+    if (otp.code !== dto.code.trim()) throw new BadRequestException('Invalid visit code');
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.appointmentOTP.update({
+        where: { id: otp.id },
+        data: { isUsed: true, usedAtUtc: new Date() },
+      });
+
+      const updated = await tx.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          status: 'CheckedIn',
+          checkedInAtUtc: new Date(),
+          lastModifiedBy: userProfileId,
+        },
+      });
+
+      await tx.appointmentStatusChange.create({
+        data: {
+          appointmentId,
+          fromStatus: appointment.status as any,
+          toStatus: 'CheckedIn',
+          reason: 'Visit code verified',
+          changedByUserId: userProfileId,
+        },
+      });
 
       return updated;
     });

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/auth.guard';
+import { authGuard, roleGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   // Public
@@ -11,32 +11,32 @@ export const routes: Routes = [
 
   // Patient portal
   {
-  path: 'patient/onboard',
-  canActivate: [authGuard],
-  loadComponent: () =>
-    import('./features/patient/onboarding/patient-onboarding').then(
-      (m) => m.PatientOnboarding,
-    ),
-},
+    path: 'patient/onboard',
+    canActivate: [authGuard, roleGuard('PATIENT')],
+    loadComponent: () =>
+      import('./features/patient/onboarding/patient-onboarding').then(
+        (m) => m.PatientOnboarding,
+      ),
+  },
   {
     path: 'patient',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard('PATIENT')],
     loadComponent: () =>
       import('./features/patient/patient-dashboard').then((m) => m.PatientDashboard),
   },
-  
+
   // Provider portal
   {
-  path: 'provider/onboard',
-  canActivate: [authGuard],
-  loadComponent: () =>
-    import('./features/provider/onboarding/provider-onboarding').then(
-      (m) => m.ProviderOnboarding,
-    ),
-},
+    path: 'provider/onboard',
+    canActivate: [authGuard, roleGuard('PROVIDER')],
+    loadComponent: () =>
+      import('./features/provider/onboarding/provider-onboarding').then(
+        (m) => m.ProviderOnboarding,
+      ),
+  },
   {
     path: 'provider',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard('PROVIDER')],
     loadComponent: () =>
       import('./features/provider/provider-dashboard').then((m) => m.ProviderDashboard),
   },
@@ -44,7 +44,7 @@ export const routes: Routes = [
   // Admin portal
   {
     path: 'admin',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard('ADMIN')],
     loadComponent: () =>
       import('./features/admin/admin-dashboard').then((m) => m.AdminDashboard),
   },

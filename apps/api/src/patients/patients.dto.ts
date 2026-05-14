@@ -65,6 +65,53 @@ export class TopUpDto {
   mpesaPhone?: string;
 }
 
+export class UpdatePatientProfileDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  nationalId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+}
+
+export class AddBeneficiaryDto {
+  @ApiProperty()
+  @IsString()
+  fullName: string;
+
+  @ApiProperty({ example: 'Spouse' })
+  @IsString()
+  relationship: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  nationalId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+}
+
 export class OnboardPatientDto {
   @ApiProperty()
   @IsString()

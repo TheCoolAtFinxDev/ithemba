@@ -5,7 +5,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import {
   BookAppointmentDto, CancelAppointmentDto, RescheduleAppointmentDto,
-  SendOtpDto, ProviderAppointmentActionDto,
+  SendOtpDto, ProviderAppointmentActionDto, VerifyVisitCodeDto,
 } from './appointments.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -145,5 +145,16 @@ export class AppointmentsController {
   @Put('v1/providers/:providerId/appointments/:appointmentId/cancel')
   providerCancel(@CurrentUser() user: any, @Param('providerId') pid: string, @Param('appointmentId') aid: string, @Body() dto: ProviderAppointmentActionDto) {
     return this.appointmentsService.providerAction(user.sub, pid, aid, 'cancel', dto);
+  }
+
+  @Post('v1/providers/:providerId/appointments/:appointmentId/verify-otp')
+  @ApiOperation({ summary: 'Verify patient visit code and check in' })
+  verifyVisitCode(
+    @CurrentUser() user: any,
+    @Param('providerId') providerId: string,
+    @Param('appointmentId') appointmentId: string,
+    @Body() dto: VerifyVisitCodeDto,
+  ) {
+    return this.appointmentsService.verifyVisitCode(user.sub, providerId, appointmentId, dto);
   }
 }

@@ -49,6 +49,12 @@ export class SendOtpDto {
   preferredChannel?: 'Sms' | 'Email';
 }
 
+export class VerifyVisitCodeDto {
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  code: string;
+}
+
 export class ProviderAppointmentActionDto {
   @ApiPropertyOptional()
   @IsOptional()

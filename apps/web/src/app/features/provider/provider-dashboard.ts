@@ -28,6 +28,7 @@ export class ProviderDashboard implements OnInit {
   private router = inject(Router);
 
   userName = '';
+  providerInitials = '';
   activeSection = 'dashboard';
   providerId = '';
   stats: Stats = { todayCount: 0, checkedIn: 0, completedWeek: 0, pendingClaims: 0 };
@@ -38,7 +39,11 @@ export class ProviderDashboard implements OnInit {
         this.router.navigate(['/provider/onboard']);
         return;
       }
-      this.userName = profile?.fullName?.split(' ')[0] ?? 'Provider';
+      const p = profile?.provider;
+      this.userName = p?.firstName
+        ? `${p.firstName} ${p.lastName ?? ''}`.trim()
+        : profile?.fullName?.split(' ')[0] ?? 'Provider';
+      this.providerInitials = this.userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
       if (profile?.provider?.id && !this.providerId) {
         this.providerId = profile.provider.id;
         this.loadStats();

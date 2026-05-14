@@ -1,9 +1,9 @@
 import {
-  Controller, Get, Post, Put, Body, Param, UseGuards,
+  Controller, Get, Post, Put, Delete, Body, Param, UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
-import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto } from './patients.dto';
+import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto, AddBeneficiaryDto, UpdatePatientProfileDto } from './patients.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
@@ -18,6 +18,12 @@ export class PatientsController {
   @ApiOperation({ summary: 'Get current patient profile' })
   getMyProfile(@CurrentUser() user: any) {
     return this.patientsService.getProfile(user.sub);
+  }
+
+  @Put('patients/profile')
+  @ApiOperation({ summary: 'Update patient profile (phone, DOB, national ID)' })
+  updateProfile(@CurrentUser() user: any, @Body() dto: UpdatePatientProfileDto) {
+    return this.patientsService.updateProfile(user.sub, dto);
   }
 
   @Put('patients/profile/address')
@@ -71,5 +77,33 @@ export class PatientsController {
   @ApiOperation({ summary: 'Get HSA transaction history' })
   getTransactions(@CurrentUser() user: any, @Param('patientId') patientId: string) {
     return this.patientsService.getTransactions(user.sub, patientId);
+  }
+
+  // ── Beneficiaries ─────────────────────────────────────────────
+
+  @Get('patients/:patientId/beneficiaries')
+  @ApiOperation({ summary: 'List active beneficiaries' })
+  listBeneficiaries(@CurrentUser() user: any, @Param('patientId') patientId: string) {
+    return this.patientsService.listBeneficiaries(user.sub, patientId);
+  }
+
+  @Post('patients/:patientId/beneficiaries')
+  @ApiOperation({ summary: 'Add a beneficiary' })
+  addBeneficiary(
+    @CurrentUser() user: any,
+    @Param('patientId') patientId: string,
+    @Body() dto: AddBeneficiaryDto,
+  ) {
+    return this.patientsService.addBeneficiary(user.sub, patientId, dto);
+  }
+
+  @Delete('patients/:patientId/beneficiaries/:beneficiaryId')
+  @ApiOperation({ summary: 'Remove (deactivate) a beneficiary' })
+  removeBeneficiary(
+    @CurrentUser() user: any,
+    @Param('patientId') patientId: string,
+    @Param('beneficiaryId') beneficiaryId: string,
+  ) {
+    return this.patientsService.removeBeneficiary(user.sub, patientId, beneficiaryId);
   }
 }

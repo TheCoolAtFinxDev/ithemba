@@ -1,10 +1,10 @@
 <div style="padding:20px">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
       <h5 style="font-weight:700;margin:0">Appointments</h5>
       <p class="text-muted mb-0" style="font-size:13px">Manage your appointment queue</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <button class="btn btn-sm" [class.btn-dark]="filter==='all'" [class.btn-outline-secondary]="filter!=='all'"
         (click)="setFilter('all')" style="border-radius:20px;font-size:12px">All</button>
       <button class="btn btn-sm" [style.background]="filter==='Requested'?'#FF9800':''" [style.color]="filter==='Requested'?'#fff':''"
@@ -16,66 +16,136 @@
     </div>
   </div>
 
-  @if (loading) {
-    <div class="text-center py-5">
-      <div class="spinner-border" style="color:#4A7C59"></div>
-    </div>
-  }
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" style="color:#4A7C59"></div>
+  </div>
 
-  @if (!loading && filteredAppointments.length === 0) {
-    <div class="ith-card p-5 text-center text-muted">
-      <i class="bi bi-calendar-x" style="font-size:48px;opacity:0.3"></i>
-      <p class="mt-3 mb-0">No appointments found</p>
-    </div>
-  }
+  <!-- Empty state -->
+  <div *ngIf="!loading && filteredAppointments.length === 0" class="ith-card p-5 text-center text-muted">
+    <i class="bi bi-calendar-x" style="font-size:48px;opacity:0.3"></i>
+    <p class="mt-3 mb-0">No appointments found</p>
+  </div>
 
-  @for (apt of filteredAppointments; track apt.id) {
-    <div class="ith-card p-4 mb-3">
-      <div class="d-flex justify-content-between align-items-start mb-3">
-        <div class="d-flex align-items-center gap-3">
-          <div style="width:44px;height:44px;background:#e8f0eb;border-radius:12px;display:flex;align-items:center;justify-content:center">
-            <i class="bi bi-person-fill" style="color:#4A7C59;font-size:18px"></i>
+  <!-- Appointment cards -->
+  <div *ngFor="let apt of filteredAppointments" class="ith-card p-4 mb-3">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <div style="width:44px;height:44px;background:#e8f0eb;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="bi bi-person-fill" style="color:#4A7C59;font-size:18px"></i>
+        </div>
+        <div>
+          <div style="font-weight:600">{{ apt.patient?.userProfile?.fullName ?? 'Patient' }}</div>
+          <div *ngIf="apt.beneficiary" style="font-size:12px;color:#9C27B0">
+            <i class="bi bi-people me-1"></i>For: {{ apt.beneficiary.fullName }}
+          </div>
+          <div class="text-muted" style="font-size:13px">{{ apt.reason ?? 'No reason provided' }}</div>
+          <div class="text-muted" style="font-size:12px">
+            <i class="bi bi-calendar3 me-1"></i>{{ formatDate(apt.startUtc) }}
+            <i class="bi bi-clock ms-2 me-1"></i>{{ formatTime(apt.startUtc) }} — {{ formatTime(apt.endUtc) }}
+          </div>
+        </div>
+      </div>
+      <span class="badge" [class]="getStatusClass(apt.status)" style="border-radius:20px;padding:6px 12px;font-size:11px;white-space:nowrap">
+        {{ statusLabel(apt.status) }}
+      </span>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="d-flex gap-2 flex-wrap">
+      <ng-container *ngIf="apt.status === 'Requested'">
+        <button class="btn btn-sm btn-success" (click)="providerAction(apt, 'accept')" [disabled]="apt.loading">
+          <i class="bi bi-check-circle me-1"></i>Accept
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="providerAction(apt, 'reject')" [disabled]="apt.loading">
+          <i class="bi bi-x-circle me-1"></i>Reject
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Rescheduled'">
+        <button class="btn btn-sm btn-ith-verify" (click)="openOtpModal(apt)" [disabled]="apt.loading">
+          <i class="bi bi-shield-check me-1"></i>Verify &amp; Check In
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="providerAction(apt, 'no-show')" [disabled]="apt.loading">
+          No Show
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="apt.status === 'CheckedIn' || apt.status === 'InProgress'">
+        <button class="btn btn-sm" style="background:#4A7C59;color:#fff" (click)="providerAction(apt, 'complete')" [disabled]="apt.loading">
+          <i class="bi bi-check2-all me-1"></i>Complete Visit
+        </button>
+      </ng-container>
+
+      <span *ngIf="apt.loading" class="spinner-border spinner-border-sm" style="color:#4A7C59;margin-top:6px"></span>
+    </div>
+  </div>
+</div>
+
+<!-- OTP Verify Modal -->
+<div *ngIf="otpApt" class="modal-backdrop fade show" style="display:block" (click)="closeOtpModal()"></div>
+<div *ngIf="otpApt" class="modal fade show" style="display:block;pointer-events:none">
+  <div class="modal-dialog modal-dialog-centered" style="pointer-events:all" (click)="$event.stopPropagation()">
+    <div class="modal-content" style="border-radius:16px;border:none">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title" style="font-weight:700">Verify Patient Identity</h5>
+          <p class="text-muted mb-0" style="font-size:13px">
+            Ask the patient to share their 6-digit visit code
+          </p>
+        </div>
+        <button class="btn-close" (click)="closeOtpModal()"></button>
+      </div>
+      <div class="modal-body pt-3 pb-4">
+
+        <!-- Patient info -->
+        <div class="d-flex align-items-center gap-3 p-3 mb-4"
+             style="background:#f5f7fb;border-radius:12px">
+          <div style="width:44px;height:44px;background:#e8f0eb;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="bi bi-person-fill" style="color:#4A7C59;font-size:20px"></i>
           </div>
           <div>
-            <div style="font-weight:600">{{apt.patient?.userProfile?.fullName ?? 'Patient'}}</div>
-            <div class="text-muted" style="font-size:13px">{{apt.reason ?? 'No reason provided'}}</div>
-            <div class="text-muted" style="font-size:12px">
-              <i class="bi bi-calendar3 me-1"></i>{{formatDate(apt.startUtc)}}
-              <i class="bi bi-clock ms-2 me-1"></i>{{formatTime(apt.startUtc)}} — {{formatTime(apt.endUtc)}}
+            <div style="font-weight:600">{{ otpApt?.patient?.userProfile?.fullName ?? 'Patient' }}</div>
+            <div style="font-size:12px;color:#9e9e9e">
+              {{ formatDate(otpApt?.startUtc) }} · {{ formatTime(otpApt?.startUtc) }}
             </div>
           </div>
         </div>
-        <span class="badge" [class]="getStatusClass(apt.status)" style="border-radius:20px;padding:6px 12px;font-size:11px">
-          {{apt.status}}
-        </span>
-      </div>
 
-      <div class="d-flex gap-2 flex-wrap">
-        @if (apt.status === 'Requested') {
-          <button class="btn btn-sm btn-success" (click)="providerAction(apt, 'accept')" [disabled]="apt.loading">
-            <i class="bi bi-check-circle me-1"></i>Accept
+        <!-- Success -->
+        <div *ngIf="otpSuccess" class="text-center py-2">
+          <div style="font-size:48px;color:#4A7C59"><i class="bi bi-check-circle-fill"></i></div>
+          <div style="font-weight:700;color:#4A7C59;margin-top:8px">Patient Verified!</div>
+          <div style="font-size:13px;color:#9e9e9e">Appointment checked in successfully.</div>
+        </div>
+
+        <!-- Input -->
+        <div *ngIf="!otpSuccess">
+          <label class="form-label" style="font-weight:600;font-size:14px">Visit Code</label>
+          <input
+            type="text"
+            class="form-control form-control-lg text-center"
+            style="letter-spacing:12px;font-size:28px;font-weight:700;border-radius:12px;font-family:monospace"
+            maxlength="6"
+            inputmode="numeric"
+            placeholder="• • • • • •"
+            [(ngModel)]="otpCode"
+            (keyup.enter)="verifyAndCheckIn()">
+          <div *ngIf="otpError" class="alert alert-danger mt-3 py-2" style="font-size:13px;border-radius:10px">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ otpError }}
+          </div>
+          <button
+            class="btn btn-ith-primary w-100 mt-4"
+            style="padding:14px;font-size:15px;font-weight:600"
+            [disabled]="otpVerifying || otpCode.length !== 6"
+            (click)="verifyAndCheckIn()">
+            <span *ngIf="otpVerifying" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!otpVerifying" class="bi bi-shield-check me-2"></i>
+            {{ otpVerifying ? 'Verifying...' : 'Verify &amp; Check In' }}
           </button>
-          <button class="btn btn-sm btn-outline-danger" (click)="providerAction(apt, 'reject')" [disabled]="apt.loading">
-            <i class="bi bi-x-circle me-1"></i>Reject
-          </button>
-        }
-        @if (apt.status === 'Scheduled' || apt.status === 'Confirmed') {
-          <button class="btn btn-sm btn-primary" (click)="providerAction(apt, 'check-in')" [disabled]="apt.loading">
-            <i class="bi bi-door-open me-1"></i>Check In
-          </button>
-          <button class="btn btn-sm btn-outline-danger" (click)="providerAction(apt, 'no-show')" [disabled]="apt.loading">
-            No Show
-          </button>
-        }
-        @if (apt.status === 'CheckedIn' || apt.status === 'InProgress') {
-          <button class="btn btn-sm" style="background:#4A7C59;color:#fff" (click)="providerAction(apt, 'complete')" [disabled]="apt.loading">
-            <i class="bi bi-check2-all me-1"></i>Complete Visit
-          </button>
-        }
-        @if (apt.loading) {
-          <span class="spinner-border spinner-border-sm" style="color:#4A7C59;margin-top:6px"></span>
-        }
+        </div>
+
       </div>
     </div>
-  }
+  </div>
 </div>

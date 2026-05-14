@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
 
@@ -12,7 +12,12 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     if (!required?.length) return true;
+
     const { user } = context.switchToHttp().getRequest();
-    return required.includes(user?.role);
+    // user.roles is an array of role name strings built by Wso2JwtStrategy.validate()
+    const userRoles: string[] = user?.roles ?? [];
+    const hasRole = required.some(r => userRoles.includes(r));
+    if (!hasRole) throw new ForbiddenException('Insufficient role');
+    return true;
   }
 }

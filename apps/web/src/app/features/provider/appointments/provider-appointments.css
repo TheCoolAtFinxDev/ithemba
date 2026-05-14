@@ -1,0 +1,16 @@
+.btn-ith-verify {
+  background: linear-gradient(135deg, #4A7C59, #2E5C40);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-ith-verify:hover {
+  background: linear-gradient(135deg, #3d6b4a, #254e34);
+  color: #fff;
+}
+
+.btn-ith-verify:disabled {
+  opacity: 0.6;
+}

@@ -2,7 +2,7 @@ import {
   Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto } from './patients.dto';
+import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto, AddBeneficiaryDto, UpdatePatientProfileDto } from './patients.dto';
 
 const REGISTRATION_FEE = 67;
 
@@ -86,6 +86,18 @@ export class PatientsService {
     });
 
     return result.patient;
+  }
+
+  async updateProfile(userProfileId: string, dto: UpdatePatientProfileDto) {
+    const patient = await this.prisma.patient.findUnique({ where: { userProfileId } });
+    if (!patient) throw new NotFoundException('Patient not found');
+
+    const data: any = { lastModifiedBy: userProfileId };
+    if (dto.phoneNumber !== undefined) data.phoneNumber = dto.phoneNumber;
+    if (dto.nationalId !== undefined) data.nationalId = dto.nationalId;
+    if (dto.dateOfBirth !== undefined) data.dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : null;
+
+    return this.prisma.patient.update({ where: { userProfileId }, data });
   }
 
   async updateAddress(userProfileId: string, dto: UpdatePatientAddressDto) {
@@ -172,6 +184,43 @@ export class PatientsService {
       where: { accountId: account.id },
       orderBy: { transactionDate: 'desc' },
       take: 50,
+    });
+  }
+
+  // ── Beneficiaries ─────────────────────────────────────────────
+
+  async listBeneficiaries(userProfileId: string, patientId: string) {
+    await this.resolvePatient(patientId, userProfileId);
+    return this.prisma.beneficiary.findMany({
+      where: { patientId, isActive: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async addBeneficiary(userProfileId: string, patientId: string, dto: AddBeneficiaryDto) {
+    await this.resolvePatient(patientId, userProfileId);
+    return this.prisma.beneficiary.create({
+      data: {
+        patientId,
+        fullName: dto.fullName,
+        relationship: dto.relationship,
+        dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+        gender: dto.gender,
+        nationalId: dto.nationalId,
+        phoneNumber: dto.phoneNumber,
+        isActive: true,
+        createdBy: userProfileId,
+      },
+    });
+  }
+
+  async removeBeneficiary(userProfileId: string, patientId: string, beneficiaryId: string) {
+    await this.resolvePatient(patientId, userProfileId);
+    const ben = await this.prisma.beneficiary.findUnique({ where: { id: beneficiaryId } });
+    if (!ben || ben.patientId !== patientId) throw new NotFoundException('Beneficiary not found');
+    return this.prisma.beneficiary.update({
+      where: { id: beneficiaryId },
+      data: { isActive: false, lastModifiedBy: userProfileId },
     });
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
@@ -12,16 +12,17 @@ export class Wso2JwtStrategy extends PassportStrategy(Strategy, 'wso2-jwt') {
     private prisma: PrismaService,
   ) {
     super({
-  secretOrKeyProvider: passportJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 10,
-    jwksUri: config.getOrThrow('WSO2_JWKS_URI'),
-  }),
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  issuer: config.getOrThrow('WSO2_ISSUER'),
-  algorithms: ['RS256'],
-});
+      secretOrKeyProvider: passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 10,
+        jwksUri: config.getOrThrow('WSO2_JWKS_URI'),
+      }),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      issuer: config.getOrThrow('WSO2_ISSUER'),
+      audience: config.getOrThrow('WSO2_AUDIENCE'),
+      algorithms: ['RS256'],
+    });
   }
 
 async validate(payload: any) {

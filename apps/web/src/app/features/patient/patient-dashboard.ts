@@ -8,13 +8,15 @@ import { PatientAppointmentDetail } from './appointments/patient-appointment-det
 import { PatientBook } from './book/patient-book';
 import { PatientWallet } from './wallet/patient-wallet';
 import { PatientClaims } from './claims/patient-claims';
+import { PatientBeneficiaries } from './beneficiaries/patient-beneficiaries';
+import { PatientProfile } from './profile/patient-profile';
 import { environment } from '../../../environments/environment';
 
-type View = 'home' | 'appointments' | 'appointment-detail' | 'book' | 'wallet' | 'claims';
+type View = 'home' | 'appointments' | 'appointment-detail' | 'book' | 'wallet' | 'claims' | 'beneficiaries' | 'profile';
 
 @Component({
   selector: 'app-patient-dashboard',
-  imports: [NgIf, DecimalPipe, PatientAppointments, PatientAppointmentDetail, PatientBook, PatientWallet, PatientClaims],
+  imports: [NgIf, DecimalPipe, PatientAppointments, PatientAppointmentDetail, PatientBook, PatientWallet, PatientClaims, PatientBeneficiaries, PatientProfile],
   templateUrl: './patient-dashboard.html',
   styleUrl: './patient-dashboard.css',
 })
