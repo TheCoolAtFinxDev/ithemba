@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"http://localhost:3000/api/v1/providers/profile/search\" -H \"Authorization: Bearer test\")",
+      "Bash(pm2 logs *)",
+      "Bash(curl -s http://localhost:3000/api/v1/providers/profile/search)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); b=d.get\\('targets',{}\\).get\\('build',{}\\); print\\(json.dumps\\(b.get\\('configurations',{}\\), indent=2\\)\\)\")",
+      "Bash(NX_IGNORE_UNSUPPORTED_TS_SETUP=true npx nx build api --skip-nx-cache)",
+      "Bash(./deploy.sh)",
+      "Bash(pm2 list *)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(./smoke-test.sh)",
+      "Bash(./git-push.sh \"admin portal UI complete\")"
+    ]
+  }
+}
