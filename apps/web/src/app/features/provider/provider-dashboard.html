@@ -91,40 +91,40 @@
         <p class="text-muted">Here's your practice overview for today</p>
 
         <div class="row g-4 mb-4">
-          <div class="col-md-3">
+          <div class="col-md-3" style="cursor:pointer" (click)="setSection('appointments')">
             <div class="ith-card p-4">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted" style="font-size:13px">Today's Appointments</span>
                 <i class="bi bi-calendar-check" style="color:#00B9D6;font-size:20px"></i>
               </div>
-              <div style="font-size:32px;font-weight:700">0</div>
+              <div style="font-size:32px;font-weight:700">{{ stats.todayCount }}</div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-3" style="cursor:pointer" (click)="setSection('appointments')">
             <div class="ith-card p-4">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted" style="font-size:13px">Pending Claims</span>
-                <i class="bi bi-file-earmark-text" style="color:#FF9800;font-size:20px"></i>
+                <span class="text-muted" style="font-size:13px">Currently Checked In</span>
+                <i class="bi bi-door-open" style="color:#4A7C59;font-size:20px"></i>
               </div>
-              <div style="font-size:32px;font-weight:700">0</div>
+              <div style="font-size:32px;font-weight:700" [style.color]="stats.checkedIn > 0 ? '#4A7C59' : 'inherit'">{{ stats.checkedIn }}</div>
             </div>
           </div>
           <div class="col-md-3">
             <div class="ith-card p-4">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted" style="font-size:13px">Completed This Week</span>
-                <i class="bi bi-check-circle" style="color:#4A7C59;font-size:20px"></i>
+                <i class="bi bi-check-circle" style="color:#9C27B0;font-size:20px"></i>
               </div>
-              <div style="font-size:32px;font-weight:700">0</div>
+              <div style="font-size:32px;font-weight:700">{{ stats.completedWeek }}</div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-3" style="cursor:pointer" (click)="setSection('claims')">
             <div class="ith-card p-4">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted" style="font-size:13px">Total Earnings</span>
-                <i class="bi bi-currency-exchange" style="color:#9C27B0;font-size:20px"></i>
+                <span class="text-muted" style="font-size:13px">Pending Claims</span>
+                <i class="bi bi-file-earmark-text" style="color:#FF9800;font-size:20px"></i>
               </div>
-              <div style="font-size:32px;font-weight:700">R 0</div>
+              <div style="font-size:32px;font-weight:700" [style.color]="stats.pendingClaims > 0 ? '#E65100' : 'inherit'">{{ stats.pendingClaims }}</div>
             </div>
           </div>
         </div>
@@ -154,20 +154,14 @@
     <!-- Time Off Section -->
     @if (activeSection === 'timeoff') {
       <div class="p-4">
-        <div class="ith-card p-5 text-center text-muted">
-          <i class="bi bi-clock-history" style="font-size:48px;opacity:0.3"></i>
-          <p class="mt-3 mb-0">Time off management coming soon</p>
-        </div>
+        <app-provider-timeoff />
       </div>
     }
 
     <!-- Profile Section -->
     @if (activeSection === 'profile') {
       <div class="p-4">
-        <div class="ith-card p-5 text-center text-muted">
-          <i class="bi bi-person-circle" style="font-size:48px;opacity:0.3"></i>
-          <p class="mt-3 mb-0">Profile management coming soon</p>
-        </div>
+        <app-provider-profile />
       </div>
     }
 

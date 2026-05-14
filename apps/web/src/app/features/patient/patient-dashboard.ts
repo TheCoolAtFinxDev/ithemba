@@ -36,6 +36,7 @@ export class PatientDashboard implements OnInit {
 
   // wallet summary (home screen)
   walletBalance: number | null = null;
+  upcomingAppointments: any[] = [];
   private patientId = '';
 
   ngOnInit() {
@@ -49,6 +50,7 @@ export class PatientDashboard implements OnInit {
         if (profile.patient?.id && !this.patientId) {
           this.patientId = profile.patient.id;
           this.loadWalletBalance();
+          this.loadUpcomingAppointments();
         }
       }
     });
@@ -57,6 +59,42 @@ export class PatientDashboard implements OnInit {
   loadWalletBalance() {
     this.http.get<{ balance: string }>(`${environment.apiUrl}/patients/${this.patientId}/wallet`)
       .subscribe({ next: w => this.walletBalance = +(w?.balance ?? 0) });
+  }
+
+  loadUpcomingAppointments() {
+    const now = new Date();
+    this.http.get<any[]>(`${environment.apiUrl}/patients/${this.patientId}/appointments`)
+      .subscribe({
+        next: data => {
+          this.upcomingAppointments = (data || [])
+            .filter(a => new Date(a.startUtc) >= now &&
+              !['CancelledByPatient', 'CancelledByProvider', 'NoShow'].includes(a.status))
+            .sort((a, b) => new Date(a.startUtc).getTime() - new Date(b.startUtc).getTime())
+            .slice(0, 3);
+        },
+      });
+  }
+
+  apptStatusText(s: string): string {
+    const map: Record<string, string> = {
+      Requested: 'Requested', Scheduled: 'Scheduled', Confirmed: 'Confirmed',
+      Rescheduled: 'Rescheduled', CheckedIn: 'Checked In', InProgress: 'In Progress',
+    };
+    return map[s] ?? s;
+  }
+
+  apptStatusColor(s: string): string {
+    if (['Confirmed', 'CheckedIn', 'InProgress'].includes(s)) return '#2E7D32';
+    if (s === 'Scheduled') return '#1565C0';
+    return '#E65100';
+  }
+
+  formatApptDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  formatApptTime(iso: string): string {
+    return new Date(iso).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
   }
 
   setTab(tab: 'home' | 'appointments' | 'claims') {

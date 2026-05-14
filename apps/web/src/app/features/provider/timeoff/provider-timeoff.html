@@ -1,0 +1,72 @@
+<div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h5 class="fw-bold mb-1">Time Off</h5>
+      <p class="text-muted mb-0" style="font-size:13px">Block dates when you are unavailable</p>
+    </div>
+    <button class="btn btn-ith-primary" (click)="openForm()">
+      <i class="bi bi-plus-lg me-1"></i>Add Time Off
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ error }}</div>
+
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" style="color:#4A7C59"></div>
+  </div>
+
+  <div *ngIf="!loading && periods.length === 0" class="ith-card p-5 text-center text-muted">
+    <i class="bi bi-calendar-x" style="font-size:48px;opacity:0.25"></i>
+    <p class="mt-3 mb-0" style="font-size:14px">No upcoming time off scheduled</p>
+  </div>
+
+  <div *ngFor="let p of periods" class="ith-card p-4 mb-3 d-flex justify-content-between align-items-center">
+    <div>
+      <div style="font-weight:700;font-size:15px">
+        {{ p.startUtc | date:'d MMM y' }}
+        <span *ngIf="p.startUtc !== p.endUtc"> — {{ p.endUtc | date:'d MMM y' }}</span>
+      </div>
+      <div *ngIf="p.reason" style="font-size:13px;color:#777;margin-top:2px">{{ p.reason }}</div>
+    </div>
+    <button class="btn btn-sm" style="background:#FFEBEE;color:#B71C1C;border:none;border-radius:8px;font-size:12px;font-weight:600;padding:6px 14px"
+            [disabled]="deleteId === p.id"
+            (click)="remove(p.id)">
+      <span *ngIf="deleteId === p.id" class="spinner-border spinner-border-sm me-1" style="width:10px;height:10px"></span>
+      <i *ngIf="deleteId !== p.id" class="bi bi-trash me-1"></i>Remove
+    </button>
+  </div>
+</div>
+
+<!-- Add form modal -->
+<div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h6 class="fw-bold mb-0">Add Time Off</h6>
+      <button class="btn-icon" (click)="closeForm()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div *ngIf="saveError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ saveError }}</div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-semibold" style="font-size:13px">Start Date</label>
+        <input type="date" class="form-control" style="border-radius:10px"
+               [(ngModel)]="startDate" [min]="today()" />
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-semibold" style="font-size:13px">End Date</label>
+        <input type="date" class="form-control" style="border-radius:10px"
+               [(ngModel)]="endDate" [min]="startDate || today()" />
+      </div>
+    </div>
+
+    <label class="form-label fw-semibold" style="font-size:13px">Reason (optional)</label>
+    <input type="text" class="form-control mb-4" style="border-radius:10px"
+           [(ngModel)]="reason" placeholder="e.g. Annual leave, CPD conference…" />
+
+    <button class="btn btn-ith-primary w-100" [disabled]="saving" (click)="save()">
+      <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+      {{ saving ? 'Saving…' : 'Save Time Off' }}
+    </button>
+  </div>
+</div>

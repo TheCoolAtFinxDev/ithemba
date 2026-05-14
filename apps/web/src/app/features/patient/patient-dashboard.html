@@ -66,12 +66,33 @@
         <h6 style="font-weight:700;margin:0">Upcoming Appointments</h6>
         <a style="color:#00B9D6;font-size:13px;cursor:pointer;text-decoration:none" (click)="goToAppointments()">View all</a>
       </div>
-      <div class="ith-card p-4 text-center text-muted">
+
+      <div *ngIf="upcomingAppointments.length === 0" class="ith-card p-4 text-center text-muted">
         <i class="bi bi-calendar-x" style="font-size:32px;opacity:0.3"></i>
-        <p class="mt-2 mb-2" style="font-size:14px">Book your first appointment</p>
+        <p class="mt-2 mb-2" style="font-size:14px">No upcoming appointments</p>
         <button class="btn btn-ith-primary btn-sm" (click)="openBook()">
           <i class="bi bi-search me-1"></i>Find a Doctor
         </button>
+      </div>
+
+      <div *ngFor="let a of upcomingAppointments" class="ith-card p-3 mb-2" style="cursor:pointer" (click)="openDetail(a.id)">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:42px;height:42px;background:#e8f8fb;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="bi bi-hospital" style="color:#00B9D6;font-size:18px"></i>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:14px">{{ a.provider?.clinicName }}</div>
+              <div style="font-size:12px;color:#777">Dr {{ a.provider?.firstName }} {{ a.provider?.lastName }}</div>
+              <div style="font-size:12px;color:#9e9e9e">{{ formatApptDate(a.startUtc) }} · {{ formatApptTime(a.startUtc) }}</div>
+            </div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap"
+                [style.background]="apptStatusColor(a.status) + '22'"
+                [style.color]="apptStatusColor(a.status)">
+            {{ apptStatusText(a.status) }}
+          </span>
+        </div>
       </div>
     </div>
 

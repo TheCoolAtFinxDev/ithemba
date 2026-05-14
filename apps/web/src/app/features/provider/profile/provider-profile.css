@@ -1,0 +1,23 @@
+.hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 16px;
+}
+.hours-row:last-child { border-bottom: none; }
+
+.hours-row__day {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 160px;
+}
+
+.time-input {
+  border-radius: 8px !important;
+  border-color: #e0e0e0 !important;
+  font-size: 13px !important;
+  width: 108px !important;
+}
