@@ -10,7 +10,8 @@
       "Bash(pm2 list *)",
       "Bash(curl -s http://localhost:3000/api/health)",
       "Bash(./smoke-test.sh)",
-      "Bash(./git-push.sh \"admin portal UI complete\")"
+      "Bash(./git-push.sh \"admin portal UI complete\")",
+      "Bash(./git-push.sh \"provider time off, hours, stats + patient home appointments\")"
     ]
   }
 }
