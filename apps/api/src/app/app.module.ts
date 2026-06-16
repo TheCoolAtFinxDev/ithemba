@@ -9,6 +9,7 @@ import { ProvidersModule } from '../providers/providers.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
 import { ClaimsModule } from '../claims/claims.module';
 import { AdminModule } from '../admin/admin.module';
+import { NovuModule } from '../novu/novu.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AdminModule } from '../admin/admin.module';
     AppointmentsModule,
     ClaimsModule,
     AdminModule,
+    NovuModule,
   ],
   controllers: [AppController],
   providers: [AppService],

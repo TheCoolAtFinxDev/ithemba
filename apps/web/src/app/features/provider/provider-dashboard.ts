@@ -1,7 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { ProviderAppointments } from './appointments/provider-appointments';
 import { ProviderClaims } from './claims/provider-claims';
@@ -18,32 +16,33 @@ interface Stats {
 
 @Component({
   selector: 'app-provider-dashboard',
-  imports: [NgIf, ProviderAppointments, ProviderClaims, ProviderTimeoff, ProviderProfile],
+  imports: [ProviderAppointments, ProviderClaims, ProviderTimeoff, ProviderProfile],
   templateUrl: './provider-dashboard.html',
   styleUrl: './provider-dashboard.css',
 })
 export class ProviderDashboard implements OnInit {
   private auth = inject(AuthService);
   private http = inject(HttpClient);
-  private router = inject(Router);
 
   userName = '';
   providerInitials = '';
+  profileIncomplete = false;
+  isUnverified = false;
   activeSection = 'dashboard';
   providerId = '';
   stats: Stats = { todayCount: 0, checkedIn: 0, completedWeek: 0, pendingClaims: 0 };
 
   ngOnInit() {
     this.auth.profile$.subscribe(profile => {
-      if (profile && !profile.provider) {
-        this.router.navigate(['/provider/onboard']);
-        return;
-      }
+      if (!profile) return;
       const p = profile?.provider;
       this.userName = p?.firstName
         ? `${p.firstName} ${p.lastName ?? ''}`.trim()
         : profile?.fullName?.split(' ')[0] ?? 'Provider';
       this.providerInitials = this.userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+      // Nudge if auto-provisioned with no clinic/specialization details
+      this.profileIncomplete = !p?.clinicName || !p?.specialization || !p?.phoneNumber;
+      this.isUnverified = p ? !p['isVerified'] : false;
       if (profile?.provider?.id && !this.providerId) {
         this.providerId = profile.provider.id;
         this.loadStats();

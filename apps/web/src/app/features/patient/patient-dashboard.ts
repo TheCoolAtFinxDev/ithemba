@@ -2,7 +2,6 @@ import { Component, inject, OnInit } from '@angular/core';
 import { NgIf, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
-import { Router } from '@angular/router';
 import { PatientAppointments } from './appointments/patient-appointments';
 import { PatientAppointmentDetail } from './appointments/patient-appointment-detail';
 import { PatientBook } from './book/patient-book';
@@ -23,9 +22,9 @@ type View = 'home' | 'appointments' | 'appointment-detail' | 'book' | 'wallet' |
 export class PatientDashboard implements OnInit {
   private auth = inject(AuthService);
   private http = inject(HttpClient);
-  private router = inject(Router);
 
   userName = '';
+  profileIncomplete = false;
   activeView: View = 'home';
   activeTab: 'home' | 'appointments' | 'claims' = 'home';
 
@@ -44,11 +43,9 @@ export class PatientDashboard implements OnInit {
   ngOnInit() {
     this.auth.profile$.subscribe(profile => {
       if (profile) {
-        if (!profile.patient) {
-          this.router.navigate(['/patient/onboard']);
-          return;
-        }
         this.userName = profile.fullName?.split(' ')[0] ?? 'Patient';
+        // Show nudge if profile was auto-provisioned with no phone number
+        this.profileIncomplete = !profile.patient?.phoneNumber;
         if (profile.patient?.id && !this.patientId) {
           this.patientId = profile.patient.id;
           this.loadWalletBalance();

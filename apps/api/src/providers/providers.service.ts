@@ -30,57 +30,61 @@ export class ProvidersService {
   async onboard(userProfileId: string, dto: OnboardProviderDto) {
     const existing = await this.prisma.provider.findUnique({
       where: { userProfileId },
+      include: { workingHours: true },
     });
-    if (existing) throw new ConflictException('Provider profile already exists');
 
     const provider = await this.prisma.$transaction(async (tx) => {
-      const p = await tx.provider.create({
-        data: {
-          userProfileId,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          clinicName: dto.clinicName,
-          specialization: dto.specialization,
-          phoneNumber: dto.phoneNumber,
-          email: dto.email ?? '',
-          medicalLicenseNumber: dto.medicalLicenseNumber,
-          mpesaMerchantCode: dto.mpesaMerchantCode ?? '',
-          about: dto.about,
-          location: dto.location ?? '',
-          isActive: true,
-          isVerified: false,
-          createdBy: userProfileId,
-        },
-      });
+      let p;
 
-      // Create default working hours Mon-Fri 09:00-17:00
-      const defaultDays = [1, 2, 3, 4, 5];
-      for (const day of defaultDays) {
-        await tx.workingHours.create({
+      if (existing) {
+        // Profile was auto-provisioned on sync — update with submitted details
+        p = await tx.provider.update({
+          where: { userProfileId },
           data: {
-            providerId: p.id,
-            dayOfWeek: day,
-            startTime: '09:00',
-            endTime: '17:00',
-            isAvailable: true,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            clinicName: dto.clinicName,
+            specialization: dto.specialization,
+            phoneNumber: dto.phoneNumber,
+            email: dto.email ?? existing.email,
+            medicalLicenseNumber: dto.medicalLicenseNumber ?? existing.medicalLicenseNumber,
+            mpesaMerchantCode: dto.mpesaMerchantCode ?? existing.mpesaMerchantCode,
+            about: dto.about ?? existing.about,
+            location: dto.location ?? existing.location,
+            lastModifiedBy: userProfileId,
           },
+        });
+      } else {
+        p = await tx.provider.create({
+          data: {
+            userProfileId,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            clinicName: dto.clinicName,
+            specialization: dto.specialization,
+            phoneNumber: dto.phoneNumber,
+            email: dto.email ?? '',
+            medicalLicenseNumber: dto.medicalLicenseNumber,
+            mpesaMerchantCode: dto.mpesaMerchantCode ?? '',
+            about: dto.about,
+            location: dto.location ?? '',
+            isActive: true,
+            isVerified: false,
+            createdBy: userProfileId,
+          },
+        });
+
+        // Default working hours only for newly created providers
+        await tx.workingHours.createMany({
+          data: [1, 2, 3, 4, 5].map(day => ({
+            providerId: p.id, dayOfWeek: day, startTime: '09:00', endTime: '17:00', isAvailable: true,
+          })).concat([0, 6].map(day => ({
+            providerId: p.id, dayOfWeek: day, startTime: '09:00', endTime: '17:00', isAvailable: false,
+          }))),
         });
       }
 
-      // Weekend — not available by default
-      for (const day of [0, 6]) {
-        await tx.workingHours.create({
-          data: {
-            providerId: p.id,
-            dayOfWeek: day,
-            startTime: '09:00',
-            endTime: '17:00',
-            isAvailable: false,
-          },
-        });
-      }
-
-      // Assign PROVIDER role
+      // Ensure PROVIDER role is assigned
       const role = await tx.role.findUnique({ where: { name: 'PROVIDER' } });
       if (role) {
         await tx.userRole.upsert({

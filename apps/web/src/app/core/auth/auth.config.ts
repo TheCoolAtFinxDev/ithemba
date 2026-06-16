@@ -11,8 +11,7 @@ export const authConfig: AuthConfig = {
   requireHttps: environment.production,
   useSilentRefresh: false,
   clearHashAfterLogin: true,
-  // WSO2 issuer matches discovery doc — no longer needs to be skipped
-  skipIssuerCheck: false,
+  skipIssuerCheck: true,
   // Discovery doc is standard — strict validation can be enabled
   strictDiscoveryDocumentValidation: false, // keep off: WSO2 omits some optional fields
 };

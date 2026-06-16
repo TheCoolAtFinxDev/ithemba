@@ -23,55 +23,92 @@ export class PatientsService {
   }
 
   async onboard(userProfileId: string, dto: OnboardPatientDto) {
-    // Check not already onboarded
     const existing = await this.prisma.patient.findUnique({
       where: { userProfileId },
+      include: { savingsAccount: true },
     });
-    if (existing) {
-      throw new ConflictException('Patient profile already exists');
-    }
 
-    // Create patient + HSA in a transaction
     const result = await this.prisma.$transaction(async (tx) => {
-      // Create patient record
-      const patient = await tx.patient.create({
-        data: {
-          userProfileId,
-          phoneNumber: dto.phoneNumber,
-          nationalId: dto.nationalId,
-          dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
-          isActive: true,
-          createdBy: userProfileId,
-        },
-      });
+      let patient;
+      let hsa;
 
-      // Create HSA
-      const hsa = await tx.healthSavingsAccount.create({
-        data: {
-          patientId: patient.id,
-          balance: 0,
-          totalContributed: 0,
-          totalClaimed: 0,
-          isDefault: true,
-          autoDebitEnabled: dto.autoDebitEnabled ?? false,
-          debitSourceMpesaNumber: dto.debitSourceMpesaNumber,
-          createdBy: userProfileId,
-        },
-      });
+      if (existing) {
+        // Profile was auto-provisioned on sync — update with submitted details
+        patient = await tx.patient.update({
+          where: { userProfileId },
+          data: {
+            phoneNumber: dto.phoneNumber,
+            nationalId: dto.nationalId ?? existing.nationalId,
+            dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : existing.dateOfBirth,
+            lastModifiedBy: userProfileId,
+          },
+        });
+        hsa = existing.savingsAccount;
 
-      // Deduct registration fee transaction record
-      await tx.savingsTransaction.create({
-        data: {
-          accountId: hsa.id,
-          patientId: patient.id,
-          transactionType: 'Debit',
-          amount: REGISTRATION_FEE,
-          notes: 'Once-off registration fee',
-          isSuccessful: true,
-        },
-      });
+        if (!hsa) {
+          hsa = await tx.healthSavingsAccount.create({
+            data: {
+              patientId: patient.id,
+              balance: 0,
+              totalContributed: 0,
+              totalClaimed: 0,
+              isDefault: true,
+              autoDebitEnabled: dto.autoDebitEnabled ?? false,
+              debitSourceMpesaNumber: dto.debitSourceMpesaNumber,
+              createdBy: userProfileId,
+            },
+          });
+        } else {
+          await tx.healthSavingsAccount.update({
+            where: { id: hsa.id },
+            data: {
+              autoDebitEnabled: dto.autoDebitEnabled ?? hsa.autoDebitEnabled,
+              debitSourceMpesaNumber: dto.debitSourceMpesaNumber ?? hsa.debitSourceMpesaNumber,
+            },
+          });
+        }
+      } else {
+        patient = await tx.patient.create({
+          data: {
+            userProfileId,
+            phoneNumber: dto.phoneNumber,
+            nationalId: dto.nationalId,
+            dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+            isActive: true,
+            createdBy: userProfileId,
+          },
+        });
+        hsa = await tx.healthSavingsAccount.create({
+          data: {
+            patientId: patient.id,
+            balance: 0,
+            totalContributed: 0,
+            totalClaimed: 0,
+            isDefault: true,
+            autoDebitEnabled: dto.autoDebitEnabled ?? false,
+            debitSourceMpesaNumber: dto.debitSourceMpesaNumber,
+            createdBy: userProfileId,
+          },
+        });
+      }
 
-      // Log audit
+      // Record R67 registration fee only once (if no prior fee transaction exists)
+      const feeExists = await tx.savingsTransaction.count({
+        where: { accountId: hsa.id, notes: 'Once-off registration fee' },
+      });
+      if (feeExists === 0) {
+        await tx.savingsTransaction.create({
+          data: {
+            accountId: hsa.id,
+            patientId: patient.id,
+            transactionType: 'Debit',
+            amount: REGISTRATION_FEE,
+            notes: 'Once-off registration fee',
+            isSuccessful: true,
+          },
+        });
+      }
+
       await tx.auditLogEntry.create({
         data: {
           userId: userProfileId,

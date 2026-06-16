@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 @Injectable()
 export class Wso2JwtStrategy extends PassportStrategy(Strategy, 'wso2-jwt') {
   constructor(
-    private config: ConfigService,
+    config: ConfigService,
     private prisma: PrismaService,
   ) {
     super({
@@ -20,7 +20,7 @@ export class Wso2JwtStrategy extends PassportStrategy(Strategy, 'wso2-jwt') {
       }),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       issuer: config.getOrThrow('WSO2_ISSUER'),
-      audience: config.getOrThrow('WSO2_AUDIENCE'),
+      // audience validation re-enable after WSO2 is configured to include aud: WSO2_AUDIENCE
       algorithms: ['RS256'],
     });
   }

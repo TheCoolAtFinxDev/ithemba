@@ -2,6 +2,7 @@ import {
   Injectable, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NovuService } from '../novu/novu.service';
 import {
   BookAppointmentDto, CancelAppointmentDto, RescheduleAppointmentDto,
   SendOtpDto, ProviderAppointmentActionDto, VerifyVisitCodeDto,
@@ -13,7 +14,10 @@ function generateOTP(): string {
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private novu: NovuService,
+  ) {}
 
   // ── Patient Appointments ─────────────────────────────────────
 
@@ -197,40 +201,61 @@ export class AppointmentsService {
 
   async sendOtp(
     userProfileId: string, patientId: string,
-    appointmentId: string, dto: SendOtpDto,
+    appointmentId: string, _dto: SendOtpDto,
   ) {
-    const patient = await this.verifyPatientOwnership(userProfileId, patientId);
-    const appointment = await this.findAppointmentForPatient(appointmentId, patient.id);
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: patientId },
+      include: { userProfile: { select: { fullName: true, email: true } } },
+    });
+    if (!patient) throw new NotFoundException('Patient not found');
+    if (patient.userProfileId !== userProfileId) throw new ForbiddenException();
+
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, patientId: patient.id },
+      include: { provider: { select: { firstName: true, lastName: true } } },
+    });
+    if (!appointment) throw new NotFoundException('Appointment not found');
 
     if (!['Confirmed', 'Scheduled', 'Requested'].includes(appointment.status)) {
       throw new BadRequestException('Cannot send OTP for this appointment status');
     }
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    const email = patient.userProfile?.email ?? '';
 
     await this.prisma.appointmentOTP.create({
       data: {
         appointmentId,
         code,
         expiresAtUtc: expiresAt,
-        deliveryChannel: dto.preferredChannel ?? 'Sms',
-        destination: patient.phoneNumber,
+        deliveryChannel: 'Email',
+        destination: email,
       },
     });
 
-    // Update appointment with visit code
     await this.prisma.appointment.update({
       where: { id: appointmentId },
       data: { visitCode: code },
     });
 
-    // TODO: Send via Novu when SMS provider is configured
-    // await this.novu.sendVisitCode(userProfileId, { visitCode: code, ... });
+    const providerName = `Dr. ${appointment.provider.firstName} ${appointment.provider.lastName ?? ''}`.trim();
+    const apptDate = new Date(appointment.startUtc).toLocaleDateString('en-ZA', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+
+    await this.novu.sendVisitCode({
+      subscriberId: userProfileId,
+      email,
+      firstName: patient.userProfile?.fullName?.split(' ')[0] ?? 'Patient',
+      visitCode: code,
+      appointmentDate: apptDate,
+      providerName,
+    });
 
     return {
-      message: 'Visit code sent successfully',
-      channel: dto.preferredChannel ?? 'Sms',
+      message: 'Visit code sent to your email',
+      channel: 'Email',
       expiresAt,
     };
   }
