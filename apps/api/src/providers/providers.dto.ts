@@ -84,6 +84,18 @@ export class OnboardProviderDto {
 
   @ApiPropertyOptional()
   @IsOptional() @IsString()
+  bankAccountNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  bankName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  ecocashNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
   about?: string;
 
   @ApiPropertyOptional()
@@ -119,6 +131,18 @@ export class UpdateProviderDto {
   @ApiPropertyOptional()
   @IsOptional() @IsString()
   mpesaMerchantCode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  bankAccountNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  bankName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  ecocashNumber?: string;
 
   @ApiPropertyOptional()
   @IsOptional() @IsString()

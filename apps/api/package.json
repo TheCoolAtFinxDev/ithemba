@@ -74,6 +74,14 @@
             "buildTarget": "@ithemba/api:build:production"
           }
         }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "jest --config apps/api/jest.config.js"
+        },
+        "cache": true,
+        "inputs": ["default", "^production"]
       }
     }
   },

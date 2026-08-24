@@ -31,9 +31,12 @@
           }
         </div>
         <div class="mb-3">
-          <label class="form-label" style="font-size:13px;font-weight:500">National ID</label>
+          <label class="form-label" style="font-size:13px;font-weight:500">National ID *</label>
           <input type="text" class="form-control" placeholder="Your national ID number"
-            [(ngModel)]="form.nationalId">
+            [(ngModel)]="form.nationalId" [class.is-invalid]="errors['nationalId']">
+          @if (errors['nationalId']) {
+            <div class="invalid-feedback">{{errors['nationalId']}}</div>
+          }
         </div>
         <div class="mb-3">
           <label class="form-label" style="font-size:13px;font-weight:500">Date of Birth</label>

@@ -142,6 +142,11 @@ export class AppointmentsController {
     return this.appointmentsService.providerAction(user.sub, pid, aid, 'no-show', dto);
   }
 
+  @Put('v1/providers/:providerId/appointments/:appointmentId/reschedule')
+  providerReschedule(@CurrentUser() user: any, @Param('providerId') pid: string, @Param('appointmentId') aid: string, @Body() dto: RescheduleAppointmentDto) {
+    return this.appointmentsService.providerReschedule(user.sub, pid, aid, dto);
+  }
+
   @Put('v1/providers/:providerId/appointments/:appointmentId/cancel')
   providerCancel(@CurrentUser() user: any, @Param('providerId') pid: string, @Param('appointmentId') aid: string, @Body() dto: ProviderAppointmentActionDto) {
     return this.appointmentsService.providerAction(user.sub, pid, aid, 'cancel', dto);

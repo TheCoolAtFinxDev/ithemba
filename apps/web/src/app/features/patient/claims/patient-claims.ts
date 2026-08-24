@@ -4,16 +4,21 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/auth/auth.service';
 import { environment } from '../../../../environments/environment';
 
+interface LineItem { description: string; quantity: number; unitPrice: number; }
+
 interface Claim {
   id: string;
   claimNumber: string;
   status: string;
   totalAmount: string;
+  hsaCoveredAmount: string;
+  outOfPocketAmount: string;
   dateOfVisit: string;
   description: string | null;
   createdAt: string;
   provider: { firstName: string; lastName: string; clinicName: string };
   appointment: { startUtc: string } | null;
+  lineItems: LineItem[];
 }
 
 @Component({
@@ -57,6 +62,7 @@ export class PatientClaims implements OnInit {
     const map: Record<string, string> = {
       Pending: 'Pending', Submitted: 'Submitted', InReview: 'In Review',
       Approved: 'Approved', Rejected: 'Rejected', Paid: 'Paid', Denied: 'Denied',
+      Withdrawn: 'Withdrawn',
     };
     return map[s] ?? s;
   }
@@ -65,6 +71,7 @@ export class PatientClaims implements OnInit {
     switch (s) {
       case 'Approved': case 'Paid': return 'badge-green';
       case 'Rejected': case 'Denied': return 'badge-red';
+      case 'Withdrawn': return 'badge-grey';
       case 'InReview': return 'badge-blue';
       case 'Submitted': return 'badge-orange';
       default: return 'badge-grey';

@@ -90,3 +90,289 @@ body {
 .badge-confirmed { background: #4CAF50; color: #fff; }
 .badge-completed { background: #9E9E9E; color: #fff; }
 .badge-cancelled { background: #E53935; color: #fff; }
+
+// ── Shared admin UI (used across all admin section components) ──────────────
+
+// Backward-compat badge aliases (defined here globally so all components get them)
+.claim-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.badge-green  { background: #E8F5E9; color: #2E7D32; }
+.badge-teal   { background: #E0F7FA; color: #00838F; }
+.badge-blue   { background: #E3F2FD; color: #1565C0; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-red    { background: #FFEBEE; color: #B71C1C; }
+.badge-grey   { background: #F5F5F5; color: #616161; }
+.badge-purple { background: #F3E5F5; color: #6A1B9A; }
+
+// btn-icon used in admin modals
+.btn-icon {
+  width: 32px; height: 32px;
+  border: none; background: #f5f5f5; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #555;
+  transition: background 0.15s;
+  &:hover { background: #eee; }
+}
+
+// Filter chips
+.filter-chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #757575;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  &:hover { border-color: #E53935; color: #E53935; }
+  &.filter-chip--active { background: #E53935; color: #fff; border-color: #E53935; }
+}
+.filter-chip--teal:hover, .filter-chip--teal.filter-chip--active { border-color: #00B9D6; }
+.filter-chip--teal:hover { color: #00B9D6; }
+.filter-chip--teal.filter-chip--active { background: #00B9D6; color: #fff; }
+
+// Status/role pill badges
+.adm-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.2px;
+}
+.adm-badge-green  { background: #E8F5E9; color: #2E7D32; }
+.adm-badge-teal   { background: #E0F7FA; color: #00838F; }
+.adm-badge-blue   { background: #E3F2FD; color: #1565C0; }
+.adm-badge-orange { background: #FFF3E0; color: #E65100; }
+.adm-badge-red    { background: #FFEBEE; color: #B71C1C; }
+.adm-badge-grey   { background: #F5F5F5; color: #616161; }
+.adm-badge-purple { background: #F3E5F5; color: #6A1B9A; }
+
+// Role pills
+.role-badge { @extend .adm-badge; }
+.role-patient  { @extend .adm-badge-teal; }
+.role-provider { @extend .adm-badge-green; }
+.role-admin    { background: #FCE4EC; color: #880E4F; }
+.role-employer { @extend .adm-badge-blue; }
+
+// Section-page header
+.adm-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+  .adm-page-header__title { font-weight: 700; font-size: 18px; margin-bottom: 2px; }
+  .adm-page-header__sub   { font-size: 13px; color: #9e9e9e; }
+}
+
+// Data table inside ith-card
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  thead tr {
+    background: #fafafa;
+    border-bottom: 2px solid #f0f0f0;
+    th {
+      padding: 11px 16px;
+      font-weight: 600;
+      color: #757575;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      white-space: nowrap;
+    }
+  }
+  tbody tr {
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.1s;
+    &:hover { background: #fafafa; }
+    &:last-child { border-bottom: none; }
+    td {
+      padding: 13px 16px;
+      border: none;
+      vertical-align: middle;
+    }
+  }
+}
+
+// Avatar initials circle
+.adm-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: #E3F2FD;
+  color: #1565C0;
+}
+.adm-avatar--green  { background: #E8F5E9; color: #2E7D32; }
+.adm-avatar--orange { background: #FFF3E0; color: #E65100; }
+.adm-avatar--red    { background: #FFEBEE; color: #B71C1C; }
+.adm-avatar--purple { background: #EDE7F6; color: #512DA8; }
+
+// Empty state
+.adm-empty {
+  padding: 60px 20px;
+  text-align: center;
+  .adm-empty__icon { font-size: 48px; opacity: 0.2; color: #9e9e9e; margin-bottom: 12px; }
+  .adm-empty__text { font-size: 14px; color: #9e9e9e; }
+}
+
+// Pending section zone
+.adm-zone-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  .adm-zone-dot { width: 8px; height: 8px; border-radius: 50%; }
+  span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+}
+
+// Action buttons row
+.adm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+.adm-action-btn--green  { background: #E8F5E9; color: #2E7D32; }
+.adm-action-btn--red    { background: #FFEBEE; color: #B71C1C; }
+.adm-action-btn--blue   { background: #E3F2FD; color: #1565C0; }
+.adm-action-btn--orange { background: #FFF3E0; color: #E65100; }
+.adm-action-btn--grey   { background: #F5F5F5; color: #555; }
+
+// Modal (Bootstrap-compatible overlay)
+.adm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.adm-modal {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  .adm-modal__header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    .adm-modal__title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+    .adm-modal__sub   { font-size: 12px; color: #9e9e9e; }
+  }
+  .adm-modal__body { padding: 24px; }
+  .adm-modal__footer {
+    padding: 0 24px 24px;
+    display: flex;
+    gap: 10px;
+    button { flex: 1; }
+  }
+}
+
+// Info row inside modal
+.adm-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+  &:last-child { border-bottom: none; }
+  .adm-info-row__label { color: #9e9e9e; }
+  .adm-info-row__value { font-weight: 600; }
+}
+
+// Mono code box
+.adm-code-box {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+// Stat mini chips for section headers
+.adm-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f5f7fb;
+  color: #555;
+  i { font-size: 11px; }
+}
+
+// Provider/Employer pending card
+.adm-pending-card {
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  border-left: 4px solid #FF9800;
+  background: #fff;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.15s;
+  &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+}
+
+// ith-modal (Bootstrap-style inside Angular)
+.ith-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1055;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+  width: 90%;
+  max-width: 480px;
+  padding: 28px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1050;
+}

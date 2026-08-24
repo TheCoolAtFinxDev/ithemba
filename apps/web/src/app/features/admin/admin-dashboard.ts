@@ -6,19 +6,26 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AdminUsers } from './sections/admin-users';
 import { AdminClaims } from './sections/admin-claims';
 import { AdminProviders } from './sections/admin-providers';
+import { AdminEmployers } from './sections/admin-employers';
+import { AdminAppointments } from './sections/admin-appointments';
+import { AdminRbac } from './sections/admin-rbac';
+import { AdminSettings } from './sections/admin-settings';
 import { environment } from '../../../environments/environment';
 
 interface Stats {
   patients: number;
   providers: number;
+  unverifiedProviders: number;
   appointments: number;
   claims: number;
   pendingClaims: number;
+  employers: number;
+  pendingEmployers: number;
 }
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [NgIf, NgClass, AdminUsers, AdminClaims, AdminProviders],
+  imports: [NgIf, NgClass, AdminUsers, AdminClaims, AdminProviders, AdminEmployers, AdminAppointments, AdminRbac, AdminSettings],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.css',
 })

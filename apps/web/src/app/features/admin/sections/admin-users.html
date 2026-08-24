@@ -3,11 +3,53 @@
     <h5 class="fw-bold mb-1">Users</h5>
     <p class="text-muted mb-0" style="font-size:13px">{{ users.length }} total</p>
   </div>
-  <div class="position-relative" style="width:260px">
-    <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9e9e9e;font-size:14px"></i>
-    <input class="form-control" style="padding-left:36px;border-radius:10px;font-size:13px;border-color:#e0e0e0"
-           placeholder="Search name or email…"
-           [(ngModel)]="search" (ngModelChange)="onSearch()" />
+  <div class="d-flex gap-2 align-items-center">
+    <div class="position-relative" style="width:220px">
+      <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9e9e9e;font-size:14px"></i>
+      <input class="form-control" style="padding-left:36px;border-radius:10px;font-size:13px;border-color:#e0e0e0"
+             placeholder="Search name or email…"
+             [(ngModel)]="search" (ngModelChange)="onSearch()" />
+    </div>
+    <button class="btn btn-sm" style="background:#f5f7fb;color:#555;border:1px solid #e0e0e0;border-radius:8px;font-weight:600;white-space:nowrap"
+      (click)="togglePending()">
+      <i class="bi bi-hourglass-split me-1"></i>Stuck Registrations
+    </button>
+    <button class="btn btn-sm" style="background:#00B9D6;color:#fff;border-radius:8px;font-weight:600;white-space:nowrap"
+      (click)="openInviteModal()">
+      <i class="bi bi-person-plus me-1"></i>Invite User
+    </button>
+  </div>
+</div>
+
+<!-- Stuck registrations panel -->
+<div *ngIf="showPending" class="ith-card p-3 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div style="font-weight:700;font-size:13px">Pending Registrations</div>
+    <button class="btn-icon" (click)="showPending = false"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div *ngIf="pendingLoading" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+  <div *ngIf="!pendingLoading && pendingRegistrations.length === 0" class="text-muted text-center py-3" style="font-size:13px">
+    No pending registrations.
+  </div>
+  <div *ngFor="let reg of pendingRegistrations" class="d-flex justify-content-between align-items-center py-2"
+       style="border-bottom:1px solid #f5f5f5">
+    <div>
+      <div style="font-weight:600;font-size:13px">{{ reg.firstName }} {{ reg.lastName }} <span class="text-muted" style="font-weight:400">({{ reg.role }})</span></div>
+      <div class="text-muted" style="font-size:12px">{{ reg.email }} · {{ reg.phoneNumber }}</div>
+      <div style="font-size:11px;margin-top:2px">
+        <span [style.color]="reg.emailVerified ? '#2E7D32' : '#9e9e9e'">
+          <i class="bi" [class.bi-check-circle-fill]="reg.emailVerified" [class.bi-circle]="!reg.emailVerified"></i> Email
+        </span>
+        <span class="ms-2" [style.color]="reg.phoneVerified ? '#2E7D32' : '#9e9e9e'">
+          <i class="bi" [class.bi-check-circle-fill]="reg.phoneVerified" [class.bi-circle]="!reg.phoneVerified"></i> Phone
+        </span>
+      </div>
+    </div>
+    <button *ngIf="!reg.phoneVerified" class="btn btn-sm" style="background:#FFF3E0;color:#E65100;border:none;border-radius:6px;font-size:11px;font-weight:600"
+            [disabled]="pendingActionId === reg.id" (click)="forceVerifyPhone(reg)">
+      <span *ngIf="pendingActionId === reg.id" class="spinner-border spinner-border-sm me-1" style="width:10px;height:10px"></span>
+      Force Verify Phone
+    </button>
   </div>
 </div>
 
@@ -86,6 +128,12 @@
                       (click)="verifyProvider(u)">
                 <i class="bi bi-patch-check me-1"></i>Verify
               </button>
+              <!-- Adjust Wallet -->
+              <button *ngIf="u.patient"
+                      class="btn btn-sm" style="background:#FFF3E0;color:#E65100;border:none;border-radius:6px;font-size:11px;font-weight:600;padding:4px 8px"
+                      (click)="openAdjustModal(u)">
+                <i class="bi bi-wallet2 me-1"></i>Adjust Wallet
+              </button>
             </div>
           </td>
         </tr>
@@ -110,4 +158,140 @@
       Assign Role
     </button>
   </div>
+</div>
+
+<!-- ── Invite User Modal ────────��────────────────────────────────── -->
+<div *ngIf="showInviteModal" class="modal-backdrop" (click)="closeInviteModal()"></div>
+<div *ngIf="showInviteModal" class="ith-modal">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h6 class="fw-bold mb-0">
+      <i class="bi bi-person-plus me-2" style="color:#00B9D6"></i>Invite New User
+    </h6>
+    <button class="btn-close" (click)="closeInviteModal()"></button>
+  </div>
+
+  <div *ngIf="inviteSuccess" class="mb-3">
+    <div class="alert alert-success py-2 mb-2" style="font-size:13px;border-radius:8px">
+      <i class="bi bi-check-circle me-1"></i>{{ inviteSuccess }}
+    </div>
+    <div *ngIf="inviteResult?.temporaryPassword" class="p-3" style="background:#f8f9fa;border-radius:10px;font-size:13px">
+      <div class="text-muted mb-1" style="font-size:11px">TEMPORARY PASSWORD (for your records)</div>
+      <div class="fw-semibold" style="font-family:monospace;font-size:14px">{{ inviteResult!.temporaryPassword }}</div>
+      <div class="text-muted mt-1" style="font-size:11px">A welcome email with this password was sent to the user.</div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!inviteSuccess">
+    <!-- Role toggle -->
+    <div class="d-flex gap-2 mb-4">
+      <div class="flex-fill p-3 rounded-3 text-center"
+        style="cursor:pointer;border:2px solid;font-size:13px;font-weight:600;transition:all 0.15s"
+        [style.borderColor]="invite.role === 'PATIENT' ? '#00B9D6' : '#dee2e6'"
+        [style.background]="invite.role === 'PATIENT' ? '#e8f8fb' : '#fff'"
+        [style.color]="invite.role === 'PATIENT' ? '#006680' : '#6c757d'"
+        (click)="invite.role = 'PATIENT'">
+        <i class="bi bi-person-heart d-block mb-1" style="font-size:20px"></i>Patient
+      </div>
+      <div class="flex-fill p-3 rounded-3 text-center"
+        style="cursor:pointer;border:2px solid;font-size:13px;font-weight:600;transition:all 0.15s"
+        [style.borderColor]="invite.role === 'PROVIDER' ? '#4A7C59' : '#dee2e6'"
+        [style.background]="invite.role === 'PROVIDER' ? '#e8f0eb' : '#fff'"
+        [style.color]="invite.role === 'PROVIDER' ? '#2d5a3d' : '#6c757d'"
+        (click)="invite.role = 'PROVIDER'">
+        <i class="bi bi-hospital d-block mb-1" style="font-size:20px"></i>Provider
+      </div>
+      <div class="flex-fill p-3 rounded-3 text-center"
+        style="cursor:pointer;border:2px solid;font-size:13px;font-weight:600;transition:all 0.15s"
+        [style.borderColor]="invite.role === 'ADMIN' ? '#E53935' : '#dee2e6'"
+        [style.background]="invite.role === 'ADMIN' ? '#fdecea' : '#fff'"
+        [style.color]="invite.role === 'ADMIN' ? '#b71c1c' : '#6c757d'"
+        (click)="invite.role = 'ADMIN'">
+        <i class="bi bi-shield-lock d-block mb-1" style="font-size:20px"></i>Admin
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-6">
+        <label class="form-label" style="font-size:12px;font-weight:500">First Name *</label>
+        <input type="text" class="form-control form-control-sm" placeholder="Jane" [(ngModel)]="invite.firstName">
+      </div>
+      <div class="col-6">
+        <label class="form-label" style="font-size:12px;font-weight:500">Last Name *</label>
+        <input type="text" class="form-control form-control-sm" placeholder="Doe" [(ngModel)]="invite.lastName">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" style="font-size:12px;font-weight:500">Email *</label>
+      <input type="email" class="form-control form-control-sm" [class.is-invalid]="inviteEmailTaken"
+             placeholder="jane@example.com" [(ngModel)]="invite.email" (ngModelChange)="onInviteEmailInput()">
+      <div *ngIf="inviteEmailTaken" class="text-danger mt-1" style="font-size:11px">
+        <i class="bi bi-exclamation-circle me-1"></i>Already registered
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label" style="font-size:12px;font-weight:500">Phone Number *</label>
+      <input type="tel" class="form-control form-control-sm" placeholder="+266 50 123 456" [(ngModel)]="invite.phoneNumber">
+    </div>
+
+    <div *ngIf="inviteError" class="alert alert-danger py-2 mb-3" style="font-size:13px">
+      <i class="bi bi-exclamation-circle me-1"></i>{{ inviteError }}
+    </div>
+
+    <button class="btn w-100" style="background:#00B9D6;color:#fff;font-weight:600"
+      [disabled]="inviteLoading" (click)="submitInvite()">
+      <span *ngIf="inviteLoading" class="spinner-border spinner-border-sm me-2"></span>
+      Create Account &amp; Send Invite
+    </button>
+  </ng-container>
+</div>
+
+<!-- ── Adjust Wallet Modal ───────────────────────────────────────── -->
+<div *ngIf="showAdjustModal" class="modal-backdrop" (click)="closeAdjustModal()"></div>
+<div *ngIf="showAdjustModal" class="ith-modal">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h6 class="fw-bold mb-0">
+      <i class="bi bi-wallet2 me-2" style="color:#E65100"></i>Adjust Wallet Balance
+    </h6>
+    <button class="btn-close" (click)="closeAdjustModal()"></button>
+  </div>
+
+  <div class="mb-3 p-3 rounded-3" style="background:#f5f7fb;font-size:13px">
+    <div class="fw-semibold">{{ adjustUser?.fullName }}</div>
+    <div class="text-muted">{{ adjustUser?.email }}</div>
+  </div>
+
+  <div class="d-flex gap-2 mb-3">
+    <div class="flex-fill p-2 rounded-3 text-center"
+      style="cursor:pointer;border:2px solid;font-size:13px;font-weight:600"
+      [style.borderColor]="adjustDirection === 'credit' ? '#2E7D32' : '#dee2e6'"
+      [style.background]="adjustDirection === 'credit' ? '#E8F5E9' : '#fff'"
+      [style.color]="adjustDirection === 'credit' ? '#2E7D32' : '#6c757d'"
+      (click)="adjustDirection = 'credit'">
+      <i class="bi bi-plus-circle me-1"></i>Credit
+    </div>
+    <div class="flex-fill p-2 rounded-3 text-center"
+      style="cursor:pointer;border:2px solid;font-size:13px;font-weight:600"
+      [style.borderColor]="adjustDirection === 'debit' ? '#B71C1C' : '#dee2e6'"
+      [style.background]="adjustDirection === 'debit' ? '#FFEBEE' : '#fff'"
+      [style.color]="adjustDirection === 'debit' ? '#B71C1C' : '#6c757d'"
+      (click)="adjustDirection = 'debit'">
+      <i class="bi bi-dash-circle me-1"></i>Debit
+    </div>
+  </div>
+
+  <label class="form-label" style="font-size:12px;font-weight:500">Amount (LSL) *</label>
+  <input type="number" class="form-control mb-3" min="0.01" step="0.01" placeholder="e.g. 250.00" [(ngModel)]="adjustAmount">
+
+  <label class="form-label" style="font-size:12px;font-weight:500">Reason *</label>
+  <textarea class="form-control mb-3" rows="2" placeholder="e.g. Reversal for failed M-Pesa top-up on 12 June" [(ngModel)]="adjustReason"></textarea>
+
+  <div *ngIf="adjustError" class="alert alert-danger py-2 mb-3" style="font-size:13px">
+    <i class="bi bi-exclamation-circle me-1"></i>{{ adjustError }}
+  </div>
+
+  <button class="btn w-100" style="background:#E65100;color:#fff;font-weight:600"
+    [disabled]="adjustLoading" (click)="submitAdjust()">
+    <span *ngIf="adjustLoading" class="spinner-border spinner-border-sm me-2"></span>
+    {{ adjustDirection === 'credit' ? 'Credit' : 'Debit' }} Wallet
+  </button>
 </div>

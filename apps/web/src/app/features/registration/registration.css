@@ -1,0 +1,5 @@
+/* OTP digit inputs */
+.form-control:focus {
+  border-color: #00B9D6;
+  box-shadow: 0 0 0 3px rgba(0, 185, 214, 0.15);
+}

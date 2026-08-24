@@ -7,7 +7,7 @@ export const authConfig: AuthConfig = {
   clientId: environment.wso2ClientId,
   responseType: 'code',
   scope: environment.wso2Scope,
-  showDebugInformation: !environment.production,
+  showDebugInformation: false,
   requireHttps: environment.production,
   useSilentRefresh: false,
   clearHashAfterLogin: true,

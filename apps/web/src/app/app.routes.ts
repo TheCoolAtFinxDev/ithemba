@@ -9,6 +9,20 @@ export const routes: Routes = [
       import('./features/landing/landing').then((m) => m.Landing),
   },
 
+  // Self-registration (public)
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./features/registration/registration').then((m) => m.Registration),
+  },
+
+  // Self-service password reset (public)
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+  },
+
   // Patient portal
   {
     path: 'patient/onboard',
@@ -49,6 +63,14 @@ export const routes: Routes = [
       import('./features/admin/admin-dashboard').then((m) => m.AdminDashboard),
   },
 
+  // Employer portal
+  {
+    path: 'employer',
+    canActivate: [authGuard, roleGuard('EMPLOYER')],
+    loadComponent: () =>
+      import('./features/employer/employer-dashboard').then((m) => m.EmployerDashboard),
+  },
+
   // Legacy routes
   {
     path: 'home',
@@ -66,6 +88,16 @@ export const routes: Routes = [
     path: 'unauthorized',
     loadComponent: () =>
       import('./features/unauthorized/unauthorized').then((m) => m.Unauthorized),
+  },
+  {
+    path: 'terms',
+    loadComponent: () =>
+      import('./features/legal/terms').then((m) => m.TermsPage),
+  },
+  {
+    path: 'privacy',
+    loadComponent: () =>
+      import('./features/legal/privacy').then((m) => m.PrivacyPage),
   },
   {
     path: '**',

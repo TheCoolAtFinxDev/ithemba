@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Ephemeral DB for this job only — used for `prisma generate` and the
+    # schema-drift check below, never touches the real Supabase database.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma schema drift check
+        # Fails if schema.prisma doesn't match what replaying every committed
+        # migration file produces — catches a schema edit with no matching
+        # migration before it reaches production. Runs against the throwaway
+        # postgres service above, never the real Supabase database.
+        run: |
+          npx prisma migrate diff \
+            --from-migrations ./prisma/migrations \
+            --to-schema ./prisma/schema.prisma \
+            --exit-code
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run API tests
+        run: npx nx test api
+
+      - name: Build API
+        run: npx nx build api
+
+      - name: Build web
+        run: npx nx build web
+        env:
+          NX_IGNORE_UNSUPPORTED_TS_SETUP: 'true'

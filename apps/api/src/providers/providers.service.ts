@@ -2,6 +2,7 @@ import {
   Injectable, NotFoundException, ConflictException, ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NovuService } from '../novu/novu.service';
 import {
   OnboardProviderDto, UpdateProviderDto, UpdateWorkingHoursDto,
   ProviderAddressDto, ProviderSearchDto, CreateTimeOffDto,
@@ -11,7 +12,7 @@ const SLOT_DURATION_MINUTES = 30;
 
 @Injectable()
 export class ProvidersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private novu: NovuService) {}
 
   // ── Profile ─────────────────────────────────────────────────
 
@@ -49,6 +50,9 @@ export class ProvidersService {
             email: dto.email ?? existing.email,
             medicalLicenseNumber: dto.medicalLicenseNumber ?? existing.medicalLicenseNumber,
             mpesaMerchantCode: dto.mpesaMerchantCode ?? existing.mpesaMerchantCode,
+            bankAccountNumber: dto.bankAccountNumber ?? existing.bankAccountNumber,
+            bankName: dto.bankName ?? existing.bankName,
+            ecocashNumber: dto.ecocashNumber ?? existing.ecocashNumber,
             about: dto.about ?? existing.about,
             location: dto.location ?? existing.location,
             lastModifiedBy: userProfileId,
@@ -66,6 +70,9 @@ export class ProvidersService {
             email: dto.email ?? '',
             medicalLicenseNumber: dto.medicalLicenseNumber,
             mpesaMerchantCode: dto.mpesaMerchantCode ?? '',
+            bankAccountNumber: dto.bankAccountNumber,
+            bankName: dto.bankName,
+            ecocashNumber: dto.ecocashNumber,
             about: dto.about,
             location: dto.location ?? '',
             isActive: true,
@@ -105,6 +112,13 @@ export class ProvidersService {
 
       return p;
     });
+
+    if (!existing) {
+      await this.novu.notifyAdminsNewProvider({
+        providerName: `${dto.firstName} ${dto.lastName ?? ''}`.trim(),
+        clinicName: dto.clinicName,
+      });
+    }
 
     return provider;
   }

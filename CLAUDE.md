@@ -99,7 +99,7 @@ DB_HOST=aws-0-eu-west-1.pooler.supabase.com
 DB_PORT=6543
 DB_NAME=postgres
 DB_USER=postgres.seodrkgpfytwofwozitt
-DB_PASSWORD=qU9ne$q#2Ah/y?y
+DB_PASSWORD=<redacted — see local .env, not committed>
 
 # WSO2
 WSO2_ISSUER=https://identity.golink.co.ls/oauth2/token
@@ -115,6 +115,9 @@ NOVU_API_URL=https://talk.golink.co.ls/api
 # App
 NODE_ENV=production
 PORT=3000
+
+# Sentry (error tracking) — optional, no-ops if unset
+SENTRY_DSN=
 ```
 
 ---
@@ -126,17 +129,17 @@ PORT=3000
 | ithemba-api | jwaADZBObZ3IIenbRWsfoGlytNka | Resource server — API validates tokens against this audience |
 | ithemba-pwa | qK58RLdy2ehhqhvtzUhBgB7m1v4a | SPA — authorization code + PKCE (S256), JWT access tokens |
 
-**WSO2 admin:** admin / Mg2Q4VVm8MgJLqK5dBEn
+**WSO2 admin:** admin / <redacted — see password manager, not committed>
 
-**Test users:**
-- Patient: testpatient@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn
-- Patient 2: testpatient2@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn
-- Provider: testprovider@ithembahealth.com / Mg2Q4VVm8MgJLqK5dBEn
+**Test users:** their Postgres records (patient/provider/HSA/appointments/etc.) were wiped from the production database on 2026-07-11 as part of go-live prep. **The WSO2 accounts themselves still exist and can still log in** — disabling/deleting them in the identity.golink.co.ls console is a manual step that hasn't been done yet. Recreate via real onboarding if needed for dev/staging.
+- Patient: testpatient@ithembahealth.com
+- Patient 2: testpatient2@ithembahealth.com
+- Provider: testprovider@ithembahealth.com
 
 **Required WSO2 settings for ithemba-pwa:**
 - Token type: JWT (not opaque — backend validates via JWKS)
 - PKCE: Mandatory, S256
-- Allowed redirect URIs: `http://169.239.181.30`, `https://app.ithembahealth.com`
+- Allowed redirect URIs: `http://169.239.181.30`, `https://myhealth.ithembahealth.com` (confirmed production domain as of 2026-07-13 — **must be added in the WSO2 console manually, not just here**)
 - Allowed origins: same as redirect URIs
 - Scopes: `openid profile email roles`
 - Requested attributes (in access token): email, given_name, family_name, name, roles
@@ -222,12 +225,20 @@ npx tsx prisma/seed-providers.ts  # test providers
 
 ## Pending / Future Work 🔲
 
-- **Novu SMS** — `NOVU_API_KEY` is empty; OTP send is stubbed with a TODO comment
-- **Annual admin fee** — R67 deducted every January (needs a PM2 cron or scheduled job)
-- **C-Pay integration** — Blocked, waiting for API docs from Chaperone
-- **M-Pesa real integration** — Top-up currently creates a real DB transaction but makes no actual M-Pesa call
-- **Provider email notifications** — Appointment accepted/rejected, claim approved/rejected
-- **Patient SMS notifications** — Appointment reminders, visit code delivery
+*(Last verified against code 2026-07-13 — this list decays fast, re-check before trusting it.)*
+
+- **Employer payslip deduction** — blocked on Golink Transact's vendor response (API shape, Lesotho availability, settlement timeline); `EmployerPaymentMethod.Payslip` exists as a schema placeholder only
+- **C-Pay/M-Pesa live-rail testing** — both rails are fully wired through `GolinkService` (top-up, auto-debit, provider disbursement, employer payment links) but only exercised against `sandbox.transact.golink.co.ls` so far — needs real end-to-end testing before go-live
+- **Appointment reminder notifications** — distinct from visit-code delivery (which is done); no reminder job exists yet
+- **Reconciliation / balance endpoints** — `GET /merchant/balance`, `GET /transactions` from the Golink integration request doc are not implemented; needed for finance reconciliation before go-live, not user-facing
+- **Backend test coverage** — `apps/api` has Jest wired up with unit tests for the highest-risk paths (claim approval/rejection race conditions, appointment double-booking, Golink webhook signature/idempotency) — still far from comprehensive, expand as new risk areas are found
+
+### Already done, despite what older versions of this doc said
+- Novu SMS is live via Golink Talk (Vomule provider), not a stub
+- Annual R67 admin fee — daily cron (`apps/api/src/admin/annual-fee.task.ts`)
+- M-Pesa real integration — live Golink STK push for top-up/auto-debit/registration fee
+- Appointment/claim email notifications (accepted/rejected/approved/rejected) — wired via Novu
+- CI (`​.github/workflows/ci.yml`) — build + schema-drift check + tests on every PR
 
 ---
 

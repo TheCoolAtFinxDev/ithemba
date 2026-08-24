@@ -57,6 +57,9 @@
         <button class="btn btn-sm btn-success" (click)="providerAction(apt, 'accept')" [disabled]="apt.loading">
           <i class="bi bi-check-circle me-1"></i>Accept
         </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="openRescheduleModal(apt)" [disabled]="apt.loading">
+          <i class="bi bi-calendar-event me-1"></i>Reschedule
+        </button>
         <button class="btn btn-sm btn-outline-danger" (click)="providerAction(apt, 'reject')" [disabled]="apt.loading">
           <i class="bi bi-x-circle me-1"></i>Reject
         </button>
@@ -65,6 +68,9 @@
       <ng-container *ngIf="apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Rescheduled'">
         <button class="btn btn-sm btn-ith-verify" (click)="openOtpModal(apt)" [disabled]="apt.loading">
           <i class="bi bi-shield-check me-1"></i>Verify &amp; Check In
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="openRescheduleModal(apt)" [disabled]="apt.loading">
+          <i class="bi bi-calendar-event me-1"></i>Reschedule
         </button>
         <button class="btn btn-sm btn-outline-secondary" (click)="providerAction(apt, 'no-show')" [disabled]="apt.loading">
           No Show
@@ -145,6 +151,53 @@
           </button>
         </div>
 
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reschedule Modal -->
+<div *ngIf="rescheduleApt" class="modal-backdrop fade show" style="display:block" (click)="closeRescheduleModal()"></div>
+<div *ngIf="rescheduleApt" class="modal fade show" style="display:block;pointer-events:none">
+  <div class="modal-dialog modal-dialog-centered" style="pointer-events:all" (click)="$event.stopPropagation()">
+    <div class="modal-content" style="border-radius:16px;border:none">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title" style="font-weight:700">Reschedule Appointment</h5>
+          <p class="text-muted mb-0" style="font-size:13px">
+            {{ rescheduleApt?.patient?.userProfile?.fullName ?? 'Patient' }}
+          </p>
+        </div>
+        <button class="btn-close" (click)="closeRescheduleModal()"></button>
+      </div>
+      <div class="modal-body pt-3 pb-4">
+
+        <label class="form-label" style="font-weight:600;font-size:13px">Date</label>
+        <input type="date" class="form-control mb-3" style="border-radius:10px" [(ngModel)]="rescheduleDate">
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label" style="font-weight:600;font-size:13px">Start Time</label>
+            <input type="time" class="form-control" style="border-radius:10px" [(ngModel)]="rescheduleStartTime">
+          </div>
+          <div class="col-6">
+            <label class="form-label" style="font-weight:600;font-size:13px">End Time</label>
+            <input type="time" class="form-control" style="border-radius:10px" [(ngModel)]="rescheduleEndTime">
+          </div>
+        </div>
+
+        <div *ngIf="rescheduleError" class="alert alert-danger py-2" style="font-size:13px;border-radius:10px">
+          <i class="bi bi-exclamation-triangle me-1"></i>{{ rescheduleError }}
+        </div>
+
+        <button
+          class="btn btn-ith-primary w-100"
+          style="padding:12px;font-size:14px;font-weight:600"
+          [disabled]="rescheduleSaving"
+          (click)="submitReschedule()">
+          <span *ngIf="rescheduleSaving" class="spinner-border spinner-border-sm me-2"></span>
+          {{ rescheduleSaving ? 'Saving…' : 'Confirm New Time' }}
+        </button>
       </div>
     </div>
   </div>

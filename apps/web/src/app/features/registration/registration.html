@@ -1,0 +1,238 @@
+<div style="min-height:100vh;background:#f5f7fb;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:480px">
+
+    <!-- Logo + header -->
+    <div class="text-center mb-4">
+      <img src="logos/ithemba.png" alt="iThemba Health" style="height:56px;width:auto;margin:0 auto 12px;display:block" />
+      <h4 style="font-weight:700;margin:0">Create your iThemba account</h4>
+      <p class="text-muted" style="font-size:13px;margin-top:4px">
+        <ng-container *ngIf="step === 'info'">Step 1 of 3 — Your details</ng-container>
+        <ng-container *ngIf="step === 'email-otp'">Step 2 of 3 — Email verification</ng-container>
+        <ng-container *ngIf="step === 'sms-otp'">Step 3 of 3 — SMS verification</ng-container>
+        <ng-container *ngIf="step === 'done'">Account created</ng-container>
+      </p>
+      <div class="progress mt-2" style="height:4px;border-radius:2px" *ngIf="step !== 'done'">
+        <div class="progress-bar" style="background:#00B9D6;transition:width 0.3s"
+          [style.width]="step === 'info' ? '33%' : step === 'email-otp' ? '66%' : '100%'"></div>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: Info ── -->
+    <div class="ith-card p-4" *ngIf="step === 'info'">
+
+      <!-- Employer invite banner -->
+      <div *ngIf="inviteToken" class="p-3 mb-3 rounded-3" style="background:#e3f2fd;border:1px solid #bbdefb;font-size:13px;color:#1565C0">
+        <i class="bi bi-envelope-paper-heart me-1"></i>
+        You're joining <strong>{{ inviteEmployerName }}</strong>'s health savings plan. Complete registration below to activate your account.
+      </div>
+      <div *ngIf="inviteError" class="alert alert-warning" style="font-size:13px">
+        <i class="bi bi-exclamation-triangle me-1"></i>{{ inviteError }}
+      </div>
+
+      <!-- Role selector — 3 tiles -->
+      <div class="row g-2 mb-4" *ngIf="!inviteToken">
+        <div class="col-4">
+          <div class="p-3 rounded-3 text-center" style="cursor:pointer;border:2px solid;transition:all 0.2s"
+            [style.borderColor]="role === 'PATIENT' ? '#00B9D6' : '#dee2e6'"
+            [style.background]="role === 'PATIENT' ? '#e8f8fb' : '#fff'"
+            (click)="setRole('PATIENT')">
+            <i class="bi bi-person-heart d-block mb-1" style="font-size:22px"
+              [style.color]="role === 'PATIENT' ? '#00B9D6' : '#9e9e9e'"></i>
+            <div style="font-size:12px;font-weight:700" [style.color]="role === 'PATIENT' ? '#006680' : '#6c757d'">Patient</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-3 rounded-3 text-center" style="cursor:pointer;border:2px solid;transition:all 0.2s"
+            [style.borderColor]="role === 'PROVIDER' ? '#4A7C59' : '#dee2e6'"
+            [style.background]="role === 'PROVIDER' ? '#e8f0eb' : '#fff'"
+            (click)="setRole('PROVIDER')">
+            <i class="bi bi-hospital d-block mb-1" style="font-size:22px"
+              [style.color]="role === 'PROVIDER' ? '#4A7C59' : '#9e9e9e'"></i>
+            <div style="font-size:12px;font-weight:700" [style.color]="role === 'PROVIDER' ? '#2d5a3d' : '#6c757d'">Provider</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-3 rounded-3 text-center" style="cursor:pointer;border:2px solid;transition:all 0.2s"
+            [style.borderColor]="role === 'EMPLOYER' ? '#1565C0' : '#dee2e6'"
+            [style.background]="role === 'EMPLOYER' ? '#e3f2fd' : '#fff'"
+            (click)="setRole('EMPLOYER')">
+            <i class="bi bi-building-fill d-block mb-1" style="font-size:22px"
+              [style.color]="role === 'EMPLOYER' ? '#1565C0' : '#9e9e9e'"></i>
+            <div style="font-size:12px;font-weight:700" [style.color]="role === 'EMPLOYER' ? '#0d47a1' : '#6c757d'">Employer</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employer-only context banner -->
+      <div *ngIf="role === 'EMPLOYER'" class="p-3 mb-3 rounded-3" style="background:#e3f2fd;border:1px solid #bbdefb;font-size:13px;color:#1565C0">
+        <i class="bi bi-building-check me-1"></i>
+        Set up a group HSA plan for your employees. Your account starts unverified — the iThemba team will contact you within 2 business days.
+      </div>
+
+      <!-- Company name — only for EMPLOYER -->
+      <div class="mb-3" *ngIf="role === 'EMPLOYER'">
+        <label class="form-label" style="font-size:13px;font-weight:500">Company / Organisation Name *</label>
+        <input type="text" class="form-control" placeholder="e.g. Lesotho National Bank" [(ngModel)]="info.companyName">
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <label class="form-label" style="font-size:13px;font-weight:500">
+            {{ role === 'EMPLOYER' ? 'Contact First Name *' : 'First Name *' }}
+          </label>
+          <input type="text" class="form-control" placeholder="Jane" [(ngModel)]="info.firstName">
+        </div>
+        <div class="col-6">
+          <label class="form-label" style="font-size:13px;font-weight:500">
+            {{ role === 'EMPLOYER' ? 'Contact Last Name *' : 'Last Name *' }}
+          </label>
+          <input type="text" class="form-control" placeholder="Doe" [(ngModel)]="info.lastName">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" style="font-size:13px;font-weight:500">
+          {{ role === 'EMPLOYER' ? 'Work Email Address *' : 'Email Address *' }}
+        </label>
+        <input type="email" class="form-control" [class.is-invalid]="emailTaken" [readonly]="!!inviteToken"
+               placeholder="jane@company.ls" [(ngModel)]="info.email" (ngModelChange)="onEmailInput()">
+        <div *ngIf="emailTaken" class="text-danger mt-1" style="font-size:12px">
+          <i class="bi bi-exclamation-circle me-1"></i>An account with this email already exists.
+        </div>
+        <div *ngIf="inviteToken" class="form-text">Locked to the email your employer invited — this is how your account gets linked.</div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" style="font-size:13px;font-weight:500">
+          {{ role === 'EMPLOYER' ? 'Work Phone Number *' : 'Phone Number *' }}
+        </label>
+        <input type="tel" class="form-control" placeholder="+266 50 123 456" [(ngModel)]="info.phoneNumber">
+        <div class="form-text">We'll send a verification code to this number</div>
+      </div>
+
+      <div class="alert alert-danger" style="font-size:13px" *ngIf="error">
+        <i class="bi bi-exclamation-circle me-1"></i>{{error}}
+      </div>
+
+      <button class="btn w-100" style="font-weight:600;padding:12px;color:#fff"
+        [style.background]="role === 'EMPLOYER' ? '#1565C0' : role === 'PROVIDER' ? '#4A7C59' : '#00B9D6'"
+        [disabled]="loading" (click)="submitInfo()">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+        Send Verification Codes
+        <i class="bi bi-arrow-right ms-1" *ngIf="!loading"></i>
+      </button>
+
+      <p class="text-center text-muted mt-3" style="font-size:13px">
+        Already have an account?
+        <a (click)="goLogin()" style="color:#00B9D6;cursor:pointer;text-decoration:none;font-weight:500">Sign in</a>
+      </p>
+    </div>
+
+    <!-- ── STEP 2: Email OTP ── -->
+    <div class="ith-card p-4" *ngIf="step === 'email-otp'">
+      <div class="d-flex align-items-center mb-4" style="gap:12px">
+        <div style="width:44px;height:44px;background:#e8f8fb;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="bi bi-envelope-fill" style="color:#00B9D6;font-size:20px"></i>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:15px">Check your email</div>
+          <div class="text-muted" style="font-size:13px">Code sent to <strong>{{info.email || 'your email'}}</strong></div>
+        </div>
+      </div>
+
+      <label class="form-label" style="font-size:13px;font-weight:600;color:#444">Email verification code</label>
+
+      <div style="position:relative;cursor:text;margin-bottom:24px" (click)="focusEmailOtp()">
+        <div class="d-flex gap-2">
+          <div *ngFor="let i of slots"
+            style="flex:1;height:54px;border:2px solid;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:#fff;transition:border-color 0.15s;user-select:none"
+            [style.borderColor]="emailOtpRaw.length === i ? '#00B9D6' : emailOtpRaw[i] ? '#4A7C59' : '#dee2e6'"
+            [style.color]="emailOtpRaw[i] ? '#1a1a1a' : '#ccc'">
+            {{emailOtpRaw[i] || '•'}}
+          </div>
+        </div>
+        <input #emailOtpInput type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;border:none;outline:none;cursor:text;font-size:16px"
+          [value]="emailOtpRaw" (input)="onOtpInput('email', $event)" (keydown)="onOtpKeydown($event)">
+      </div>
+
+      <div class="alert alert-danger" style="font-size:13px" *ngIf="error">
+        <i class="bi bi-exclamation-circle me-1"></i>{{error}}
+      </div>
+
+      <button class="btn w-100 mb-3" style="background:#00B9D6;color:#fff;font-weight:600;padding:12px" (click)="nextToSms()">
+        Next — Enter SMS code <i class="bi bi-arrow-right ms-1"></i>
+      </button>
+      <p class="text-center text-muted" style="font-size:12px">
+        Didn't receive the code?
+        <a (click)="resend()" style="color:#00B9D6;cursor:pointer;text-decoration:none">Resend both codes</a>
+      </p>
+    </div>
+
+    <!-- ── STEP 3: SMS OTP ── -->
+    <div class="ith-card p-4" *ngIf="step === 'sms-otp'">
+      <div class="d-flex align-items-center mb-4" style="gap:12px">
+        <div style="width:44px;height:44px;background:#e8f0eb;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="bi bi-phone-fill" style="color:#4A7C59;font-size:20px"></i>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:15px">Check your phone</div>
+          <div class="text-muted" style="font-size:13px">Code sent to <strong>{{info.phoneNumber || 'your phone'}}</strong></div>
+        </div>
+      </div>
+
+      <label class="form-label" style="font-size:13px;font-weight:600;color:#444">SMS verification code</label>
+
+      <div style="position:relative;cursor:text;margin-bottom:24px" (click)="focusPhoneOtp()">
+        <div class="d-flex gap-2">
+          <div *ngFor="let i of slots"
+            style="flex:1;height:54px;border:2px solid;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:#fff;transition:border-color 0.15s;user-select:none"
+            [style.borderColor]="phoneOtpRaw.length === i ? '#4A7C59' : phoneOtpRaw[i] ? '#4A7C59' : '#dee2e6'"
+            [style.color]="phoneOtpRaw[i] ? '#1a1a1a' : '#ccc'">
+            {{phoneOtpRaw[i] || '•'}}
+          </div>
+        </div>
+        <input #phoneOtpInput type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;border:none;outline:none;cursor:text;font-size:16px"
+          [value]="phoneOtpRaw" (input)="onOtpInput('phone', $event)" (keydown)="onOtpKeydown($event)">
+      </div>
+
+      <div class="alert alert-danger" style="font-size:13px" *ngIf="error">
+        <i class="bi bi-exclamation-circle me-1"></i>{{error}}
+      </div>
+
+      <button class="btn w-100 mb-3" style="background:#4A7C59;color:#fff;font-weight:600;padding:12px"
+        [disabled]="loading" (click)="submitVerify()">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+        Verify &amp; Create Account
+      </button>
+      <div class="d-flex justify-content-between" style="font-size:12px">
+        <a (click)="backToEmail()" style="color:#00B9D6;cursor:pointer;text-decoration:none">
+          <i class="bi bi-arrow-left me-1"></i>Back to email code
+        </a>
+        <a (click)="resend()" style="color:#00B9D6;cursor:pointer;text-decoration:none">Resend both codes</a>
+      </div>
+    </div>
+
+    <!-- ── Done ── -->
+    <div class="ith-card p-4 text-center" *ngIf="step === 'done'">
+      <div style="width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"
+           [style.background]="role === 'EMPLOYER' ? '#e3f2fd' : '#e8f8fb'">
+        <i class="bi bi-check-circle-fill" style="font-size:36px"
+           [style.color]="role === 'EMPLOYER' ? '#1565C0' : '#00B9D6'"></i>
+      </div>
+      <h5 style="font-weight:700">{{ roleTitle }}</h5>
+      <p class="text-muted mb-4" style="font-size:14px;line-height:1.7">{{ doneMessage }}</p>
+      <button class="btn w-100" style="font-weight:600;padding:12px;color:#fff"
+        [style.background]="role === 'EMPLOYER' ? '#1565C0' : '#00B9D6'" (click)="goLogin()">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+      </button>
+    </div>
+
+    <p class="text-center text-muted mt-3" style="font-size:11px">
+      By registering you agree to iThemba Health's
+      <a href="/terms" style="color:#9e9e9e">Terms of Service</a> and
+      <a href="/privacy" style="color:#9e9e9e">Privacy Policy</a>.
+    </p>
+  </div>
+</div>

@@ -33,8 +33,35 @@
       </div>
     </div>
     <button class="btn btn-topup mt-4 w-100" (click)="openTopup()">
-      <i class="bi bi-plus-circle me-2"></i>Top Up via M-Pesa
+      <i class="bi bi-plus-circle me-2"></i>Top Up Wallet
     </button>
+  </div>
+
+  <!-- Auto Top-Up -->
+  <div *ngIf="!loading" class="ith-card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div style="font-weight:700;font-size:14px">
+          <i class="bi bi-arrow-repeat me-1" style="color:#00B9D6"></i>Auto Top-Up
+        </div>
+        <div *ngIf="!autoDebit || !autoDebit.isActive" style="font-size:12px;color:#9e9e9e;margin-top:2px">
+          Not set up. Automatically top up your HSA on a schedule.
+        </div>
+        <div *ngIf="autoDebit && autoDebit.isActive" style="font-size:12px;color:#4A7C59;margin-top:2px">
+          R{{ (+autoDebit.amount) | number:'1.2-2' }} every {{ autoDebit.frequency === 'Weekly' ? 'week' : 'month' }} from {{ autoDebit.mpesaNumber }}
+        </div>
+      </div>
+      <button *ngIf="!autoDebit || !autoDebit.isActive" class="btn btn-sm btn-outline-secondary" style="font-size:12px" (click)="openAutoDebitModal()">
+        Set Up
+      </button>
+      <div *ngIf="autoDebit && autoDebit.isActive" class="d-flex gap-1">
+        <button class="btn btn-sm btn-outline-secondary" style="font-size:11px" (click)="openAutoDebitModal()">Edit</button>
+        <button class="btn btn-sm btn-outline-danger" style="font-size:11px" [disabled]="autoDebitLoading" (click)="cancelAutoDebit()">Cancel</button>
+      </div>
+    </div>
+    <div *ngIf="autoDebit && autoDebit.isActive" class="mt-2 pt-2" style="border-top:1px dashed #f0f0f0;font-size:11px;color:#9e9e9e">
+      <i class="bi bi-shield-check me-1"></i>You'll get an M-Pesa prompt to confirm — cancel anytime.
+    </div>
   </div>
 
   <!-- Transactions -->
@@ -56,16 +83,23 @@
     </div>
 
     <div *ngFor="let tx of transactions" class="ith-card p-3 mb-2 d-flex align-items-center gap-3">
-      <div class="tx-icon-wrap" [style.background]="txColor(tx.transactionType) + '22'">
-        <i class="bi" [ngClass]="txIcon(tx.transactionType)" [style.color]="txColor(tx.transactionType)"></i>
+      <div class="tx-icon-wrap" [style.background]="(isPending(tx) ? '#FF9800' : txColor(tx.transactionType, tx)) + '22'">
+        <i class="bi" [ngClass]="isPending(tx) ? 'bi-clock-history' : txIcon(tx.transactionType)"
+           [style.color]="isPending(tx) ? '#FF9800' : txColor(tx.transactionType, tx)"></i>
       </div>
       <div class="flex-grow-1">
         <div style="font-weight:600;font-size:14px">{{ txLabel(tx.transactionType) }}</div>
         <div style="font-size:12px;color:#9e9e9e">{{ tx.notes || '' }}</div>
         <div style="font-size:11px;color:#b0b0b0">{{ tx.transactionDate | date:'d MMM y, HH:mm' }}</div>
+        <div *ngIf="isPending(tx)" style="font-size:11px;color:#FF9800;font-weight:600;margin-top:2px">
+          <i class="bi bi-hourglass-split me-1"></i>Awaiting confirmation
+        </div>
+        <div *ngIf="tx.status === 'Failed'" style="font-size:11px;color:#E53935;font-weight:600;margin-top:2px">
+          <i class="bi bi-x-circle me-1"></i>Failed
+        </div>
       </div>
-      <div style="font-size:16px;font-weight:700" [style.color]="txColor(tx.transactionType)">
-        {{ txSign(tx.transactionType) }}R{{ (+tx.amount) | number:'1.2-2' }}
+      <div style="font-size:16px;font-weight:700" [style.color]="isPending(tx) ? '#FF9800' : txColor(tx.transactionType, tx)">
+        {{ txSign(tx.transactionType, tx) }}R{{ (+tx.amount) | number:'1.2-2' }}
       </div>
     </div>
   </div>
@@ -82,6 +116,12 @@
 
     <div *ngIf="topupError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ topupError }}</div>
 
+    <label class="form-label fw-semibold" style="font-size:13px">Pay With</label>
+    <div class="d-flex gap-2 mb-3">
+      <button class="chip-btn" [class.chip-btn--active]="topupRail === 'MPESA'" (click)="topupRail = 'MPESA'">M-Pesa</button>
+      <button class="chip-btn" [class.chip-btn--active]="topupRail === 'CPAY'" (click)="topupRail = 'CPAY'">C-Pay</button>
+    </div>
+
     <label class="form-label fw-semibold" style="font-size:13px">Amount (ZAR)</label>
     <input type="number" class="form-control mb-3" style="border-radius:10px"
            [(ngModel)]="topupAmount" min="500" max="10000"
@@ -95,18 +135,55 @@
               (click)="topupAmount = amt">R{{ amt }}</button>
     </div>
 
-    <label class="form-label fw-semibold" style="font-size:13px">M-Pesa Number (optional)</label>
+    <label class="form-label fw-semibold" style="font-size:13px">Phone Number</label>
     <input type="tel" class="form-control mb-4" style="border-radius:10px"
            [(ngModel)]="topupPhone" placeholder="+266 5x xxx xxxx" />
 
     <div class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;background:#e3f2fd;border:none;color:#1565C0">
-      <i class="bi bi-info-circle me-1"></i>
-      This is a stub — no real M-Pesa charge will occur. Real integration coming soon.
+      <i class="bi bi-phone me-1"></i>
+      You'll get a prompt on your phone to confirm this payment.
     </div>
 
     <button class="btn btn-ith-primary w-100" [disabled]="topupLoading" (click)="submitTopup()">
       <span *ngIf="topupLoading" class="spinner-border spinner-border-sm me-2"></span>
-      {{ topupLoading ? 'Processing…' : 'Confirm Top-Up of R' + topupAmount }}
+      {{ topupLoading ? 'Sending request…' : 'Top Up R' + topupAmount }}
+    </button>
+  </div>
+</div>
+
+<!-- Auto top-up setup modal -->
+<div *ngIf="showAutoDebitModal" class="modal-overlay" (click)="closeAutoDebitModal()">
+  <div class="modal-sheet" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h6 class="fw-bold mb-0">Set Up Auto Top-Up</h6>
+      <button class="btn-icon" (click)="closeAutoDebitModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div *ngIf="autoDebitError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ autoDebitError }}</div>
+
+    <label class="form-label fw-semibold" style="font-size:13px">Amount (ZAR)</label>
+    <input type="number" class="form-control mb-3" style="border-radius:10px"
+           [(ngModel)]="autoDebitForm.amount" min="500" max="10000" placeholder="e.g. 1000" />
+    <div style="font-size:11px;color:#9e9e9e;margin-top:-10px;margin-bottom:14px">Min R500 · Max R10,000</div>
+
+    <label class="form-label fw-semibold" style="font-size:13px">Frequency</label>
+    <div class="d-flex gap-2 mb-3">
+      <button class="chip-btn" [class.chip-btn--active]="autoDebitForm.frequency === 'Weekly'" (click)="autoDebitForm.frequency = 'Weekly'">Weekly</button>
+      <button class="chip-btn" [class.chip-btn--active]="autoDebitForm.frequency === 'Monthly'" (click)="autoDebitForm.frequency = 'Monthly'">Monthly</button>
+    </div>
+
+    <label class="form-label fw-semibold" style="font-size:13px">M-Pesa Number</label>
+    <input type="tel" class="form-control mb-4" style="border-radius:10px"
+           [(ngModel)]="autoDebitForm.mpesaNumber" placeholder="+266 5x xxx xxxx" />
+
+    <div class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;background:#e3f2fd;border:none;color:#1565C0">
+      <i class="bi bi-phone me-1"></i>
+      You'll get one M-Pesa prompt to consent — after that, top-ups happen automatically with no further action.
+    </div>
+
+    <button class="btn btn-ith-primary w-100" [disabled]="autoDebitSaving" (click)="submitAutoDebit()">
+      <span *ngIf="autoDebitSaving" class="spinner-border spinner-border-sm me-2"></span>
+      {{ autoDebitSaving ? 'Saving…' : 'Save Auto Top-Up' }}
     </button>
   </div>
 </div>

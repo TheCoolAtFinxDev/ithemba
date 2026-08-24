@@ -23,6 +23,10 @@ interface ProfileData {
   about: string | null;
   location: string;
   isVerified: boolean;
+  mpesaMerchantCode: string | null;
+  bankAccountNumber: string | null;
+  bankName: string | null;
+  ecocashNumber: string | null;
 }
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -77,6 +81,10 @@ export class ProviderProfile implements OnInit {
               about: data.about,
               location: data.location,
               isVerified: data.isVerified,
+              mpesaMerchantCode: data.mpesaMerchantCode,
+              bankAccountNumber: data.bankAccountNumber,
+              bankName: data.bankName,
+              ecocashNumber: data.ecocashNumber,
             };
           }
           this.profileLoading = false;
@@ -120,6 +128,10 @@ export class ProviderProfile implements OnInit {
       phoneNumber: this.profile.phoneNumber,
       about: this.profile.about,
       location: this.profile.location,
+      mpesaMerchantCode: this.profile.mpesaMerchantCode,
+      bankAccountNumber: this.profile.bankAccountNumber,
+      bankName: this.profile.bankName,
+      ecocashNumber: this.profile.ecocashNumber,
     }).subscribe({
       next: () => { this.profileSaving = false; this.profileSuccess = 'Profile updated successfully!'; },
       error: e => { this.profileError = e?.error?.message || 'Update failed.'; this.profileSaving = false; },

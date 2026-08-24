@@ -1,0 +1,6 @@
+<!-- PLACEHOLDER — replace with the official Chaperone C-Pay logo SVG -->
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="32" viewBox="0 0 90 32">
+  <rect width="90" height="32" rx="6" fill="#00B9D6"/>
+  <text x="45" y="21" font-family="Segoe UI,sans-serif" font-size="11" font-weight="800"
+        fill="#fff" text-anchor="middle" letter-spacing="1">C-PAY</text>
+</svg>

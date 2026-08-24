@@ -6,6 +6,11 @@ import { SyncProfileDto } from './auth.dto';
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async emailExists(email: string): Promise<{ exists: boolean }> {
+    const found = await this.prisma.userProfile.findUnique({ where: { email } });
+    return { exists: !!found };
+  }
+
 async sync(sub: string, dto: SyncProfileDto) {
   const profile = await this.prisma.userProfile.upsert({
     where: { id: sub },
@@ -23,27 +28,40 @@ async sync(sub: string, dto: SyncProfileDto) {
     },
   });
 
-  // Assign default role if user has no roles yet
-  const existingRoles = await this.prisma.userRole.count({
-    where: { userProfileId: sub },
-  });
+  // JWT groups claim drives role assignment on every login.
+  // IMPORTANT: 'PATIENT' is the fallback when groups claim is absent from the JWT.
+  // We never downgrade an explicitly-assigned elevated role (EMPLOYER, ADMIN, PROVIDER)
+  // just because groups was missing from a particular token — only an explicit JWT signal
+  // or an admin action should change an elevated role.
+  const roleName = dto.role ?? 'PATIENT';
+  const jwtWasExplicit = roleName !== 'PATIENT'; // true only when JWT contained a real group
+  const role = await this.prisma.role.findUnique({ where: { name: roleName } });
 
-  let roleName = dto.role ?? 'PATIENT';
-
-  if (existingRoles === 0) {
-    const role = await this.prisma.role.findUnique({ where: { name: roleName } });
-    if (role) {
-      await this.prisma.userRole.create({
-        data: { userProfileId: sub, roleId: role.id },
-      });
-    }
-  } else {
-    // Derive current primary role for provisioning logic below
-    const userRole = await this.prisma.userRole.findFirst({
+  if (role) {
+    const existingUserRoles = await this.prisma.userRole.findMany({
       where: { userProfileId: sub },
       include: { role: true },
     });
-    roleName = userRole?.role?.name ?? roleName;
+    const hasElevatedRole = existingUserRoles.some(
+      ur => ['ADMIN', 'PROVIDER', 'EMPLOYER'].includes(ur.role.name),
+    );
+
+    if (jwtWasExplicit || !hasElevatedRole) {
+      // JWT explicitly identified a role → trust it and correct any mismatch.
+      // OR user has no elevated role yet → safely assign the (possibly PATIENT) default.
+      const stale = existingUserRoles.filter(ur => ur.role.name !== roleName);
+      if (stale.length > 0) {
+        await this.prisma.userRole.deleteMany({
+          where: { userProfileId: sub, roleId: { in: stale.map(ur => ur.roleId) } },
+        });
+      }
+    }
+    // Always ensure the target role row exists (upsert is idempotent).
+    await this.prisma.userRole.upsert({
+      where: { userProfileId_roleId: { userProfileId: sub, roleId: role.id } },
+      create: { userProfileId: sub, roleId: role.id },
+      update: {},
+    });
   }
 
   // Auto-provision patient record + HSA on first login

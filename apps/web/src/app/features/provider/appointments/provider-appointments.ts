@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { lastValueFrom } from 'rxjs';
 import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -26,6 +27,14 @@ export class ProviderAppointments implements OnInit {
   otpError = '';
   otpVerifying = false;
   otpSuccess = false;
+
+  // Reschedule modal state
+  rescheduleApt: any = null;
+  rescheduleDate = '';
+  rescheduleStartTime = '';
+  rescheduleEndTime = '';
+  rescheduleError = '';
+  rescheduleSaving = false;
 
   get filteredAppointments() {
     if (this.filter === 'all') return this.appointments;
@@ -88,12 +97,55 @@ export class ProviderAppointments implements OnInit {
     });
   }
 
+  openRescheduleModal(apt: any) {
+    this.rescheduleApt = apt;
+    const start = new Date(apt.startUtc);
+    const end = new Date(apt.endUtc);
+    this.rescheduleDate = start.toISOString().slice(0, 10);
+    this.rescheduleStartTime = start.toTimeString().slice(0, 5);
+    this.rescheduleEndTime = end.toTimeString().slice(0, 5);
+    this.rescheduleError = '';
+    this.rescheduleSaving = false;
+  }
+
+  closeRescheduleModal() { this.rescheduleApt = null; }
+
+  submitReschedule() {
+    if (!this.rescheduleDate || !this.rescheduleStartTime || !this.rescheduleEndTime) {
+      this.rescheduleError = 'Please choose a date and time.';
+      return;
+    }
+    const startUtc = new Date(`${this.rescheduleDate}T${this.rescheduleStartTime}:00`).toISOString();
+    const endUtc = new Date(`${this.rescheduleDate}T${this.rescheduleEndTime}:00`).toISOString();
+    if (new Date(endUtc) <= new Date(startUtc)) {
+      this.rescheduleError = 'End time must be after the start time.';
+      return;
+    }
+
+    this.rescheduleSaving = true;
+    this.rescheduleError = '';
+    this.http.put(
+      `${environment.apiUrl}/v1/providers/${this.providerId}/appointments/${this.rescheduleApt.id}/reschedule`,
+      { startUtc, endUtc },
+    ).subscribe({
+      next: () => {
+        this.rescheduleSaving = false;
+        this.closeRescheduleModal();
+        this.loadAppointments();
+      },
+      error: e => {
+        this.rescheduleError = e?.error?.message || 'Could not reschedule this appointment.';
+        this.rescheduleSaving = false;
+      },
+    });
+  }
+
   async providerAction(apt: any, action: string) {
     apt.loading = true;
     try {
-      await this.http.put(
+      await lastValueFrom(this.http.put(
         `${environment.apiUrl}/v1/providers/${this.providerId}/appointments/${apt.id}/${action}`, {},
-      ).toPromise();
+      ));
       this.loadAppointments();
     } catch (e) {
       console.error(e);

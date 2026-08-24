@@ -40,6 +40,12 @@ export class PatientProfile implements OnInit {
 
   showLogoutConfirm = false;
 
+  emailEnabled = true;
+  smsEnabled = true;
+  reminderAdvanceHours = 24;
+  prefsLoading = false;
+  prefsSaving = false;
+
   ngOnInit() {
     this.auth.profile$.subscribe(p => {
       if (p) {
@@ -47,7 +53,43 @@ export class PatientProfile implements OnInit {
         this.email = p.email ?? '';
         this.initials = this.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
         this.loadPatient();
+        this.loadNotificationPreferences();
       }
+    });
+  }
+
+  loadNotificationPreferences() {
+    this.prefsLoading = true;
+    this.http.get<{ emailEnabled: boolean; smsEnabled: boolean; reminderAdvanceHours?: number }>(`${environment.apiUrl}/patients/profile/notification-preferences`)
+      .subscribe({
+        next: data => {
+          this.emailEnabled = data.emailEnabled;
+          this.smsEnabled = data.smsEnabled;
+          this.reminderAdvanceHours = data.reminderAdvanceHours ?? 24;
+          this.prefsLoading = false;
+        },
+        error: () => { this.prefsLoading = false; },
+      });
+  }
+
+  toggleNotificationPref(field: 'emailEnabled' | 'smsEnabled') {
+    this[field] = !this[field];
+    this.saveNotificationPrefs();
+  }
+
+  updateReminderAdvanceHours(value: string) {
+    this.reminderAdvanceHours = Number(value);
+    this.saveNotificationPrefs();
+  }
+
+  private saveNotificationPrefs() {
+    this.prefsSaving = true;
+    this.http.put(`${environment.apiUrl}/patients/profile/notification-preferences`, {
+      emailEnabled: this.emailEnabled, smsEnabled: this.smsEnabled,
+      reminderAdvanceHours: this.reminderAdvanceHours,
+    }).subscribe({
+      next: () => { this.prefsSaving = false; },
+      error: () => { this.prefsSaving = false; },
     });
   }
 

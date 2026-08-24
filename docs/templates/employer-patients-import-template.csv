@@ -1,0 +1,4 @@
+employerName,employeeNumber,firstName,lastName,email,phoneNumber,nationalId,dateOfBirth
+Lesotho National Bank,EMP001,Tsebo,Mokhachane,tsebo@lnb.co.ls,+26650000001,1234567890,1990-03-15
+Lesotho National Bank,EMP002,Mamolapo,Lekhanya,mamolapo@lnb.co.ls,+26650000002,0987654321,1985-07-22
+Lesotho National Bank,EMP003,Lehlohonolo,Sefako,lehlohonolo@lnb.co.ls,+26650000003,1122334455,1992-11-08

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, lastValueFrom } from 'rxjs';
 import { authConfig } from './auth.config';
 import { environment } from '../../../environments/environment';
 
@@ -88,27 +88,10 @@ async init(): Promise<void> {
 
   if (this.oauth.hasValidAccessToken()) {
     await this.syncProfile();
-    this.redirectByRole();
   }
 
   this._loading$.next(false);
   this.oauth.setupAutomaticSilentRefresh();
-}
-
-private redirectByRole(): void {
-  const currentPath = window.location.pathname;
-  if (currentPath === '/' || currentPath === '/home') {
-    switch (this.role) {
-      case 'ADMIN':
-        this.router.navigate(['/admin']);
-        break;
-      case 'PROVIDER':
-        this.router.navigate(['/provider']);
-        break;
-      default:
-        this.router.navigate(['/patient']);
-    }
-  }
 }
 
   login(): void {
@@ -122,19 +105,27 @@ private redirectByRole(): void {
   }
 
 private async syncProfile(): Promise<void> {
-  const claims = this.claims;
-  const sub = this.oauth.getAccessToken()
-    ? JSON.parse(atob(this.oauth.getAccessToken().split('.')[1]))['sub']
-    : null;
+  // WSO2 puts user claims in the ACCESS token, not the ID token.
+  // Decode both and merge — access token wins for groups/email.
+  const idClaims = this.claims; // from ID token via getIdentityClaims()
+  const atRaw = this.oauth.getAccessToken();
+  const atClaims: Record<string, any> = atRaw
+    ? JSON.parse(atob(atRaw.split('.')[1]))
+    : {};
+  const claims = { ...idClaims, ...atClaims }; // access token claims take precedence
 
-  // Derive role from WSO2 groups/roles claim (falls back to PATIENT)
-  const wso2Roles: string[] = claims['roles'] ?? claims['groups'] ?? [];
-  const role = wso2Roles.includes('ADMIN') ? 'ADMIN'
-    : wso2Roles.includes('PROVIDER') ? 'PROVIDER'
+  const sub = atClaims['sub'] ?? null;
+
+  // WSO2 sends group membership under 'groups'. Normalise to strip 'PRIMARY/' prefix.
+  const rawGroups: string[] = claims['groups'] ?? claims['roles'] ?? [];
+  const wso2Groups = rawGroups.map((g: string) => g.split('/').pop()!.toUpperCase());
+  const role = wso2Groups.includes('ADMIN') ? 'ADMIN'
+    : wso2Groups.includes('PROVIDER') ? 'PROVIDER'
+    : wso2Groups.includes('EMPLOYER') ? 'EMPLOYER'
     : 'PATIENT';
 
   const fullName = [claims['given_name'], claims['family_name']]
-    .filter(Boolean).join(' ') || claims['name'] || 'User';
+    .filter(Boolean).join(' ') || claims['name'] || claims['username'] || 'User';
 
   const dto = {
     email: claims['email'] ?? claims['username'] ?? (sub ? `${sub}@wso2.local` : undefined),
@@ -143,9 +134,8 @@ private async syncProfile(): Promise<void> {
   };
 
   try {
-    await this.http
-      .post<UserProfile>(`${environment.apiUrl}/auth/sync`, dto)
-      .toPromise();
+    await lastValueFrom(this.http
+      .post<UserProfile>(`${environment.apiUrl}/auth/sync`, dto));
 
     // Load full profile including roles
     await this.loadProfile();
@@ -156,9 +146,8 @@ private async syncProfile(): Promise<void> {
 
   async loadProfile(): Promise<void> {
     try {
-      const profile = await this.http
-        .get<UserProfile>(`${environment.apiUrl}/auth/me`)
-        .toPromise();
+      const profile = await lastValueFrom(this.http
+        .get<UserProfile>(`${environment.apiUrl}/auth/me`));
       this._profile$.next(profile!);
     } catch (e) {
       console.error('Load profile failed', e);

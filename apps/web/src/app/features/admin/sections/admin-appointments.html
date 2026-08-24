@@ -1,0 +1,90 @@
+<!-- Header -->
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-header__title">Appointments</div>
+    <div class="adm-page-header__sub">{{ appointments.length }} shown · click a status to filter</div>
+  </div>
+  <button class="btn btn-sm btn-ith-primary" (click)="load()">
+    <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+  </button>
+</div>
+
+<!-- Filter chips -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <button *ngFor="let s of statuses"
+          class="filter-chip filter-chip--teal"
+          [class.filter-chip--active]="filterStatus === s.value"
+          (click)="filterStatus = s.value; load()">
+    {{ s.label }}
+  </button>
+</div>
+
+<div *ngIf="error" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">
+  <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border" style="color:#00B9D6"></div>
+</div>
+
+<!-- Empty -->
+<div *ngIf="!loading && appointments.length === 0" class="adm-empty">
+  <div class="adm-empty__icon"><i class="bi bi-calendar-x"></i></div>
+  <div class="adm-empty__text">No appointments{{ filterStatus ? ' with status "' + statusLabel(filterStatus) + '"' : '' }}</div>
+</div>
+
+<!-- Table -->
+<div *ngIf="!loading && appointments.length > 0" class="ith-card overflow-hidden">
+  <div class="table-responsive">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Provider</th>
+          <th>Date &amp; Time</th>
+          <th>Reason</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of appointments">
+          <!-- Patient -->
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="apt-row-avatar">
+                {{ a.patient.userProfile.fullName | slice:0:2 | uppercase }}
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:13px;color:#1a1a2e">{{ a.patient.userProfile.fullName }}</div>
+                <div style="color:#9e9e9e;font-size:11px">{{ a.patient.userProfile.email }}</div>
+              </div>
+            </div>
+          </td>
+          <!-- Provider -->
+          <td>
+            <div style="font-weight:500;font-size:13px">Dr {{ a.provider.firstName }} {{ a.provider.lastName }}</div>
+            <div style="color:#4A7C59;font-size:11px;font-weight:600">{{ a.provider.clinicName }}</div>
+          </td>
+          <!-- Date/Time -->
+          <td style="white-space:nowrap">
+            <div style="font-weight:600;font-size:13px">{{ a.startUtc | date:'d MMM y' }}</div>
+            <div style="color:#9e9e9e;font-size:11px">{{ a.startUtc | date:'HH:mm' }}–{{ a.endUtc | date:'HH:mm' }}</div>
+          </td>
+          <!-- Reason -->
+          <td style="max-width:180px">
+            <span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:#555">
+              {{ a.reason || '—' }}
+            </span>
+          </td>
+          <!-- Status -->
+          <td>
+            <span class="claim-badge" [ngClass]="statusClass(a.status)">
+              {{ statusLabel(a.status) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

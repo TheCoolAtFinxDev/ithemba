@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { lastValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -28,7 +29,8 @@ export class ProviderOnboarding implements OnInit {
 
   ngOnInit() {
     this.auth.profile$.subscribe(profile => {
-      if (profile?.provider) { this.router.navigate(['/provider']); }
+      // Already fully onboarded (has clinic name) — skip to dashboard
+      if (profile?.provider?.clinicName) { this.router.navigate(['/provider']); }
       if (profile?.fullName) {
         const parts = profile.fullName.split(' ');
         this.form.firstName = parts[0] ?? '';
@@ -58,7 +60,7 @@ export class ProviderOnboarding implements OnInit {
     this.error = '';
     try {
       const userId = this.auth.profile?.id;
-      await this.http.post(`${environment.apiUrl}/v1/users/${userId}/provider/onboard`, this.form).toPromise();
+      await lastValueFrom(this.http.post(`${environment.apiUrl}/v1/users/${userId}/provider/onboard`, this.form));
       await this.auth.loadProfile();
       this.router.navigate(['/provider']);
     } catch (err: any) {

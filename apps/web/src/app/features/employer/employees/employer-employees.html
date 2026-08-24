@@ -1,0 +1,273 @@
+<div>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h5 style="font-weight:700;margin:0">Employees</h5>
+      <p class="text-muted mb-0" style="font-size:13px">Manage enrolled staff and their monthly contributions</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" (click)="openUpload()">
+        <i class="bi bi-upload me-1"></i> Upload Contributions
+      </button>
+      <button class="btn btn-outline-primary btn-sm" (click)="openBulk()">
+        <i class="bi bi-people-fill me-1"></i> Bulk Enroll
+      </button>
+      <button class="btn btn-sm text-white" style="background:#1565C0" (click)="openAdd()">
+        <i class="bi bi-person-plus me-1"></i> Add Employee
+      </button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm"></div> Loading...</div>
+  } @else if (error) {
+    <div class="alert alert-danger">{{ error }}</div>
+  } @else if (members.length === 0) {
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-people" style="font-size:40px;opacity:0.3"></i>
+      <p class="mt-3">No employees enrolled yet. Click "Add Employee" to get started.</p>
+    </div>
+  } @else {
+    <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden">
+      <table class="table table-hover mb-0">
+        <thead style="background:#f8f9fa">
+          <tr>
+            <th style="font-size:12px;font-weight:600;color:#9e9e9e;text-transform:uppercase;border:0;padding:12px 16px">Employee</th>
+            <th style="font-size:12px;font-weight:600;color:#9e9e9e;text-transform:uppercase;border:0;padding:12px 16px">Ref</th>
+            <th style="font-size:12px;font-weight:600;color:#9e9e9e;text-transform:uppercase;border:0;padding:12px 16px">Monthly Contribution</th>
+            <th style="font-size:12px;font-weight:600;color:#9e9e9e;text-transform:uppercase;border:0;padding:12px 16px">Status</th>
+            <th style="font-size:12px;font-weight:600;color:#9e9e9e;text-transform:uppercase;border:0;padding:12px 16px">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of members; track m.id) {
+            <tr>
+              <td style="padding:14px 16px;vertical-align:middle">
+                <div style="font-weight:600;font-size:14px">{{ m.patient.userProfile.fullName }}</div>
+                <div style="font-size:12px;color:#9e9e9e">{{ m.patient.userProfile.email }}</div>
+              </td>
+              <td style="padding:14px 16px;vertical-align:middle">
+                <span style="font-family:monospace;font-size:13px;background:#f5f7fb;padding:2px 8px;border-radius:6px">{{ m.employeeRef }}</span>
+              </td>
+              <td style="padding:14px 16px;vertical-align:middle;font-weight:700">
+                LSL {{ m.contributionAmount | number:'1.2-2' }}
+              </td>
+              <td style="padding:14px 16px;vertical-align:middle">
+                <span [class]="statusBadge(m.status)" style="font-size:11px">{{ m.status }}</span>
+              </td>
+              <td style="padding:14px 16px;vertical-align:middle">
+                <div class="d-flex gap-2">
+                  @if (m.status === 'Active') {
+                    <button class="btn btn-sm btn-outline-warning" (click)="suspend(m)" title="Suspend">
+                      <i class="bi bi-pause-circle"></i>
+                    </button>
+                  }
+                  @if (m.status !== 'Terminated') {
+                    <button class="btn btn-sm btn-outline-danger" (click)="terminate(m)" title="Terminate">
+                      <i class="bi bi-person-x"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Add Employee Modal -->
+  @if (showAddModal) {
+    <div class="modal d-block" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:0">
+          <div class="modal-header border-0 pb-0">
+            <h6 class="modal-title fw-bold">Add Employee</h6>
+            <button class="btn-close" (click)="showAddModal=false"></button>
+          </div>
+          <div class="modal-body">
+            @if (addError) { <div class="alert alert-danger py-2 small">{{ addError }}</div> }
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Patient ID</label>
+              <input class="form-control" [(ngModel)]="addPatientId" placeholder="Patient UUID from system" />
+              <div class="form-text">Ask admin for the patient's ID from the users list</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Payroll Ref</label>
+              <input class="form-control" [(ngModel)]="addEmployeeRef" placeholder="e.g. EMP001" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Monthly Contribution (LSL)</label>
+              <input class="form-control" type="number" [(ngModel)]="addAmount" placeholder="e.g. 1200" />
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button class="btn btn-light" (click)="showAddModal=false">Cancel</button>
+            <button class="btn text-white" style="background:#1565C0" [disabled]="addLoading" (click)="submitAdd()">
+              @if (addLoading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Add Employee
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Bulk Enroll Modal -->
+  @if (showBulkModal) {
+    <div class="modal d-block" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius:16px;border:0">
+          <div class="modal-header border-0 pb-0">
+            <h6 class="modal-title fw-bold">Bulk Enroll Employees</h6>
+            <button class="btn-close" (click)="showBulkModal=false"></button>
+          </div>
+          <div class="modal-body">
+            @if (bulkError) { <div class="alert alert-danger py-2 small">{{ bulkError }}</div> }
+
+            @if (!bulkResult) {
+              <p class="text-muted small mb-3">
+                Upload a CSV with columns: <code>firstName,lastName,email,phoneNumber,employeeRef,contributionAmount</code>.
+                Rows matching an existing patient account (by email or phone) are linked immediately; the rest get an invite email/SMS to register.
+              </p>
+              <input type="file" accept=".csv,text/csv" class="form-control mb-3" (change)="onBulkFileSelected($event)" />
+
+              @if (bulkFileName) {
+                <div class="small text-muted mb-2"><i class="bi bi-file-earmark-spreadsheet me-1"></i>{{ bulkFileName }}</div>
+              }
+
+              @if (bulkParseErrors.length) {
+                <div class="alert alert-warning py-2 small mb-3">
+                  <div class="fw-semibold mb-1">Fix these before uploading:</div>
+                  <ul class="mb-0 ps-3">
+                    @for (e of bulkParseErrors; track e) { <li>{{ e }}</li> }
+                  </ul>
+                </div>
+              }
+
+              @if (bulkRows.length > 0) {
+                <div class="table-responsive mb-2" style="max-height:260px;overflow-y:auto">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr><th>Name</th><th>Email</th><th>Phone</th><th>Ref</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody>
+                      @for (r of bulkRows; track r.employeeRef) {
+                        <tr>
+                          <td>{{ r.firstName }} {{ r.lastName }}</td>
+                          <td>{{ r.email }}</td>
+                          <td>{{ r.phoneNumber }}</td>
+                          <td><span style="font-family:monospace">{{ r.employeeRef }}</span></td>
+                          <td>LSL {{ r.contributionAmount | number:'1.2-2' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <div class="small text-muted">{{ bulkRows.length }} row(s) ready to submit.</div>
+              }
+            } @else {
+              <div class="p-3 rounded-3 mb-3" style="background:#f5f7fb">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="text-muted">Linked to existing accounts</span><span class="fw-bold text-success">{{ bulkResult.linked }}</span>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="text-muted">Invited (no account yet)</span><span class="fw-bold" style="color:#1565C0">{{ bulkResult.invited }}</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                  <span class="text-muted">Failed</span><span class="fw-bold text-danger">{{ bulkResult.failed }}</span>
+                </div>
+              </div>
+              @if (bulkResult.failed > 0) {
+                <div class="table-responsive" style="max-height:220px;overflow-y:auto">
+                  <table class="table table-sm">
+                    <thead><tr><th>Ref</th><th>Reason</th></tr></thead>
+                    <tbody>
+                      @for (r of bulkResult.results; track r.row) {
+                        @if (r.outcome === 'error') {
+                          <tr><td><span style="font-family:monospace">{{ r.employeeRef }}</span></td><td class="text-danger">{{ r.message }}</td></tr>
+                        }
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            }
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button class="btn btn-light" (click)="showBulkModal=false">{{ bulkResult ? 'Close' : 'Cancel' }}</button>
+            @if (!bulkResult) {
+              <button class="btn text-white" style="background:#1565C0" [disabled]="bulkLoading || !bulkRows.length" (click)="submitBulk()">
+                @if (bulkLoading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                Enroll {{ bulkRows.length || '' }} Employee(s)
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Upload Contributions Modal -->
+  @if (showUploadModal) {
+    <div class="modal d-block" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius:16px;border:0">
+          <div class="modal-header border-0 pb-0">
+            <h6 class="modal-title fw-bold">Upload Contributions</h6>
+            <button class="btn-close" (click)="showUploadModal=false"></button>
+          </div>
+          <div class="modal-body">
+            @if (uploadError) { <div class="alert alert-danger py-2 small">{{ uploadError }}</div> }
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Billing Month</label>
+              <input class="form-control" type="month" [(ngModel)]="uploadMonth" />
+            </div>
+            <label class="form-label small fw-semibold">Contribution Lines</label>
+            @for (row of uploadRows; track $index) {
+              <div class="d-flex gap-2 mb-2 align-items-center">
+                <input class="form-control form-control-sm" [(ngModel)]="row.employeeRef" placeholder="Payroll ref" style="max-width:160px" />
+                <input class="form-control form-control-sm" type="number" [(ngModel)]="row.amount" placeholder="Amount (LSL)" />
+                <button class="btn btn-sm btn-outline-secondary" (click)="removeUploadRow($index)" [disabled]="uploadRows.length === 1">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            }
+            <button class="btn btn-sm btn-outline-primary mt-1" (click)="addUploadRow()">
+              <i class="bi bi-plus"></i> Add Row
+            </button>
+
+            @if (uploadPreview) {
+              <div class="mt-4 p-3 rounded-3" style="background:#f5f7fb">
+                <div class="fw-semibold mb-2" style="font-size:14px">Preview</div>
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                  <span>Matched employees</span><span class="fw-bold text-dark">{{ uploadPreview.matchedCount }}</span>
+                </div>
+                @if (uploadPreview.unmatchedRefs?.length) {
+                  <div class="alert alert-warning py-2 small mt-2">
+                    Unmatched refs: {{ uploadPreview.unmatchedRefs.join(', ') }}
+                  </div>
+                }
+                <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
+                  <span>Subtotal</span><span style="color:#1565C0">LSL {{ uploadPreview.subtotal | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button class="btn btn-light" (click)="showUploadModal=false">Cancel</button>
+            <button class="btn btn-outline-primary" [disabled]="uploadLoading" (click)="previewUpload()">
+              @if (uploadLoading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Preview
+            </button>
+            @if (uploadPreview?.matchedCount > 0) {
+              <button class="btn text-white" style="background:#1565C0" [disabled]="confirming" (click)="confirmUpload()">
+                @if (confirming) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                Confirm &amp; Generate Invoice
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

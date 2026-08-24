@@ -1,6 +1,7 @@
 import {
   Injectable, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NovuService } from '../novu/novu.service';
 import {
@@ -79,50 +80,73 @@ export class AppointmentsService {
       throw new BadRequestException('This time slot is already booked');
     }
 
-    const appointment = await this.prisma.$transaction(async (tx) => {
-      const apt = await tx.appointment.create({
-        data: {
-          patientId: patient.id,
-          providerId: dto.providerId,
-          beneficiaryId: dto.beneficiaryId,
-          startUtc: new Date(dto.startUtc),
-          endUtc: new Date(dto.endUtc),
-          reason: dto.reason,
-          status: 'Requested',
-          createdBy: userProfileId,
-        },
-        include: {
-          provider: {
-            select: {
-              firstName: true, lastName: true,
-              clinicName: true, specialization: true,
+    try {
+      const appointment = await this.prisma.$transaction(async (tx) => {
+        const apt = await tx.appointment.create({
+          data: {
+            patientId: patient.id,
+            providerId: dto.providerId,
+            beneficiaryId: dto.beneficiaryId,
+            startUtc: new Date(dto.startUtc),
+            endUtc: new Date(dto.endUtc),
+            reason: dto.reason,
+            status: 'Requested',
+            createdBy: userProfileId,
+          },
+          include: {
+            provider: {
+              select: {
+                firstName: true, lastName: true,
+                clinicName: true, specialization: true,
+              },
             },
           },
-        },
+        });
+
+        await tx.appointmentStatusChange.create({
+          data: {
+            appointmentId: apt.id,
+            fromStatus: 'Requested',
+            toStatus: 'Requested',
+            changedByUserId: userProfileId,
+          },
+        });
+
+        await tx.auditLogEntry.create({
+          data: {
+            userId: userProfileId,
+            action: 'APPOINTMENT_BOOKED',
+            entity: 'Appointment',
+            entityId: apt.id,
+          },
+        });
+
+        return apt;
       });
 
-      await tx.appointmentStatusChange.create({
-        data: {
-          appointmentId: apt.id,
-          fromStatus: 'Requested',
-          toStatus: 'Requested',
-          changedByUserId: userProfileId,
-        },
-      });
+      const patientProfile = await this.prisma.userProfile.findUnique({ where: { id: userProfileId } });
+      if (provider.email) {
+        const appointmentDate = new Date(appointment.startUtc).toLocaleDateString('en-ZA', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+        await this.novu.sendNewAppointmentRequest({
+          subscriberId: provider.userProfileId, email: provider.email,
+          firstName: provider.firstName, patientName: patientProfile?.fullName ?? 'A patient',
+          appointmentDate,
+        });
+      }
 
-      await tx.auditLogEntry.create({
-        data: {
-          userId: userProfileId,
-          action: 'APPOINTMENT_BOOKED',
-          entity: 'Appointment',
-          entityId: apt.id,
-        },
-      });
-
-      return apt;
-    });
-
-    return appointment;
+      return appointment;
+    } catch (err) {
+      // The findFirst check above has a race window between two concurrent
+      // bookings for the same slot — the DB-level partial unique index
+      // (migration 20260713150000) is the actual guarantee; this just turns
+      // its violation into the same clean error as the pre-check above.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new BadRequestException('This time slot is already booked');
+      }
+      throw err;
+    }
   }
 
   async cancelAppointment(
@@ -136,7 +160,7 @@ export class AppointmentsService {
       throw new BadRequestException(`Cannot cancel appointment with status: ${appointment.status}`);
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.appointment.update({
         where: { id: appointmentId },
         data: {
@@ -160,6 +184,23 @@ export class AppointmentsService {
 
       return updated;
     });
+
+    const [provider, patientProfile] = await Promise.all([
+      this.prisma.provider.findUnique({ where: { id: appointment.providerId } }),
+      this.prisma.userProfile.findUnique({ where: { id: userProfileId } }),
+    ]);
+    if (provider?.email) {
+      const appointmentDate = new Date(appointment.startUtc).toLocaleDateString('en-ZA', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+      await this.novu.sendAppointmentCancelledByPatient({
+        subscriberId: provider.userProfileId, email: provider.email,
+        firstName: provider.firstName, patientName: patientProfile?.fullName ?? 'A patient',
+        appointmentDate, reason: dto.reason,
+      });
+    }
+
+    return updated;
   }
 
   async rescheduleAppointment(
@@ -269,7 +310,10 @@ export class AppointmentsService {
       where: { providerId: provider.id },
       include: {
         patient: {
-          include: { userProfile: { select: { fullName: true, email: true } } },
+          include: {
+            userProfile: { select: { fullName: true, email: true } },
+            savingsAccount: { select: { balance: true } },
+          },
         },
         beneficiary: true,
       },
@@ -338,7 +382,7 @@ export class AppointmentsService {
       updateData.cancelledByUserId = userProfileId;
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.appointment.update({
         where: { id: appointmentId },
         data: updateData,
@@ -363,6 +407,94 @@ export class AppointmentsService {
           },
         });
       }
+
+      return updated;
+    });
+
+    if (action === 'accept' || action === 'reject') {
+      await this.notifyPatientOfProviderDecision(updated, action, dto.reason);
+    }
+
+    return updated;
+  }
+
+  private async notifyPatientOfProviderDecision(
+    appointment: { id: string; patientId: string; providerId: string; startUtc: Date },
+    action: 'accept' | 'reject',
+    reason?: string,
+  ) {
+    const [patient, provider] = await Promise.all([
+      this.prisma.patient.findUnique({
+        where: { id: appointment.patientId },
+        include: { userProfile: { select: { id: true, fullName: true, email: true } } },
+      }),
+      this.prisma.provider.findUnique({
+        where: { id: appointment.providerId },
+        select: { firstName: true, lastName: true },
+      }),
+    ]);
+    if (!patient?.userProfile?.email || !provider) return;
+
+    const providerName = `Dr. ${provider.firstName} ${provider.lastName ?? ''}`.trim();
+    const appointmentDate = new Date(appointment.startUtc).toLocaleDateString('en-ZA', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    const firstName = patient.userProfile.fullName?.split(' ')[0] ?? 'Patient';
+
+    if (action === 'accept') {
+      await this.novu.sendAppointmentAccepted({
+        subscriberId: patient.userProfile.id,
+        email: patient.userProfile.email,
+        firstName,
+        appointmentDate,
+        providerName,
+      });
+    } else {
+      await this.novu.sendAppointmentRejected({
+        subscriberId: patient.userProfile.id,
+        email: patient.userProfile.email,
+        firstName,
+        appointmentDate,
+        providerName,
+        reason,
+      });
+    }
+  }
+
+  async providerReschedule(
+    userProfileId: string, providerId: string,
+    appointmentId: string, dto: RescheduleAppointmentDto,
+  ) {
+    const provider = await this.verifyProviderOwnership(userProfileId, providerId);
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, providerId: provider.id },
+    });
+    if (!appointment) throw new NotFoundException('Appointment not found');
+
+    if (!['Requested', 'Scheduled', 'Confirmed'].includes(appointment.status)) {
+      throw new BadRequestException('Cannot reschedule this appointment');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          startUtc: new Date(dto.startUtc),
+          endUtc: new Date(dto.endUtc),
+          status: 'Rescheduled',
+          lastModifiedBy: userProfileId,
+        },
+      });
+
+      await tx.appointmentStatusChange.create({
+        data: {
+          appointmentId,
+          fromStatus: appointment.status as any,
+          toStatus: 'Rescheduled' as any,
+          reason: 'Rescheduled by provider',
+          changedByUserId: userProfileId,
+        },
+      });
 
       return updated;
     });
@@ -394,7 +526,7 @@ export class AppointmentsService {
     if (!otp) throw new BadRequestException('No valid visit code found. Ask the patient to request a new code.');
     if (otp.code !== dto.code.trim()) throw new BadRequestException('Invalid visit code');
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       await tx.appointmentOTP.update({
         where: { id: otp.id },
         data: { isUsed: true, usedAtUtc: new Date() },
@@ -421,6 +553,24 @@ export class AppointmentsService {
 
       return updated;
     });
+
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: appointment.patientId },
+      include: { userProfile: { select: { id: true, fullName: true, email: true } } },
+    });
+    if (patient?.userProfile?.email) {
+      const appointmentDate = new Date(appointment.startUtc).toLocaleDateString('en-ZA', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+      await this.novu.sendAppointmentCheckedIn({
+        subscriberId: patient.userProfile.id, email: patient.userProfile.email,
+        firstName: patient.userProfile.fullName?.split(' ')[0] ?? 'there',
+        providerName: `Dr. ${provider.firstName} ${provider.lastName ?? ''}`.trim(),
+        appointmentDate,
+      });
+    }
+
+    return updated;
   }
 
   // ── Helpers ──────────────────────────────────────────────────

@@ -11,8 +11,8 @@ export class SyncProfileDto {
   @IsString()
   fullName: string;
 
-  @ApiProperty({ enum: ['PATIENT', 'PROVIDER', 'ADMIN'] })
-  @IsIn(['PATIENT', 'PROVIDER', 'ADMIN'])
+  @ApiProperty({ enum: ['PATIENT', 'PROVIDER', 'ADMIN', 'EMPLOYER'] })
+  @IsIn(['PATIENT', 'PROVIDER', 'ADMIN', 'EMPLOYER'])
   role: string;
 
   @ApiPropertyOptional()

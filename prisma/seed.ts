@@ -15,7 +15,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter } as any);
 
 const PERMISSIONS = [
-  { resource: 'appointments', action: 'read',     description: 'View appointments' },
+  { resource: 'appointments',  action: 'read',     description: 'View appointments' },
   { resource: 'appointments', action: 'create',   description: 'Book appointments' },
   { resource: 'appointments', action: 'update',   description: 'Update appointments' },
   { resource: 'appointments', action: 'cancel',   description: 'Cancel appointments' },
@@ -45,6 +45,10 @@ const PERMISSIONS = [
   { resource: 'roles',        action: 'manage',   description: 'Manage roles and permissions' },
   { resource: 'reports',      action: 'read',     description: 'View reports' },
   { resource: 'system',       action: 'manage',   description: 'System settings' },
+  { resource: 'employer',     action: 'read',     description: 'View employer account and employees' },
+  { resource: 'employer',     action: 'manage',   description: 'Manage employees and contribution amounts' },
+  { resource: 'employer',     action: 'billing',  description: 'View and pay invoices' },
+  { resource: 'employers',    action: 'manage',   description: 'Admin: manage all employer accounts' },
 ];
 
 const ROLES = [
@@ -86,6 +90,17 @@ const ROLES = [
       'roles:read', 'roles:manage',
       'reports:read',
       'system:manage',
+      'employers:manage',
+    ],
+  },
+  {
+    name: 'EMPLOYER',
+    description: 'Corporate employer managing staff health savings group plan',
+    isSystem: true,
+    permissions: [
+      'employer:read',
+      'employer:manage',
+      'employer:billing',
     ],
   },
 ];

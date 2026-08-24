@@ -21,9 +21,23 @@ model UserProfile {
   patient  Patient?
   provider Provider?
 
-  roles UserRole[]
+  roles          UserRole[]
+  employerContact Employer?
+  notificationPreference NotificationPreference?
 
   @@map("user_profiles")
+}
+
+model NotificationPreference {
+  id            String      @id @default(uuid())
+  userProfileId String      @unique
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  emailEnabled  Boolean     @default(true)
+  smsEnabled    Boolean     @default(true)
+  reminderAdvanceHours Int  @default(24)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@map("notification_preferences")
 }
 
 model Role {
@@ -80,18 +94,20 @@ model Patient {
   userProfileId  String      @unique
   userProfile    UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
   phoneNumber    String      @default("")
-  nationalId     String?
+  nationalId     String
   dateOfBirth    DateTime?
+  address        String?
   isActive       Boolean     @default(true)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   createdBy      String?
   lastModifiedBy String?
-  appointments   Appointment[]
-  beneficiaries  Beneficiary[]
-  savingsAccount HealthSavingsAccount?
-  feedback       UserFeedback[]
-  supportTickets SupportTicket[]
+  appointments        Appointment[]
+  beneficiaries       Beneficiary[]
+  savingsAccount      HealthSavingsAccount?
+  feedback            UserFeedback[]
+  supportTickets      SupportTicket[]
+  employerMemberships EmployerMembership[]
   @@map("patients")
 }
 
@@ -111,8 +127,11 @@ model Provider {
   mpesaMerchantCode    String      @default("")
   bankAccountNumber    String?
   bankName             String?
+  ecocashNumber        String?
+  disbursementEnabled  Boolean     @default(false)
   isActive             Boolean     @default(true)
   isVerified           Boolean     @default(false)
+  wso2OrganizationId   String?
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   createdBy            String?
@@ -230,6 +249,8 @@ model Appointment {
   cancelledAtUtc      DateTime?
   cancellationReason  String?
   cancelledByUserId   String?
+  advanceReminderSentAt DateTime?
+  finalReminderSentAt   DateTime?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   createdBy           String?
@@ -238,6 +259,9 @@ model Appointment {
   otps          AppointmentOTP[]
   statusHistory AppointmentStatusChange[]
   claim         ProviderClaim?
+  // A partial unique index on (providerId, startUtc), excluding cancelled/no-show
+  // statuses, is applied via raw migration (20260713150000) — not representable
+  // in this DSL. It backs the double-booking guard in appointments.service.ts.
   @@map("appointments")
 }
 
@@ -304,6 +328,7 @@ model HealthSavingsAccount {
   isDefault              Boolean   @default(true)
   autoDebitEnabled       Boolean   @default(false)
   debitSourceMpesaNumber String?
+  lastLowBalanceNotifiedAt DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   createdBy              String?
@@ -328,6 +353,8 @@ model SavingsTransaction {
   idempotencyKey       String?
   failureReason        String?
   isSuccessful         Boolean                @default(true)
+  status               PaymentStatus          @default(Succeeded)
+  golinkPaymentId      String?                @unique
   linkedClaims         ProviderClaim[]
   @@map("savings_transactions")
 }
@@ -338,19 +365,29 @@ enum SavingsTransactionType {
   ClaimPayment
   TransferIn
   TransferOut
+  EmployerContribution
+  AdminAdjustment
+}
+
+enum PaymentStatus {
+  Pending
+  Processing
+  Succeeded
+  Failed
 }
 
 model AutoDebitSetup {
-  id            String               @id @default(uuid())
-  accountId     String               @unique
-  account       HealthSavingsAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  mpesaNumber   String
-  amount        Decimal              @db.Decimal(12, 2)
-  frequency     DebitFrequency
-  nextDebitDate DateTime
-  isActive      Boolean              @default(true)
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id              String               @id @default(uuid())
+  accountId       String               @unique
+  account         HealthSavingsAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  mpesaNumber     String
+  amount          Decimal              @db.Decimal(12, 2)
+  frequency       DebitFrequency
+  nextDebitDate   DateTime
+  isActive        Boolean              @default(true)
+  golinkMandateId String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   @@map("auto_debit_setups")
 }
 
@@ -372,6 +409,8 @@ model ProviderClaim {
   linkedTransaction     SavingsTransaction?  @relation(fields: [linkedTransactionId], references: [id])
   dateOfVisit           DateTime
   totalAmount           Decimal              @db.Decimal(12, 2)
+  hsaCoveredAmount      Decimal              @db.Decimal(12, 2) @default(0)
+  outOfPocketAmount     Decimal              @db.Decimal(12, 2) @default(0)
   currency              String               @default("ZAR")
   description           String?
   status                ClaimStatus          @default(Pending)
@@ -389,6 +428,7 @@ model ProviderClaim {
   attachments  ClaimAttachment[]
   decisions    ClaimDecision[]
   adminActions AdminClaimAction[]
+  lineItems    ClaimLineItem[]
   @@map("provider_claims")
 }
 
@@ -400,6 +440,18 @@ enum ClaimStatus {
   Rejected
   Paid
   Denied
+  Withdrawn
+}
+
+model ClaimLineItem {
+  id          String        @id @default(uuid())
+  claimId     String
+  claim       ProviderClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal       @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal       @db.Decimal(12, 2)
+  createdAt   DateTime      @default(now())
+  @@map("claim_line_items")
 }
 
 model ClaimAttachment {
@@ -436,14 +488,17 @@ model AdminClaimAction {
 }
 
 model PaymentPayout {
-  id          String       @id @default(uuid())
-  providerId  String
-  amount      Decimal      @db.Decimal(12, 2)
-  method      String
-  reference   String?
-  status      PayoutStatus @default(Pending)
-  processedAt DateTime?
-  createdAt   DateTime     @default(now())
+  id             String       @id @default(uuid())
+  providerId     String
+  claimId        String?      @unique
+  amount         Decimal      @db.Decimal(12, 2)
+  method         String
+  reference      String?
+  idempotencyKey String?      @unique
+  failureReason  String?
+  status         PayoutStatus @default(Pending)
+  processedAt    DateTime?
+  createdAt      DateTime     @default(now())
   @@map("payment_payouts")
 }
 
@@ -507,4 +562,182 @@ model AuditLogEntry {
   userAgent String?
   createdAt DateTime @default(now())
   @@map("audit_log_entries")
+}
+
+model PendingRegistration {
+  id            String   @id @default(uuid())
+  email         String
+  phoneNumber   String
+  firstName     String
+  lastName      String
+  role          String   // PATIENT | PROVIDER | EMPLOYER
+  companyName   String?  // EMPLOYER registrations only
+  emailOtpHash  String
+  phoneOtpHash  String
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@map("pending_registrations")
+}
+
+model PasswordResetRequest {
+  id            String   @id @default(uuid())
+  userProfileId String
+  emailOtpHash  String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@map("password_reset_requests")
+}
+
+// ─── Corporate Employer Group Plans ─────────────────────────────────────────
+
+model Employer {
+  id                   String    @id @default(uuid())
+  name                 String
+  registrationNumber   String?
+  contactName          String
+  contactEmail         String
+  contactPhone         String
+  contactUserProfileId String?   @unique
+  contactUser          UserProfile? @relation(fields: [contactUserProfileId], references: [id])
+  platformFeePerSeat   Decimal   @default(50) @db.Decimal(10, 2)
+  isActive             Boolean   @default(true)
+  isVerified           Boolean   @default(false)
+  verifiedAt           DateTime?
+  verifiedBy           String?
+  wso2OrganizationId   String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  createdBy            String?
+
+  memberships   EmployerMembership[]
+  billingCycles EmployerBillingCycle[]
+  invites       EmployerInvite[]
+
+  @@map("employers")
+}
+
+model EmployerInvite {
+  id                 String               @id @default(uuid())
+  employerId         String
+  employer           Employer             @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  firstName          String
+  lastName           String
+  email              String
+  phoneNumber        String
+  employeeRef        String
+  contributionAmount Decimal              @db.Decimal(10, 2)
+  status             EmployerInviteStatus @default(Pending)
+  token              String               @unique @default(uuid())
+  expiresAt          DateTime
+  acceptedAt         DateTime?
+  patientId          String?
+  createdAt          DateTime             @default(now())
+  createdBy          String?
+
+  @@unique([employerId, employeeRef])
+  @@map("employer_invites")
+}
+
+enum EmployerInviteStatus {
+  Pending
+  Accepted
+  Expired
+  Cancelled
+}
+
+model EmployerMembership {
+  id                 String                 @id @default(uuid())
+  employerId         String
+  employer           Employer               @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  patientId          String
+  patient            Patient                @relation(fields: [patientId], references: [id])
+  employeeRef        String
+  contributionAmount Decimal                @db.Decimal(10, 2)
+  status             EmployerMemberStatus   @default(Active)
+  startDate          DateTime               @default(now())
+  endDate            DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  createdBy          String?
+
+  lineItems EmployerBillingLineItem[]
+
+  @@unique([employerId, patientId])
+  @@unique([employerId, employeeRef])
+  @@map("employer_memberships")
+}
+
+enum EmployerMemberStatus {
+  Active
+  Suspended
+  Terminated
+}
+
+model EmployerBillingCycle {
+  id              String                @id @default(uuid())
+  employerId      String
+  employer        Employer              @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  billingMonth    String
+  invoiceNumber   String                @unique
+  invoiceDate     DateTime              @default(now())
+  dueDate         DateTime
+  employeeCount   Int
+  subtotal        Decimal               @db.Decimal(12, 2)
+  platformFee     Decimal               @db.Decimal(12, 2)
+  totalAmount     Decimal               @db.Decimal(12, 2)
+  paymentMethod   EmployerPaymentMethod @default(Manual)
+  golinkPaymentLink String?
+  golinkTransactionId String? @unique
+  status          BillingCycleStatus    @default(Draft)
+  invoicedAt      DateTime?
+  paidAt          DateTime?
+  confirmedBy     String?
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  lineItems EmployerBillingLineItem[]
+
+  @@unique([employerId, billingMonth])
+  @@map("employer_billing_cycles")
+}
+
+enum EmployerPaymentMethod {
+  Manual
+  Mpesa
+  EcoCash
+  Card
+  EFT
+  PaymentLink
+  Payslip
+}
+
+enum BillingCycleStatus {
+  Draft
+  Invoiced
+  AwaitingPayment
+  Paid
+  Overdue
+  Failed
+}
+
+model EmployerBillingLineItem {
+  id                 String               @id @default(uuid())
+  billingCycleId     String
+  billingCycle       EmployerBillingCycle @relation(fields: [billingCycleId], references: [id], onDelete: Cascade)
+  membershipId       String
+  membership         EmployerMembership   @relation(fields: [membershipId], references: [id])
+  patientId          String
+  employeeName       String
+  employeeRef        String
+  contributionAmount Decimal              @db.Decimal(10, 2)
+  hsaCredited        Boolean              @default(false)
+  hsaCreditedAt      DateTime?
+
+  @@unique([billingCycleId, membershipId])
+  @@map("employer_billing_line_items")
 }

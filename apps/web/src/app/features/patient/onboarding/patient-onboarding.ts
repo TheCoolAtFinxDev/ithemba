@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { lastValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -34,9 +35,9 @@ export class PatientOnboarding implements OnInit {
   errors: Record<string, string> = {};
 
   ngOnInit() {
-    // If already onboarded, go to dashboard
+    // Already onboarded (has phone number) — skip to dashboard
     this.auth.profile$.subscribe(profile => {
-      if (profile?.patient) {
+      if (profile?.patient?.phoneNumber) {
         this.router.navigate(['/patient']);
       }
     });
@@ -60,6 +61,10 @@ export class PatientOnboarding implements OnInit {
       this.errors['phoneNumber'] = 'Phone number is required';
       return false;
     }
+    if (!this.form.nationalId.trim()) {
+      this.errors['nationalId'] = 'National ID is required';
+      return false;
+    }
   }
   return true;
 }
@@ -70,11 +75,11 @@ export class PatientOnboarding implements OnInit {
 
     try {
       const userId = this.auth.profile?.id;
-      await this.http.post(
+      await lastValueFrom(this.http.post(
         `${environment.apiUrl}/v1/users/${userId}/patient/onboard`,
         {
           phoneNumber: this.form.phoneNumber,
-          nationalId: this.form.nationalId || undefined,
+          nationalId: this.form.nationalId,
           dateOfBirth: this.form.dateOfBirth || undefined,
           addressLine1: this.form.addressLine1 || undefined,
           city: this.form.city || undefined,
@@ -82,7 +87,7 @@ export class PatientOnboarding implements OnInit {
           autoDebitEnabled: this.form.autoDebitEnabled,
           debitSourceMpesaNumber: this.form.debitSourceMpesaNumber || undefined,
         }
-      ).toPromise();
+      ));
 
       // Reload profile and redirect to dashboard
       await this.auth.loadProfile();

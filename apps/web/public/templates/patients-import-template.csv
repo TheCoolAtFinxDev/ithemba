@@ -1,0 +1,4 @@
+firstName,lastName,email,phoneNumber,nationalId,dateOfBirth,addressLine1,city,district
+Tsebo,Mokhachane,tsebo@example.ls,+26650000001,1234567890,1990-03-15,12 Kingsway Ave,Maseru,Maseru
+Mamolapo,Lekhanya,mamolapo@example.ls,+26650000002,0987654321,1985-07-22,45 Moshoeshoe Rd,Teyateyaneng,Berea
+Lehlohonolo,Sefako,lehlohonolo@example.ls,+26650000003,1122334455,1992-11-08,7 Piso St,Mafeteng,Mafeteng

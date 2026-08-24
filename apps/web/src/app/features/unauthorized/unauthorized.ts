@@ -16,6 +16,7 @@ export class Unauthorized {
     const role = this.auth.role;
     if (role === 'ADMIN') this.router.navigate(['/admin']);
     else if (role === 'PROVIDER') this.router.navigate(['/provider']);
+    else if (role === 'EMPLOYER') this.router.navigate(['/employer']);
     else if (this.auth.isAuthenticated) this.router.navigate(['/patient']);
     else this.router.navigate(['/']);
   }

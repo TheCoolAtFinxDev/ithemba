@@ -26,20 +26,25 @@ export class Wso2JwtStrategy extends PassportStrategy(Strategy, 'wso2-jwt') {
   }
 
 async validate(payload: any) {
+  // Detect role from WSO2 groups claim in the JWT — strips PRIMARY/ prefix
+  const rawGroups: string[] = payload.groups ?? payload.roles ?? [];
+  const groups = rawGroups.map((g: string) => g.split('/').pop()!.toUpperCase());
+  const detectedRole = groups.includes('ADMIN') ? 'ADMIN'
+    : groups.includes('PROVIDER') ? 'PROVIDER'
+    : groups.includes('EMPLOYER') ? 'EMPLOYER'
+    : 'PATIENT';
+
   const profile = await this.prisma.userProfile.findUnique({
     where: { id: payload.sub },
-    include: {
-      roles: {
-        include: {
-          role: true,
-        },
-      },
-    },
+    include: { roles: { include: { role: true } } },
   });
 
   return {
     sub: payload.sub,
-    email: payload.email,
+    email: payload.email ?? payload.username,
+    fullName: [payload.given_name, payload.family_name].filter(Boolean).join(' ')
+              || payload.name || payload.username || 'User',
+    detectedRole,
     roles: profile?.roles?.map(r => r.role.name) ?? [],
     primaryRole: profile?.roles?.[0]?.role.name ?? 'PATIENT',
   };

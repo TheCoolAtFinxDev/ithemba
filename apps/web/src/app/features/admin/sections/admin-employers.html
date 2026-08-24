@@ -1,0 +1,314 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h5 class="fw-bold mb-1">Employers</h5>
+    <p class="text-muted mb-0" style="font-size:13px">
+      {{ employers.length }} total ·
+      {{ pending.length }} pending verification
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-ith-primary" (click)="load()">
+      <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+    </button>
+    <button class="btn btn-sm btn-outline-primary" [disabled]="verified.length === 0" (click)="openBulk()">
+      <i class="bi bi-people-fill me-1"></i>Bulk Enroll
+    </button>
+    <button class="btn btn-sm" style="background:#1565C0;color:#fff;border-radius:8px;font-weight:600;font-size:13px" (click)="openCreate()">
+      <i class="bi bi-building-add me-1"></i>New Employer
+    </button>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ error }}</div>
+<div *ngIf="loading" class="text-center py-5"><div class="spinner-border" style="color:#1565C0"></div></div>
+
+<div *ngIf="!loading && employers.length === 0" class="text-center py-5 text-muted">
+  <i class="bi bi-building" style="font-size:40px;opacity:0.3"></i>
+  <p class="mt-3" style="font-size:14px">No employers yet. Click <strong>New Employer</strong> to onboard one.</p>
+</div>
+
+<!-- Pending verification -->
+<div *ngIf="pending.length > 0" class="mb-4">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <div style="width:8px;height:8px;border-radius:50%;background:#FF9800"></div>
+    <span style="font-size:12px;font-weight:700;color:#E65100;text-transform:uppercase;letter-spacing:0.5px">Pending Verification</span>
+  </div>
+
+  <div *ngFor="let emp of pending" class="ith-card p-4 mb-3" style="border-left:3px solid #FF9800">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div style="font-weight:700;font-size:15px">{{ emp.name }}</div>
+        <div style="font-size:13px;color:#1565C0;font-weight:600">{{ emp.contactName }}</div>
+        <div style="font-size:12px;color:#777;margin-top:2px">{{ emp.contactEmail }} · {{ emp.contactPhone }}</div>
+        <div style="font-size:12px;color:#9e9e9e">
+          <span *ngIf="emp.registrationNumber">Reg: {{ emp.registrationNumber }} · </span>
+          {{ emp._count.memberships }} members · LSL {{ emp.platformFeePerSeat | number:'1.0-0' }}/seat · Added {{ formatDate(emp.createdAt) }}
+        </div>
+      </div>
+      <button class="btn" style="background:#1565C0;color:#fff;border-radius:10px;font-size:13px;font-weight:600;padding:8px 18px"
+              [disabled]="actionLoading && actionId === emp.id"
+              (click)="verify(emp)">
+        <span *ngIf="actionLoading && actionId === emp.id" class="spinner-border spinner-border-sm me-1" style="width:12px;height:12px"></span>
+        <i *ngIf="!(actionLoading && actionId === emp.id)" class="bi bi-patch-check me-1"></i>
+        Verify
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Verified employers -->
+<div *ngIf="verified.length > 0">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <div style="width:8px;height:8px;border-radius:50%;background:#1565C0"></div>
+    <span style="font-size:12px;font-weight:700;color:#1565C0;text-transform:uppercase;letter-spacing:0.5px">Verified</span>
+  </div>
+  <div class="ith-card overflow-hidden">
+    <table class="table table-hover mb-0" style="font-size:13px">
+      <thead style="background:#f8f9fa">
+        <tr>
+          <th class="px-4 py-3" style="border:none;font-weight:600;color:#555;font-size:12px">Company</th>
+          <th class="px-3 py-3" style="border:none;font-weight:600;color:#555;font-size:12px">Contact</th>
+          <th class="px-3 py-3" style="border:none;font-weight:600;color:#555;font-size:12px">Members</th>
+          <th class="px-3 py-3" style="border:none;font-weight:600;color:#555;font-size:12px">Fee/Seat</th>
+          <th class="px-3 py-3" style="border:none;font-weight:600;color:#555;font-size:12px">Status</th>
+          <th class="px-3 py-3" style="border:none;font-weight:600;color:#555;font-size:12px">Verified</th>
+          <th class="px-3 py-3" style="border:none"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of verified" style="border-color:#f5f5f5">
+          <td class="px-4 py-3" style="border:none">
+            <div class="fw-semibold">{{ emp.name }}</div>
+            <div style="color:#9e9e9e;font-size:11px">{{ emp.registrationNumber || '—' }}</div>
+          </td>
+          <td class="px-3 py-3" style="border:none">
+            <div>{{ emp.contactName }}</div>
+            <div style="color:#9e9e9e;font-size:11px">{{ emp.contactEmail }}</div>
+          </td>
+          <td class="px-3 py-3" style="border:none">{{ emp._count.memberships }}</td>
+          <td class="px-3 py-3" style="border:none">LSL {{ emp.platformFeePerSeat | number:'1.0-0' }}</td>
+          <td class="px-3 py-3" style="border:none">
+            <span *ngIf="emp.isActive" style="color:#2E7D32;font-size:12px;font-weight:600">
+              <i class="bi bi-check-circle-fill me-1"></i>Active
+            </span>
+            <span *ngIf="!emp.isActive" style="color:#B71C1C;font-size:12px;font-weight:600">
+              <i class="bi bi-pause-circle-fill me-1"></i>Inactive
+            </span>
+          </td>
+          <td class="px-3 py-3 text-muted" style="border:none;font-size:12px">{{ emp.verifiedAt ? formatDate(emp.verifiedAt) : '—' }}</td>
+          <td class="px-3 py-3 d-flex gap-2" style="border:none">
+            <button class="btn btn-sm" style="background:#e3f0ff;color:#1565C0;border-radius:8px;font-size:12px;font-weight:600"
+                    (click)="openBilling(emp)">
+              Billing
+            </button>
+            <button class="btn btn-sm"
+                    [style.background]="emp.isActive ? '#FFF3E0' : '#E8F5E9'"
+                    [style.color]="emp.isActive ? '#E65100' : '#2E7D32'"
+                    style="border-radius:8px;font-size:12px;font-weight:600"
+                    [disabled]="actionLoading && actionId === emp.id"
+                    (click)="toggleActive(emp)">
+              {{ emp.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create Employer Modal -->
+<div *ngIf="showCreateModal" class="modal d-block" style="background:rgba(0,0,0,0.45)">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px">
+    <div class="modal-content" style="border-radius:16px;border:none">
+      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:20px 24px 16px">
+        <div>
+          <h6 class="mb-0 fw-bold">Onboard Employer</h6>
+          <p class="text-muted mb-0" style="font-size:12px">Creates a WSO2 account and sends a welcome email</p>
+        </div>
+        <button class="btn-close" (click)="closeCreate()"></button>
+      </div>
+
+      <!-- Success state -->
+      <div *ngIf="created" class="modal-body p-4">
+        <div class="text-center mb-4">
+          <div style="width:56px;height:56px;background:#E3F2FD;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <i class="bi bi-building-check" style="font-size:24px;color:#1565C0"></i>
+          </div>
+          <h6 class="fw-bold mb-1">{{ created.name }} created</h6>
+          <p class="text-muted" style="font-size:13px">Welcome email sent to <strong>{{ created.email }}</strong></p>
+        </div>
+        <div class="p-3 mb-3" style="background:#f8f9fa;border-radius:10px;font-size:13px">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Email</span>
+            <span class="fw-semibold">{{ created.email }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Temp Password</span>
+            <span class="fw-semibold" style="font-family:monospace">{{ created.temporaryPassword }}</span>
+          </div>
+        </div>
+        <p class="text-muted text-center mb-3" style="font-size:12px">
+          <i class="bi bi-info-circle me-1"></i>Account is pending verification. Verify it below to enable full access.
+        </p>
+        <button class="btn w-100" style="background:#1565C0;color:#fff;border-radius:10px;font-weight:600" (click)="closeCreate()">Done</button>
+      </div>
+
+      <!-- Form state -->
+      <div *ngIf="!created" class="modal-body p-4">
+        <div *ngIf="createError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:8px">{{ createError }}</div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Company Name *</label>
+          <input class="form-control" style="border-radius:10px;font-size:14px" placeholder="e.g. Lesotho National Bank" [(ngModel)]="form.name">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Registration Number</label>
+          <input class="form-control" style="border-radius:10px;font-size:14px" placeholder="e.g. LSO-2024-00123" [(ngModel)]="form.registrationNumber">
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold" style="font-size:13px">Contact First Name *</label>
+            <input class="form-control" style="border-radius:10px;font-size:14px" placeholder="Thabo" [(ngModel)]="form.contactFirstName">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold" style="font-size:13px">Contact Last Name *</label>
+            <input class="form-control" style="border-radius:10px;font-size:14px" placeholder="Mokoena" [(ngModel)]="form.contactLastName">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Contact Email *</label>
+          <input class="form-control" type="email" style="border-radius:10px;font-size:14px" [class.is-invalid]="contactEmailTaken"
+                 placeholder="hr@company.ls" [(ngModel)]="form.contactEmail" (ngModelChange)="onContactEmailInput()">
+          <div *ngIf="contactEmailTaken" class="text-danger mt-1" style="font-size:11px">
+            <i class="bi bi-exclamation-circle me-1"></i>An account with this email already exists
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px">Contact Phone *</label>
+          <input class="form-control" type="tel" style="border-radius:10px;font-size:14px" placeholder="+26650000000" [(ngModel)]="form.contactPhone">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold" style="font-size:13px">Platform Fee per Seat (LSL/month)</label>
+          <input class="form-control" type="number" min="0" style="border-radius:10px;font-size:14px" [(ngModel)]="form.platformFeePerSeat">
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn flex-fill" style="border-radius:10px;font-weight:600;border:1px solid #e0e0e0" (click)="closeCreate()">Cancel</button>
+          <button class="btn flex-fill" style="background:#1565C0;color:#fff;border-radius:10px;font-weight:600"
+                  [disabled]="creating" (click)="submitCreate()">
+            <span *ngIf="creating" class="spinner-border spinner-border-sm me-1" style="width:14px;height:14px"></span>
+            {{ creating ? 'Creating…' : 'Create & Send Invite' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Billing Modal -->
+<div *ngIf="billingEmployer" class="modal d-block" style="background:rgba(0,0,0,0.45)">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content" style="border-radius:16px;border:none">
+      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:20px 24px 16px">
+        <h6 class="mb-0 fw-bold">{{ billingEmployer.name }} — Billing</h6>
+        <button class="btn-close" (click)="closeBilling()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <app-employer-billing [employerId]="billingEmployer.id" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Enroll Modal -->
+<div *ngIf="showBulkModal" class="modal d-block" style="background:rgba(0,0,0,0.45)">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:16px;border:none">
+      <div class="modal-header" style="border-bottom:1px solid #f0f0f0;padding:20px 24px 16px">
+        <h6 class="mb-0 fw-bold">Bulk Enroll Employees</h6>
+        <button class="btn-close" (click)="showBulkModal=false"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div *ngIf="bulkError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:8px">{{ bulkError }}</div>
+
+        <ng-container *ngIf="!bulkResult">
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px">Employer *</label>
+            <select class="form-select" style="border-radius:10px;font-size:14px" [(ngModel)]="bulkEmployerId">
+              <option *ngFor="let e of verified" [value]="e.id">{{ e.name }}</option>
+            </select>
+          </div>
+
+          <p class="text-muted small mb-3">
+            Upload a CSV with columns: <code>firstName,lastName,email,phoneNumber,employeeRef,contributionAmount</code>.
+            Rows matching an existing patient account (by email or phone) are linked immediately; the rest get an invite email/SMS to register.
+          </p>
+          <input type="file" accept=".csv,text/csv" class="form-control mb-3" (change)="onBulkFileSelected($event)" />
+
+          <div *ngIf="bulkFileName" class="small text-muted mb-2"><i class="bi bi-file-earmark-spreadsheet me-1"></i>{{ bulkFileName }}</div>
+
+          <div *ngIf="bulkParseErrors.length" class="alert alert-warning py-2 small mb-3">
+            <div class="fw-semibold mb-1">Fix these before uploading:</div>
+            <ul class="mb-0 ps-3">
+              <li *ngFor="let e of bulkParseErrors">{{ e }}</li>
+            </ul>
+          </div>
+
+          <div *ngIf="bulkRows.length > 0" class="table-responsive mb-2" style="max-height:260px;overflow-y:auto">
+            <table class="table table-sm">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Ref</th><th>Amount</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of bulkRows">
+                  <td>{{ r.firstName }} {{ r.lastName }}</td>
+                  <td>{{ r.email }}</td>
+                  <td>{{ r.phoneNumber }}</td>
+                  <td><span style="font-family:monospace">{{ r.employeeRef }}</span></td>
+                  <td>LSL {{ r.contributionAmount | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="bulkRows.length > 0" class="small text-muted">{{ bulkRows.length }} row(s) ready to submit.</div>
+        </ng-container>
+
+        <ng-container *ngIf="bulkResult">
+          <div class="p-3 rounded-3 mb-3" style="background:#f5f7fb">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Linked to existing accounts</span><span class="fw-bold text-success">{{ bulkResult.linked }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Invited (no account yet)</span><span class="fw-bold" style="color:#1565C0">{{ bulkResult.invited }}</span>
+            </div>
+            <div class="d-flex justify-content-between small">
+              <span class="text-muted">Failed</span><span class="fw-bold text-danger">{{ bulkResult.failed }}</span>
+            </div>
+          </div>
+          <div *ngIf="bulkResult.failed > 0" class="table-responsive" style="max-height:220px;overflow-y:auto">
+            <table class="table table-sm">
+              <thead><tr><th>Ref</th><th>Reason</th></tr></thead>
+              <tbody>
+                <ng-container *ngFor="let r of bulkResult.results">
+                  <tr *ngIf="r.outcome === 'error'">
+                    <td><span style="font-family:monospace">{{ r.employeeRef }}</span></td><td class="text-danger">{{ r.message }}</td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-light" (click)="showBulkModal=false">{{ bulkResult ? 'Close' : 'Cancel' }}</button>
+        <button *ngIf="!bulkResult" class="btn text-white" style="background:#1565C0" [disabled]="bulkLoading || !bulkRows.length || !bulkEmployerId" (click)="submitBulk()">
+          <span *ngIf="bulkLoading" class="spinner-border spinner-border-sm me-1"></span>
+          Enroll {{ bulkRows.length || '' }} Employee(s)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

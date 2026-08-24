@@ -4,16 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
+interface LineItem { description: string; quantity: number; unitPrice: number; }
+
 interface Claim {
   id: string;
   claimNumber: string;
   status: string;
   totalAmount: string;
+  hsaCoveredAmount: string;
+  outOfPocketAmount: string;
   dateOfVisit: string;
   description: string | null;
   createdAt: string;
   provider: { firstName: string; lastName: string; clinicName: string };
-  account: { patient: { userProfile: { fullName: string; email: string } } };
+  account: { balance: string; patient: { userProfile: { fullName: string; email: string } } };
+  lineItems: LineItem[];
 }
 
 @Component({
@@ -45,7 +50,28 @@ export class AdminClaims implements OnInit {
     { value: 'Rejected', label: 'Rejected' },
   ];
 
+  exporting = false;
+
   ngOnInit() { this.load(); }
+
+  exportCsv() {
+    if (this.exporting) return;
+    this.exporting = true;
+    const q = this.filterStatus ? `?status=${this.filterStatus}` : '';
+    this.http.get(`${environment.apiUrl}/admin/claims/export${q}`, { responseType: 'blob' })
+      .subscribe({
+        next: blob => {
+          this.exporting = false;
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `claims-export-${new Date().toISOString().slice(0, 10)}.csv`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => { this.exporting = false; },
+      });
+  }
 
   load() {
     this.loading = true;
@@ -96,6 +122,7 @@ export class AdminClaims implements OnInit {
     const map: Record<string, string> = {
       Pending: 'Pending', Submitted: 'Submitted', InReview: 'In Review',
       Approved: 'Approved', Rejected: 'Rejected', Paid: 'Paid', Denied: 'Denied',
+      Withdrawn: 'Withdrawn',
     };
     return map[s] ?? s;
   }
@@ -106,11 +133,28 @@ export class AdminClaims implements OnInit {
       case 'Rejected': case 'Denied': return 'badge-red';
       case 'InReview': return 'badge-blue';
       case 'Submitted': return 'badge-orange';
+      case 'Withdrawn': return 'badge-grey';
       default: return 'badge-grey';
     }
   }
 
   canAction(s: string): boolean {
     return ['Submitted', 'InReview'].includes(s);
+  }
+
+  // Live preview of how approval will split the claim against the patient's
+  // *current* balance (this is recomputed authoritatively on the backend too).
+  previewHsaCovered(c: Claim): number {
+    const balance = Number(c.account?.balance ?? 0);
+    const maxHsaCoverable = Math.max(0, balance / 1.05);
+    return Math.min(Number(c.totalAmount), maxHsaCoverable);
+  }
+
+  previewOutOfPocket(c: Claim): number {
+    return Math.max(0, Number(c.totalAmount) - this.previewHsaCovered(c));
+  }
+
+  previewFee(c: Claim): number {
+    return this.previewHsaCovered(c) * 0.05;
   }
 }

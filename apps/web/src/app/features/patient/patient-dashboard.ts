@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { NgIf, DecimalPipe } from '@angular/common';
+import { NgIf, NgFor, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { PatientAppointments } from './appointments/patient-appointments';
 import { PatientAppointmentDetail } from './appointments/patient-appointment-detail';
@@ -15,16 +16,16 @@ type View = 'home' | 'appointments' | 'appointment-detail' | 'book' | 'wallet' |
 
 @Component({
   selector: 'app-patient-dashboard',
-  imports: [NgIf, DecimalPipe, PatientAppointments, PatientAppointmentDetail, PatientBook, PatientWallet, PatientClaims, PatientBeneficiaries, PatientProfile],
+  imports: [NgIf, NgFor, DecimalPipe, PatientAppointments, PatientAppointmentDetail, PatientBook, PatientWallet, PatientClaims, PatientBeneficiaries, PatientProfile],
   templateUrl: './patient-dashboard.html',
   styleUrl: './patient-dashboard.css',
 })
 export class PatientDashboard implements OnInit {
   private auth = inject(AuthService);
   private http = inject(HttpClient);
+  private router = inject(Router);
 
   userName = '';
-  profileIncomplete = false;
   activeView: View = 'home';
   activeTab: 'home' | 'appointments' | 'claims' = 'home';
 
@@ -43,9 +44,12 @@ export class PatientDashboard implements OnInit {
   ngOnInit() {
     this.auth.profile$.subscribe(profile => {
       if (profile) {
+        // New patients (auto-provisioned, no phone number yet) go to onboarding
+        if (!profile.patient?.phoneNumber) {
+          this.router.navigate(['/patient/onboard']);
+          return;
+        }
         this.userName = profile.fullName?.split(' ')[0] ?? 'Patient';
-        // Show nudge if profile was auto-provisioned with no phone number
-        this.profileIncomplete = !profile.patient?.phoneNumber;
         if (profile.patient?.id && !this.patientId) {
           this.patientId = profile.patient.id;
           this.loadWalletBalance();

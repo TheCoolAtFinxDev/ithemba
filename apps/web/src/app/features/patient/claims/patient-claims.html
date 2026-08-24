@@ -34,9 +34,21 @@
         <div style="font-size:12px;color:#9e9e9e">Claim #{{ c.claimNumber }}</div>
         <div style="font-size:12px;color:#9e9e9e">{{ c.dateOfVisit | date:'d MMM y' }}</div>
         <div *ngIf="c.description" style="font-size:12px;color:#777;margin-top:2px">{{ c.description }}</div>
+        <div *ngIf="c.lineItems?.length" style="font-size:11px;color:#9e9e9e;margin-top:4px">
+          <div *ngFor="let li of c.lineItems">{{ li.quantity }}× {{ li.description }} — R{{ (+li.unitPrice) | number:'1.2-2' }}</div>
+        </div>
       </div>
       <div style="font-size:18px;font-weight:800;color:#1a1a2e">
         R{{ (+c.totalAmount) | number:'1.2-2' }}
+      </div>
+    </div>
+
+    <div *ngIf="(+c.outOfPocketAmount) > 0" class="mt-2 p-2 rounded-3" style="background:#FFF3E0">
+      <div style="font-size:12px;color:#E65100;font-weight:700">
+        <i class="bi bi-exclamation-circle me-1"></i>You pay R{{ (+c.outOfPocketAmount) | number:'1.2-2' }} out of pocket
+      </div>
+      <div style="font-size:11px;color:#9e9e9e;margin-top:1px">
+        Your HSA covers R{{ (+c.hsaCoveredAmount) | number:'1.2-2' }} of this visit — the rest is due directly to the provider.
       </div>
     </div>
   </div>

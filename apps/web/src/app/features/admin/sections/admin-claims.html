@@ -6,11 +6,16 @@
     </p>
   </div>
   <!-- Status filter -->
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 align-items-center flex-wrap">
     <button *ngFor="let s of statuses"
             class="filter-chip" [class.filter-chip--active]="filterStatus === s.value"
             (click)="filterStatus = s.value; load()">
       {{ s.label }}
+    </button>
+    <button class="btn btn-sm" style="background:#f5f7fb;color:#555;border:1px solid #e0e0e0;border-radius:20px;font-weight:600;font-size:12px"
+            [disabled]="exporting" (click)="exportCsv()">
+      <span *ngIf="exporting" class="spinner-border spinner-border-sm me-1" style="width:10px;height:10px"></span>
+      <i *ngIf="!exporting" class="bi bi-download me-1"></i>Export CSV
     </button>
   </div>
 </div>
@@ -50,6 +55,15 @@
         Visit: {{ c.dateOfVisit | date:'d MMM y' }} · Submitted: {{ c.createdAt | date:'d MMM y' }}
       </div>
       <div *ngIf="c.description" style="font-size:12px;color:#777;margin-top:2px">{{ c.description }}</div>
+      <div *ngIf="c.lineItems?.length" style="font-size:11px;color:#9e9e9e;margin-top:4px">
+        <div *ngFor="let li of c.lineItems">{{ li.quantity }}× {{ li.description }} — R{{ (+li.unitPrice) | number:'1.2-2' }}</div>
+      </div>
+      <div *ngIf="(+c.outOfPocketAmount) > 0" class="mt-2">
+        <span class="claim-badge badge-orange">
+          <i class="bi bi-exclamation-circle me-1"></i>
+          R{{ (+c.outOfPocketAmount) | number:'1.2-2' }} out of pocket
+        </span>
+      </div>
     </div>
 
     <!-- Amount + actions -->
@@ -84,13 +98,34 @@
 
     <div class="mb-3 p-3 rounded-3" style="background:#f5f7fb;font-size:13px">
       <div class="fw-semibold">{{ modalClaim.claimNumber }}</div>
-      <div class="text-muted">R{{ (+modalClaim.totalAmount) | number:'1.2-2' }}</div>
       <div class="text-muted">{{ modalClaim.provider.clinicName }}</div>
-      <div *ngIf="modalAction === 'approve'" class="mt-2" style="color:#E65100;font-size:12px">
-        <i class="bi bi-info-circle me-1"></i>
-        A 5% service fee (R{{ (+modalClaim.totalAmount * 0.05) | number:'1.2-2' }}) will be added.
-        Total debit: R{{ (+modalClaim.totalAmount * 1.05) | number:'1.2-2' }}
+      <div class="d-flex justify-content-between mt-2">
+        <span class="text-muted">Service cost</span>
+        <span class="fw-semibold">R{{ (+modalClaim.totalAmount) | number:'1.2-2' }}</span>
       </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Patient's current HSA balance</span>
+        <span class="fw-semibold">R{{ (+modalClaim.account.balance) | number:'1.2-2' }}</span>
+      </div>
+
+      <ng-container *ngIf="modalAction === 'approve'">
+        <div class="d-flex justify-content-between mt-2 pt-2" style="border-top:1px dashed #d0d5dd">
+          <span class="text-muted">HSA pays (service)</span>
+          <span class="fw-semibold" style="color:#2E7D32">R{{ previewHsaCovered(modalClaim) | number:'1.2-2' }}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">+ 5% service fee</span>
+          <span class="fw-semibold" style="color:#2E7D32">R{{ previewFee(modalClaim) | number:'1.2-2' }}</span>
+        </div>
+        <div *ngIf="previewOutOfPocket(modalClaim) > 0" class="d-flex justify-content-between mt-1">
+          <span style="color:#B71C1C;font-weight:700"><i class="bi bi-exclamation-circle me-1"></i>Patient owes out of pocket</span>
+          <span style="color:#B71C1C;font-weight:800">R{{ previewOutOfPocket(modalClaim) | number:'1.2-2' }}</span>
+        </div>
+        <div *ngIf="previewOutOfPocket(modalClaim) > 0" class="mt-2" style="color:#E65100;font-size:11px">
+          <i class="bi bi-info-circle me-1"></i>
+          The HSA balance can't fully cover this claim. The out-of-pocket amount is recorded on the claim for the patient and provider's records.
+        </div>
+      </ng-container>
     </div>
 
     <div *ngIf="actionError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ actionError }}</div>

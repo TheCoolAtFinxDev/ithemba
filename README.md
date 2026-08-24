@@ -137,12 +137,14 @@ git checkout main && git merge feat/xxx && git push
 
 ## Test Accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Patient | testpatient@ithembahealth.com | Mg2Q4VVm8MgJLqK5dBEn |
-| Patient 2 | testpatient2@ithembahealth.com | Mg2Q4VVm8MgJLqK5dBEn |
-| Provider | testprovider@ithembahealth.com | Mg2Q4VVm8MgJLqK5dBEn |
-| WSO2 admin | admin | Mg2Q4VVm8MgJLqK5dBEn |
+Passwords are not committed — see the password manager, or `.env`'s `WSO2_ADMIN_PASS` for the WSO2 admin account. Their DB records were wiped from production on 2026-07-11; the WSO2 accounts themselves still exist.
+
+| Role | Email |
+|---|---|
+| Patient | testpatient@ithembahealth.com |
+| Patient 2 | testpatient2@ithembahealth.com |
+| Provider | testprovider@ithembahealth.com |
+| WSO2 admin | admin |
 
 ---
 

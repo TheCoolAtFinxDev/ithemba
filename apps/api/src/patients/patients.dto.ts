@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsString, IsOptional, IsDateString,
-  IsBoolean, IsNumber, Min, Max,
+  IsString, IsOptional, IsDateString, IsNotEmpty,
+  IsBoolean, IsNumber, Min, Max, IsIn,
 } from 'class-validator';
 
 export class CreatePatientDto {
@@ -54,15 +54,13 @@ export class TopUpDto {
   @Max(10000)
   amount: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  mpesaRef?: string;
+  @ApiProperty({ enum: ['MPESA', 'CPAY'] })
+  @IsIn(['MPESA', 'CPAY'])
+  rail: 'MPESA' | 'CPAY';
 
-  @ApiPropertyOptional()
-  @IsOptional()
+  @ApiProperty({ description: 'Phone number to charge, e.g. 26662227190' })
   @IsString()
-  mpesaPhone?: string;
+  mpesaPhone: string;
 }
 
 export class UpdatePatientProfileDto {
@@ -117,10 +115,10 @@ export class OnboardPatientDto {
   @IsString()
   phoneNumber: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
+  @ApiProperty({ description: 'Required — every patient must have a national ID on file' })
   @IsString()
-  nationalId?: string;
+  @IsNotEmpty()
+  nationalId: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -151,4 +149,39 @@ export class OnboardPatientDto {
   @IsOptional()
   @IsString()
   debitSourceMpesaNumber?: string;
+}
+
+export class UpdateNotificationPreferencesDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  emailEnabled?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  smsEnabled?: boolean;
+
+  @ApiPropertyOptional({ description: 'Hours before the appointment to send the customizable reminder (the 1-hour-before reminder is mandatory and unaffected by this setting)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(2)
+  @Max(72)
+  reminderAdvanceHours?: number;
+}
+
+export class SetupAutoDebitDto {
+  @ApiProperty()
+  @IsString()
+  mpesaNumber: string;
+
+  @ApiProperty({ description: 'Amount in ZAR, R500–R10,000' })
+  @IsNumber()
+  @Min(500)
+  @Max(10000)
+  amount: number;
+
+  @ApiProperty({ enum: ['Weekly', 'Monthly'] })
+  @IsIn(['Weekly', 'Monthly'])
+  frequency: 'Weekly' | 'Monthly';
 }

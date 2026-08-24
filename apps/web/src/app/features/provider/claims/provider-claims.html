@@ -37,6 +37,9 @@
           <div style="font-weight:600;font-size:14px">{{ appt.patient?.userProfile?.fullName || 'Patient' }}</div>
           <div style="font-size:12px;color:#777">{{ formatDate(appt.startUtc) }}</div>
           <div *ngIf="appt.reason" style="font-size:12px;color:#9e9e9e">{{ appt.reason }}</div>
+          <div style="font-size:12px;color:#4A7C59;font-weight:600;margin-top:2px">
+            <i class="bi bi-wallet2 me-1"></i>HSA balance: R{{ (+(appt.patient?.savingsAccount?.balance ?? 0)) | number:'1.2-2' }}
+          </div>
         </div>
         <button class="btn btn-sm btn-ith-green" style="font-size:12px;white-space:nowrap"
                 (click)="openSubmit(appt)">
@@ -65,11 +68,28 @@
           <div style="font-size:12px;color:#777">Claim #{{ c.claimNumber }}</div>
           <div style="font-size:12px;color:#9e9e9e">{{ c.dateOfVisit | date:'d MMM y' }}</div>
           <div *ngIf="c.description" style="font-size:12px;color:#777;margin-top:2px">{{ c.description }}</div>
+          <div *ngIf="c.lineItems?.length" style="font-size:11px;color:#9e9e9e;margin-top:4px">
+            <div *ngFor="let li of c.lineItems">{{ li.quantity }}× {{ li.description }} — R{{ (+li.unitPrice) | number:'1.2-2' }}</div>
+          </div>
         </div>
         <div class="d-flex flex-column align-items-end gap-1">
           <span class="claim-badge" [ngClass]="statusClass(c.status)">{{ statusText(c.status) }}</span>
           <span style="font-size:16px;font-weight:800;color:#1a1a2e">R{{ (+c.totalAmount) | number:'1.2-2' }}</span>
         </div>
+      </div>
+      <div *ngIf="(+c.outOfPocketAmount) > 0" class="mt-2 pt-2" style="border-top:1px dashed #f0f0f0;font-size:11px;color:#E65100;font-weight:600">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        HSA covers R{{ (+c.hsaCoveredAmount) | number:'1.2-2' }} · Patient pays R{{ (+c.outOfPocketAmount) | number:'1.2-2' }} out of pocket
+      </div>
+      <div *ngIf="canModify(c)" class="d-flex gap-2 mt-2 pt-2" style="border-top:1px dashed #f0f0f0">
+        <button class="btn btn-sm btn-outline-secondary" style="font-size:11px" (click)="openEdit(c)">
+          <i class="bi bi-pencil me-1"></i>Edit
+        </button>
+        <button class="btn btn-sm btn-outline-danger" style="font-size:11px"
+                [disabled]="withdrawingId === c.id" (click)="withdrawClaim(c)">
+          <span *ngIf="withdrawingId === c.id" class="spinner-border spinner-border-sm me-1" style="width:10px;height:10px"></span>
+          <i *ngIf="withdrawingId !== c.id" class="bi bi-x-circle me-1"></i>Withdraw
+        </button>
       </div>
     </div>
   </div>
@@ -80,34 +100,89 @@
 <div *ngIf="showSubmitModal" class="modal-overlay" (click)="closeSubmit()">
   <div class="modal-sheet" (click)="$event.stopPropagation()">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h6 class="fw-bold mb-0">Submit Claim</h6>
+      <h6 class="fw-bold mb-0">{{ editingClaim ? 'Edit Claim' : 'Submit Claim' }}</h6>
       <button class="btn-icon" (click)="closeSubmit()"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <div *ngIf="selectedAppt" class="alert py-2 px-3 mb-3" style="background:#f5f7fb;border-radius:10px;border:none;font-size:13px">
       <div style="font-weight:600">{{ selectedAppt.patient?.userProfile?.fullName }}</div>
       <div style="color:#777">{{ formatDate(selectedAppt.startUtc) }}</div>
+      <div style="color:#4A7C59;font-weight:700;margin-top:4px">
+        <i class="bi bi-wallet2 me-1"></i>Available HSA balance: R{{ patientBalance() | number:'1.2-2' }}
+      </div>
+    </div>
+
+    <div *ngIf="editingClaim" class="alert py-2 px-3 mb-3" style="background:#f5f7fb;border-radius:10px;border:none;font-size:13px">
+      <div style="font-weight:600">{{ editingClaim.account.patient.userProfile.fullName }}</div>
+      <div style="color:#777">Claim #{{ editingClaim.claimNumber }}</div>
+      <div style="color:#4A7C59;font-weight:700;margin-top:4px">
+        <i class="bi bi-wallet2 me-1"></i>Current HSA balance: R{{ patientBalance() | number:'1.2-2' }}
+      </div>
     </div>
 
     <div *ngIf="submitError" class="alert alert-danger py-2 px-3 mb-3" style="font-size:13px;border-radius:10px">{{ submitError }}</div>
 
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label fw-semibold mb-0" style="font-size:13px">What was provided (optional)</label>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addLineItem()">
+        <i class="bi bi-plus"></i> Add item
+      </button>
+    </div>
+    <div *ngFor="let li of lineItems; let i = index" class="d-flex gap-2 mb-2 align-items-center">
+      <input class="form-control form-control-sm" style="border-radius:8px;flex:3"
+             [(ngModel)]="li.description" (ngModelChange)="syncAmountFromLineItems()"
+             placeholder="e.g. Consultation, Paracetamol 500mg x20" />
+      <input type="number" class="form-control form-control-sm" style="border-radius:8px;flex:1" min="0.01"
+             [(ngModel)]="li.quantity" (ngModelChange)="syncAmountFromLineItems()" placeholder="Qty" />
+      <input type="number" class="form-control form-control-sm" style="border-radius:8px;flex:1.5" min="0"
+             [(ngModel)]="li.unitPrice" (ngModelChange)="syncAmountFromLineItems()" placeholder="Unit price" />
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="removeLineItem(i)">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+    <div *ngIf="lineItems.length > 0" class="text-muted mb-3" style="font-size:12px">
+      Items total: R{{ lineItemsTotal() | number:'1.2-2' }} — synced into Claim Amount below (you can still override it)
+    </div>
+
     <label class="form-label fw-semibold" style="font-size:13px">Claim Amount (ZAR)</label>
-    <input type="number" class="form-control mb-3" style="border-radius:10px"
+    <input type="number" class="form-control mb-2" style="border-radius:10px"
            [(ngModel)]="claimAmount" min="1" placeholder="e.g. 850.00" />
+
+    <!-- Live cost breakdown -->
+    <div *ngIf="claimAmount > 0" class="p-3 mb-3 rounded-3" style="background:#f5f7fb;font-size:12px">
+      <div class="d-flex justify-content-between mb-1">
+        <span class="text-muted">Service cost</span>
+        <span class="fw-semibold">R{{ claimAmount | number:'1.2-2' }}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-1">
+        <span class="text-muted">Paid from HSA</span>
+        <span class="fw-semibold" style="color:#2E7D32">R{{ hsaCoveredAmount() | number:'1.2-2' }}</span>
+      </div>
+      <div *ngIf="hasShortfall()" class="d-flex justify-content-between pt-2 mt-1" style="border-top:1px dashed #d0d5dd">
+        <span style="color:#B71C1C;font-weight:700"><i class="bi bi-exclamation-circle me-1"></i>Patient pays out of pocket</span>
+        <span style="color:#B71C1C;font-weight:800">R{{ outOfPocketAmount() | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="hasShortfall()" class="alert py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;background:#FFF3E0;border:none;color:#E65100">
+      <i class="bi bi-info-circle me-1"></i>
+      The patient's HSA balance can't fully cover this visit. They must be told upfront that
+      <strong>R{{ outOfPocketAmount() | number:'1.2-2' }}</strong> is due directly to you, outside the HSA.
+    </div>
 
     <label class="form-label fw-semibold" style="font-size:13px">Description (optional)</label>
     <textarea class="form-control mb-4" style="border-radius:10px;font-size:13px"
               rows="2" [(ngModel)]="claimDescription"
               placeholder="e.g. Consultation + blood test"></textarea>
 
-    <div class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;background:#e3f2fd;border:none;color:#1565C0">
+    <div *ngIf="!hasShortfall()" class="alert alert-info py-2 px-3 mb-3" style="font-size:12px;border-radius:10px;background:#e3f2fd;border:none;color:#1565C0">
       <i class="bi bi-info-circle me-1"></i>
-      A 5% service fee applies. Admin reviews and approves claims before payment.
+      A 5% service fee applies on amounts paid from the HSA.
     </div>
 
     <button class="btn btn-ith-primary w-100" [disabled]="submitting || !claimAmount" (click)="submitClaim()">
       <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
-      {{ submitting ? 'Submitting…' : 'Submit Claim' }}
+      {{ submitting ? 'Saving…' : (editingClaim ? 'Save Changes' : 'Submit Claim') }}
     </button>
   </div>
 </div>

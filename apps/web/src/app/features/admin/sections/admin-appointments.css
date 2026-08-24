@@ -1,0 +1,23 @@
+/* Appointment-specific overrides */
+.apt-row-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #E3F2FD;
+  color: #1565C0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.apt-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: middle;
+}

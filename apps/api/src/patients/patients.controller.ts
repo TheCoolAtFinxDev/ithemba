@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
-import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto, AddBeneficiaryDto, UpdatePatientProfileDto } from './patients.dto';
+import { OnboardPatientDto, UpdatePatientAddressDto, TopUpDto, AddBeneficiaryDto, UpdatePatientProfileDto, UpdateNotificationPreferencesDto, SetupAutoDebitDto } from './patients.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
@@ -24,6 +24,18 @@ export class PatientsController {
   @ApiOperation({ summary: 'Update patient profile (phone, DOB, national ID)' })
   updateProfile(@CurrentUser() user: any, @Body() dto: UpdatePatientProfileDto) {
     return this.patientsService.updateProfile(user.sub, dto);
+  }
+
+  @Get('patients/profile/notification-preferences')
+  @ApiOperation({ summary: 'Get notification preferences' })
+  getNotificationPreferences(@CurrentUser() user: any) {
+    return this.patientsService.getNotificationPreferences(user.sub);
+  }
+
+  @Put('patients/profile/notification-preferences')
+  @ApiOperation({ summary: 'Update notification preferences' })
+  updateNotificationPreferences(@CurrentUser() user: any, @Body() dto: UpdateNotificationPreferencesDto) {
+    return this.patientsService.updateNotificationPreferences(user.sub, dto);
   }
 
   @Put('patients/profile/address')
@@ -77,6 +89,30 @@ export class PatientsController {
   @ApiOperation({ summary: 'Get HSA transaction history' })
   getTransactions(@CurrentUser() user: any, @Param('patientId') patientId: string) {
     return this.patientsService.getTransactions(user.sub, patientId);
+  }
+
+  // ── Auto-debit (configuration only) ─────────────────────────────
+
+  @Get('patients/:patientId/wallet/auto-debit')
+  @ApiOperation({ summary: 'Get auto top-up setup' })
+  getAutoDebit(@CurrentUser() user: any, @Param('patientId') patientId: string) {
+    return this.patientsService.getAutoDebit(user.sub, patientId);
+  }
+
+  @Post('patients/:patientId/wallet/auto-debit')
+  @ApiOperation({ summary: 'Configure auto top-up (does not charge until M-Pesa integration is live)' })
+  setupAutoDebit(
+    @CurrentUser() user: any,
+    @Param('patientId') patientId: string,
+    @Body() dto: SetupAutoDebitDto,
+  ) {
+    return this.patientsService.setupAutoDebit(user.sub, patientId, dto);
+  }
+
+  @Delete('patients/:patientId/wallet/auto-debit')
+  @ApiOperation({ summary: 'Cancel auto top-up' })
+  cancelAutoDebit(@CurrentUser() user: any, @Param('patientId') patientId: string) {
+    return this.patientsService.cancelAutoDebit(user.sub, patientId);
   }
 
   // ── Beneficiaries ─────────────────────────────────────────────
